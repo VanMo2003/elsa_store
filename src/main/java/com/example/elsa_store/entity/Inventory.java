@@ -5,7 +5,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "inventories")
+@Table(
+        name = "inventories",
+        indexes = {
+                @Index(name = "idx_inventory_variant", columnList = "product_variant_id")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor

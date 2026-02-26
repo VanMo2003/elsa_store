@@ -2,13 +2,13 @@
 package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.dto.request.ProductRequest;
+import com.example.elsa_store.dto.request.ProductSearchRequest;
 import com.example.elsa_store.dto.response.ProductDetailResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
 import com.example.elsa_store.dto.response.ProductVariantResponse;
 import com.example.elsa_store.entity.Category;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductImage;
-import com.example.elsa_store.entity.ProductVariant;
 import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.mapper.ProductMapper;
 import com.example.elsa_store.mapper.ProductVariantMapper;
@@ -18,7 +18,11 @@ import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
 import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.service.ProductService;
-import org.hibernate.procedure.ProcedureOutputs;
+import com.example.elsa_store.specification.ProductSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -120,5 +124,37 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAll().stream()
                 .map(ProductMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    public List<ProductResponse> getAllByCategory(Long categoryId) {
+        return productRepository.findAllByCategory_Id(categoryId).stream()
+                .map(ProductMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> search(ProductSearchRequest request) {
+
+        Sort sort = Sort.unsorted();
+
+        if (request.getSortBy() != null) {
+            sort = Sort.by(
+                    request.getSortDir() != null && request.getSortDir().equalsIgnoreCase("desc")
+                            ? Sort.Direction.DESC
+                            : Sort.Direction.ASC,
+                    request.getSortBy()
+            );
+        }
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSizePage(), sort);
+
+        Page<Product> page = productRepository.findAll(
+                ProductSpecification.search(request),
+                pageable
+        );
+
+        return page.map(ProductMapper::toResponse);
     }
 }

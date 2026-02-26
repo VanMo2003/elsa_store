@@ -2,11 +2,13 @@
 package com.example.elsa_store.controller;
 
 import com.example.elsa_store.dto.request.ProductRequest;
+import com.example.elsa_store.dto.request.ProductSearchRequest;
 import com.example.elsa_store.dto.response.ProductDetailResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
 import com.example.elsa_store.service.ProductService;
 import jakarta.validation.Valid;
 import com.example.elsa_store.dto.common.ApiResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,7 +48,10 @@ public class ProductController {
     }
 
     @GetMapping
-    public ApiResponse<List<ProductResponse>> getAll() {
+    public ApiResponse<List<ProductResponse>> getAll(@RequestParam(required = false) Long categoryId) {
+        if (categoryId != null) {
+            return ApiResponse.ok(productService.getAllByCategory(categoryId));
+        }
         return ApiResponse.ok(productService.getAll());
     }
 
@@ -56,5 +61,10 @@ public class ProductController {
             @RequestPart("files") List<MultipartFile> files
     ) {
         return ApiResponse.ok(productService.uploadImages(id, files));
+    }
+
+    @PostMapping("/search")
+    public Page<ProductResponse> search(@RequestBody ProductSearchRequest request) {
+        return productService.search(request);
     }
 }

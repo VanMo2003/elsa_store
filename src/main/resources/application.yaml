@@ -13,11 +13,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
 jwt:
-  signer-key: "6lhXE9HRxzm7EyIVWdl0XPx9eoGdgXm8VNfpaBQ1dUDpZF6NcF8z4fDAO15JFAdF" # Q8vU1eAgYjocmEtP
+  signer-key: "6lhXE9HRxzm7EyIVWdl0XPx9eoGdgXm8VNfpaBQ1dUDpZF6NcF8z4fDAO15JFAdF"
   valid-duration: 3600 # 1 tiếng
   refreshable-duration: 604800 # 7 ngày
+
 
 file:
   upload-dir: uploads/

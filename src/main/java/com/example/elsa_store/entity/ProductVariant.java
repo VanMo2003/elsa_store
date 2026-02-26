@@ -38,4 +38,7 @@ public class ProductVariant extends BaseEntity {
 
     @OneToMany(mappedBy = "productVariant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductVariantImage> images;
+
+    @OneToOne(mappedBy = "productVariant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Inventory inventory;
 }

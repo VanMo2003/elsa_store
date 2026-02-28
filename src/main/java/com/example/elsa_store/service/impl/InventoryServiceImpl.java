@@ -30,6 +30,9 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public InventoryResponse create(InventoryRequest req) {
+        if (inventoryRepository.findByProductVariant_Id(req.getProductVariantId()).isPresent()) {
+            throw new RuntimeException("Inventory already exists for this variant");
+        }
         ProductVariant variant = productVariantRepository.findById(req.getProductVariantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product variant not found"));
         Inventory i = InventoryMapper.toEntity(req, variant);

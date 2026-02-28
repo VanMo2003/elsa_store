@@ -64,7 +64,7 @@ public class ProductController {
     }
 
     @PostMapping("/search")
-    public Page<ProductResponse> search(@RequestBody ProductSearchRequest request) {
-        return productService.search(request);
+    public ApiResponse<Page<ProductResponse>> search(@RequestBody ProductSearchRequest request) {
+        return ApiResponse.ok(productService.search(request));
     }
 }

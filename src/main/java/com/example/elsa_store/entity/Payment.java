@@ -1,6 +1,7 @@
 
 package com.example.elsa_store.entity;
 
+import com.example.elsa_store.constant.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,7 +28,7 @@ public class Payment extends BaseEntity {
     private Double amount;
 
     @Column(name = "status")
-    private Integer status;
+    private PaymentStatus status;
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;

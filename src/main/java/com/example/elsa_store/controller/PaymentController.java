@@ -55,12 +55,16 @@ public class PaymentController {
     }
 
     @GetMapping("/vn-pay-callback")
-    public ApiResponse<PaymentVnPayResponse> payCallbackHandler(HttpServletRequest request) {
+    public ApiResponse<String> payCallbackHandler(HttpServletRequest request) {
+
+        paymentService.handleVnPayCallback(request);
+
         String status = request.getParameter("vnp_ResponseCode");
-        if (status.equals("00")) {
-            return ApiResponse.ok(new PaymentVnPayResponse("00", "Success", ""));
+
+        if ("00".equals(status)) {
+            return ApiResponse.ok("Thanh toán thành công");
         } else {
-            return ApiResponse.fail("Failed", Integer.parseInt(status));
+            return ApiResponse.fail("Thanh toán thất bại", Integer.parseInt(status));
         }
     }
 }

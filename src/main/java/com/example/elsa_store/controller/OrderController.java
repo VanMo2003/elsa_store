@@ -1,6 +1,8 @@
 
 package com.example.elsa_store.controller;
 
+import com.example.elsa_store.constant.OrderStatus;
+import com.example.elsa_store.constant.PaymentStatus;
 import com.example.elsa_store.dto.request.OrderRequest;
 import com.example.elsa_store.dto.response.OrderResponse;
 import com.example.elsa_store.service.OrderService;
@@ -28,6 +30,22 @@ public class OrderController {
     @GetMapping("/{id}")
     public ApiResponse<OrderResponse> getById(@PathVariable Long id) {
         return ApiResponse.ok(orderService.getById(id));
+    }
+
+    @PutMapping("/{orderId}/status")
+    public OrderResponse updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestParam OrderStatus status
+    ) {
+        return orderService.updateStatus(orderId, status);
+    }
+
+    @PutMapping("/{orderId}/payment-status")
+    public OrderResponse updatePaymentStatus(
+            @PathVariable Long orderId,
+            @RequestParam PaymentStatus paymentStatus
+    ) {
+        return orderService.updatePaymentStatus(orderId, paymentStatus);
     }
 
     @GetMapping

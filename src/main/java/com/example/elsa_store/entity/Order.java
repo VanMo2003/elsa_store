@@ -1,6 +1,8 @@
 
 package com.example.elsa_store.entity;
 
+import com.example.elsa_store.constant.OrderStatus;
+import com.example.elsa_store.constant.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,8 +36,13 @@ public class Order extends BaseEntity {
     @Column(name = "order_date")
     private LocalDateTime orderDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private Integer status;
+    private OrderStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status")
+    private PaymentStatus paymentStatus;
 
     @Column(name = "total_amount")
     private Double totalAmount;

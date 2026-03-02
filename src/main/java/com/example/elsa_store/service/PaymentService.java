@@ -15,4 +15,5 @@ public interface PaymentService {
     PaymentResponse getById(Long id);
     List<PaymentResponse> getAll();
     PaymentVnPayResponse createVnPayPayment(HttpServletRequest request);
+    void handleVnPayCallback(HttpServletRequest request);
 }

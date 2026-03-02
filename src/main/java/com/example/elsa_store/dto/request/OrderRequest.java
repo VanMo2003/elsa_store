@@ -17,6 +17,7 @@ public class OrderRequest {
     private Long customerId;
     private Long userId;
     private Long addressId;
+    private Long paymentMethod;
 
     @NotNull
     private List<OrderItemRequest> items;

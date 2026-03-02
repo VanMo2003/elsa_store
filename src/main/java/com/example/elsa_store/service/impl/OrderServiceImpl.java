@@ -2,6 +2,7 @@
 package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.constant.OrderStatus;
+import com.example.elsa_store.constant.PaymentStatus;
 import com.example.elsa_store.dto.request.OrderRequest;
 import com.example.elsa_store.dto.response.OrderResponse;
 import com.example.elsa_store.entity.*;
@@ -42,7 +43,13 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setCode("ORD-" + System.currentTimeMillis());
         order.setOrderDate(LocalDateTime.now());
-        order.setStatus(OrderStatus.NEW.ordinal());
+        order.setStatus(OrderStatus.CHUA_XAC_NHAN);
+
+        if ("COD".equalsIgnoreCase(String.valueOf(request.getPaymentMethod()))) {
+            order.setPaymentStatus(PaymentStatus.CHUA_THANH_TOAN);
+        } else {
+            order.setPaymentStatus(PaymentStatus.CHO_THANH_TOAN);
+        }
 
         if (request.getUserId() != null) {
             User user = userRepository.findById(request.getUserId())
@@ -120,6 +127,38 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.deleteById(id);
     }
 
+    @Override
+    public OrderResponse updateStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        PaymentStatus paymentStatus = order.getPaymentStatus();
+
+        if (status == OrderStatus.HOAN_THANH
+                && paymentStatus != PaymentStatus.DA_THANH_TOAN
+                && paymentStatus != PaymentStatus.CHUA_THANH_TOAN) {
+            throw new RuntimeException("Không thể hoàn thành khi chưa thanh toán");
+        }
+
+        if (status == OrderStatus.DA_HUY
+                && paymentStatus == PaymentStatus.DA_THANH_TOAN) {
+            throw new RuntimeException("Không thể hủy đơn đã thanh toán");
+        }
+
+        order.setStatus(status);
+        return toResponse(orderRepository.save(order));
+    }
+
+    @Override
+    public OrderResponse updatePaymentStatus(Long orderId, PaymentStatus paymentStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        order.setPaymentStatus(paymentStatus);
+
+        return toResponse(orderRepository.save(order));
+    }
+
     private OrderResponse toResponse(Order order) {
         OrderResponse res = new OrderResponse();
         res.setId(order.getId());
@@ -128,6 +167,7 @@ public class OrderServiceImpl implements OrderService {
         res.setTotalAmount(order.getTotalAmount());
         res.setFinalAmount(order.getFinalAmount());
         res.setStatus(order.getStatus());
+        res.setPaymentStatus(order.getPaymentStatus());
 
         List<OrderResponse.OrderItemResponse> itemResponses = new ArrayList<>();
         if (order.getItems() != null) {

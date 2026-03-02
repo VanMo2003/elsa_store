@@ -1,6 +1,8 @@
 
 package com.example.elsa_store.dto.response;
 
+import com.example.elsa_store.constant.PaymentStatus;
+
 import java.time.LocalDateTime;
 
 public class PaymentResponse {
@@ -9,7 +11,7 @@ public class PaymentResponse {
     private Long orderId;
     private String paymentMethod;
     private Double amount;
-    private Integer status;
+    private PaymentStatus status;
     private LocalDateTime paidAt;
     private String transactionCode;
 
@@ -29,9 +31,9 @@ public class PaymentResponse {
 
     public void setAmount(Double amount) { this.amount = amount; }
 
-    public Integer getStatus() { return status; }
+    public PaymentStatus getStatus() { return status; }
 
-    public void setStatus(Integer status) { this.status = status; }
+    public void setStatus(PaymentStatus status) { this.status = status; }
 
     public LocalDateTime getPaidAt() { return paidAt; }
 

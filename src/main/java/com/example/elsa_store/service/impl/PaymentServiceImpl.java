@@ -2,6 +2,8 @@
 package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.config.VNPayConfig;
+import com.example.elsa_store.constant.OrderStatus;
+import com.example.elsa_store.constant.PaymentStatus;
 import com.example.elsa_store.dto.request.PaymentRequest;
 import com.example.elsa_store.dto.response.PaymentResponse;
 import com.example.elsa_store.dto.response.PaymentVnPayResponse;
@@ -80,24 +82,88 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentVnPayResponse createVnPayPayment(HttpServletRequest request) {
-        long amount = Integer.parseInt(request.getParameter("amount")) * 100L;
+        String orderIdStr = request.getParameter("orderId");
+
+        if (orderIdStr == null || orderIdStr.isEmpty()) {
+            throw new RuntimeException("orderId is required");
+        }
+
+        Long orderId = Long.parseLong(orderIdStr);
+
+        // 🔥 Lấy order từ DB để tránh sửa tiền từ FE
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        // VNPay yêu cầu nhân 100
+        long amount = order.getFinalAmount().longValue() * 100L;
+
         String bankCode = request.getParameter("bankCode");
+
         Map<String, String> vnpParamsMap = vnPayConfig.getVNPayConfig();
+
         vnpParamsMap.put("vnp_Amount", String.valueOf(amount));
+
+        // 🔥 BẮT BUỘC
+        vnpParamsMap.put("vnp_TxnRef", String.valueOf(orderId));
+
         if (bankCode != null && !bankCode.isEmpty()) {
             vnpParamsMap.put("vnp_BankCode", bankCode);
         }
+
         vnpParamsMap.put("vnp_IpAddr", VNPayUtil.getIpAddress(request));
+
         // build query url
         String queryUrl = VNPayUtil.getPaymentURL(vnpParamsMap, true);
         String hashData = VNPayUtil.getPaymentURL(vnpParamsMap, false);
         String vnpSecureHash = VNPayUtil.hmacSHA512(vnPayConfig.getSecretKey(), hashData);
+
         queryUrl += "&vnp_SecureHash=" + vnpSecureHash;
+
         String paymentUrl = vnPayConfig.getVnp_PayUrl() + "?" + queryUrl;
+
         return PaymentVnPayResponse.builder()
-                .code("oke")
+                .code("00")
                 .message("success")
                 .paymentUrl(paymentUrl)
                 .build();
+    }
+
+    @Override
+    public void handleVnPayCallback(HttpServletRequest request) {
+
+        String responseCode = request.getParameter("vnp_ResponseCode");
+        String txnRef = request.getParameter("vnp_TxnRef");
+        // vnp_TxnRef nên lưu orderId khi tạo thanh toán
+
+        if (txnRef == null) {
+            throw new RuntimeException("Missing order reference");
+        }
+
+        Long orderId = Long.parseLong(txnRef);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+//        Payment payment = paymentRepository.findTopByOrder_IdOrderByIdDesc(orderId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if ("00".equals(responseCode)) {
+            // Thanh toán thành công
+
+//            payment.setStatus(PaymentStatus.DA_THANH_TOAN);
+            order.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
+
+            // Auto xác nhận đơn nếu online payment
+            if (order.getStatus() == OrderStatus.CHUA_XAC_NHAN) {
+                order.setStatus(OrderStatus.DA_XAC_NHAN);
+            }
+
+        } else {
+//            payment.setStatus(PaymentStatus.THAT_BAI);
+            order.setPaymentStatus(PaymentStatus.THAT_BAI);
+        }
+
+//        paymentRepository.save(payment);
+        orderRepository.save(order);
     }
 }

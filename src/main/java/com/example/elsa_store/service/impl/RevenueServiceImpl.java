@@ -30,7 +30,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     private List<Integer> normalizeStatuses(List<Integer> statuses) {
         if (statuses == null || statuses.isEmpty()) {
-            return List.of(OrderStatus.COMPLETED.ordinal());
+            return List.of(OrderStatus.HOAN_THANH.ordinal());
         }
         return statuses;
     }

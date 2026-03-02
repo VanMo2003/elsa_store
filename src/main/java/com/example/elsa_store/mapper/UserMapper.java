@@ -21,13 +21,21 @@ public class UserMapper {
     }
 
     public static void update(User u, UserRequest req) {
-        u.setUsername(req.getUsername());
+        if (req.getUsername() != null) {
+            u.setUsername(req.getUsername());
+        }
         if (req.getPassword() != null) {
             u.setPassword(req.getPassword());
         }
-        u.setEmail(req.getEmail());
-        u.setPhone(req.getPhone());
-        u.setFullName(req.getFullName());
+        if (req.getEmail() != null) {
+            u.setEmail(req.getEmail());
+        }
+        if (req.getPhone() != null) {
+            u.setPhone(req.getPhone());
+        }
+        if (req.getFullName() != null) {
+            u.setFullName(req.getFullName());
+        }
         if (req.getEnabled() != null) {
             u.setEnabled(req.getEnabled());
         }

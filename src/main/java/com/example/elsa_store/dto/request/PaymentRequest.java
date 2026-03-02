@@ -1,6 +1,7 @@
 
 package com.example.elsa_store.dto.request;
 
+import com.example.elsa_store.constant.PaymentStatus;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
@@ -12,7 +13,7 @@ public class PaymentRequest {
 
     private String paymentMethod;
     private Double amount;
-    private Integer status;
+    private PaymentStatus status;
     private LocalDateTime paidAt;
     private String transactionCode;
 
@@ -28,9 +29,9 @@ public class PaymentRequest {
 
     public void setAmount(Double amount) { this.amount = amount; }
 
-    public Integer getStatus() { return status; }
+    public PaymentStatus getStatus() { return status; }
 
-    public void setStatus(Integer status) { this.status = status; }
+    public void setStatus(PaymentStatus status) { this.status = status; }
 
     public LocalDateTime getPaidAt() { return paidAt; }
 

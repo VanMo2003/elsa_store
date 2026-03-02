@@ -2,6 +2,9 @@
 package com.example.elsa_store.dto.response;
 
 
+import com.example.elsa_store.constant.OrderStatus;
+import com.example.elsa_store.constant.PaymentStatus;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,7 +15,8 @@ public class OrderResponse {
     private LocalDateTime orderDate;
     private Double totalAmount;
     private Double finalAmount;
-    private Integer status;
+    private OrderStatus status;
+    private PaymentStatus paymentStatus;
     private List<OrderItemResponse> items;
 
     public Long getId() { return id; }
@@ -35,9 +39,13 @@ public class OrderResponse {
 
     public void setFinalAmount(Double finalAmount) { this.finalAmount = finalAmount; }
 
-    public Integer getStatus() { return status; }
+    public OrderStatus getStatus() { return status; }
 
-    public void setStatus(Integer status) { this.status = status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
+
+    public PaymentStatus getPaymentStatus() { return paymentStatus; }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
 
     public List<OrderItemResponse> getItems() { return items; }
 

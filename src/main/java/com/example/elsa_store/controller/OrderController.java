@@ -33,11 +33,25 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
-    public OrderResponse updateOrderStatus(
+    public ApiResponse<OrderResponse> updateOrderStatus(
             @PathVariable Long orderId,
-            @RequestParam OrderStatus status
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) PaymentStatus paymentStatus
     ) {
-        return orderService.updateStatus(orderId, status);
+        if (status == null && paymentStatus == null) {
+            throw new IllegalArgumentException("Bạn phải truyền status hoặc paymentStatus");
+        }
+
+        if (status != null && paymentStatus != null) {
+            throw new IllegalArgumentException("Chỉ được truyền 1 trong 2: status hoặc paymentStatus");
+        }
+
+        OrderResponse orderResponse =
+                (status != null)
+                        ? orderService.updateStatus(orderId, status)
+                        : orderService.updatePaymentStatus(orderId, paymentStatus);
+
+        return ApiResponse.ok(orderResponse);
     }
 
     @PutMapping("/{orderId}/payment-status")

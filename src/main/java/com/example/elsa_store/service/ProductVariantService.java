@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface ProductVariantService {
-    ProductVariantResponse create(ProductVariantRequest req);
+    ProductVariantResponse create(ProductVariantRequest req, List<MultipartFile> files);
     ProductVariantResponse update(Long id, ProductVariantRequest req);
     void delete(Long id);
     ProductVariantDetailResponse getById(Long id);

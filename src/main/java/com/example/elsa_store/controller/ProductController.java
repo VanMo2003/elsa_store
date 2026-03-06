@@ -26,13 +26,16 @@ public class ProductController {
     }
 
     @PostMapping
-    public ApiResponse<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
-        return ApiResponse.ok(productService.create(request));
+    public ApiResponse<ProductResponse> create(
+            @Valid @RequestPart("data") ProductRequest request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ) {
+        return ApiResponse.ok(productService.create(request, files));
     }
 
     @PutMapping("/{id}")
     public ApiResponse<ProductResponse> update(@PathVariable Long id,
-                                                  @Valid @RequestBody ProductRequest request) {
+                                               @Valid @RequestBody ProductRequest request) {
         return ApiResponse.ok(productService.update(id, request));
     }
 

@@ -24,8 +24,12 @@ public class ProductVariantController {
     }
 
     @PostMapping
-    public ApiResponse<ProductVariantResponse> create(@Valid @RequestBody ProductVariantRequest req) {
-        return ApiResponse.ok(productVariantService.create(req));
+    public ApiResponse<ProductVariantResponse> create(
+            @Valid @RequestPart("data") ProductVariantRequest req,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ) {
+        return ApiResponse.ok(productVariantService.create(req, files));
+
     }
 
     @PutMapping("/{id}")

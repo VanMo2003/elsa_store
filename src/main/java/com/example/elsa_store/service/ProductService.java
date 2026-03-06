@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface ProductService {
-    ProductResponse create(ProductRequest request);
+    ProductResponse create(ProductRequest request, List<MultipartFile> files);
     ProductResponse update(Long id, ProductRequest request);
     void delete(Long id);
     ProductDetailResponse getById(Long id);

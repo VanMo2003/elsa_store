@@ -49,7 +49,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse create(ProductRequest request) {
+    public ProductResponse create(ProductRequest request, List<MultipartFile> files) {
         Category category = null;
         if (request.getCategoryId() != null) {
             category = categoryRepository.findById(request.getCategoryId())
@@ -57,6 +57,28 @@ public class ProductServiceImpl implements ProductService {
         }
         Product product = ProductMapper.toEntity(request, category);
         product = productRepository.save(product);
+
+        if (files != null && !files.isEmpty()) {
+            List<String> urls = files.stream()
+                    .map(fileStorageService::uploadHotelImage)
+                    .toList();
+
+            Product findProduct = product;
+            List<ProductImage> images = urls.stream()
+                    .map(url -> ProductImage.builder()
+                            .imageUrl(url)
+                            .product(findProduct)
+                            .build())
+                    .toList();
+
+            productImageRepository.saveAll(images);
+
+            if (product.getImageUrl() == null || product.getImageUrl().isBlank()) {
+                product.setImageUrl(urls.getFirst());
+                productRepository.save(product);
+            }
+        }
+
         return ProductMapper.toResponse(product);
     }
 

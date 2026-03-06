@@ -42,12 +42,34 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     }
 
     @Override
-    public ProductVariantResponse create(ProductVariantRequest req) {
+    public ProductVariantResponse create(ProductVariantRequest req, List<MultipartFile> files) {
         Product product = productRepository.findById(req.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        ProductVariant v = ProductVariantMapper.toEntity(req, product);
-        v = variantRepository.save(v);
-        return ProductVariantMapper.toResponse(v);
+        ProductVariant productVariant = ProductVariantMapper.toEntity(req, product);
+        productVariant = variantRepository.save(productVariant);
+
+        if (files != null && !files.isEmpty()) {
+            List<String> urls = files.stream()
+                    .map(fileStorageService::uploadHotelImage)
+                    .toList();
+
+            ProductVariant finalProductVariant = productVariant;
+            List<ProductVariantImage> images = urls.stream()
+                    .map(url -> ProductVariantImage.builder()
+                            .imageUrl(url)
+                            .productVariant(finalProductVariant)
+                            .build())
+                    .toList();
+
+            productVariantImageRepository.saveAll(images);
+
+            if (productVariant.getImageUrl() == null || productVariant.getImageUrl().isBlank()) {
+                productVariant.setImageUrl(urls.getFirst());
+                productVariantRepository.save(productVariant);
+            }
+        }
+
+        return ProductVariantMapper.toResponse(productVariant);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.example.elsa_store.repository;
 
+import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.entity.Order;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +11,16 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findAllByUser_Id(Long userId);
+    long countByStatus(OrderStatus status);
+
+    @Query("""
+        SELECT COALESCE(SUM(o.finalAmount),0)
+        FROM Order o
+        WHERE o.orderDate >= :start
+        AND o.orderDate < :end
+        AND o.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+    """)
+    Double revenueBetween(LocalDateTime start, LocalDateTime end);
 
     @Query("""
         select

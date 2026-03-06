@@ -131,6 +131,33 @@ public class RevenueServiceImpl implements RevenueService {
         return result;
     }
 
+    @Override
+    public DashboardResponse getDashboard() {
+
+        LocalDate today = LocalDate.now();
+
+        LocalDateTime startOfToday = today.atStartOfDay();
+        LocalDateTime startOfTomorrow = today.plusDays(1).atStartOfDay();
+
+        LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime startOfNextMonth = today.plusMonths(1).withDayOfMonth(1).atStartOfDay();
+
+        Double todayRevenue = orderRepository.revenueBetween(startOfToday, startOfTomorrow);
+
+        Double monthRevenue = orderRepository.revenueBetween(startOfMonth, startOfNextMonth);
+
+        long processing = orderRepository.countByStatus(OrderStatus.CHUA_XAC_NHAN);
+
+        long completed = orderRepository.countByStatus(OrderStatus.HOAN_THANH);
+
+        return DashboardResponse.builder()
+                .todayRevenue(todayRevenue)
+                .monthRevenue(monthRevenue)
+                .processingOrders(processing)
+                .completedOrders(completed)
+                .build();
+    }
+
     private String toDayString(Object raw) {
         if (raw == null) return null;
         if (raw instanceof Date d) return d.toLocalDate().toString();

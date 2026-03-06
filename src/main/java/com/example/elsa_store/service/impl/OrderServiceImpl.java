@@ -45,7 +45,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderDate(LocalDateTime.now());
         order.setStatus(OrderStatus.CHUA_XAC_NHAN);
 
-        if ("COD".equalsIgnoreCase(String.valueOf(request.getPaymentMethod()))) {
+        if (request.getPaymentMethod() == 0) {
             order.setPaymentStatus(PaymentStatus.CHUA_THANH_TOAN);
         } else {
             order.setPaymentStatus(PaymentStatus.CHO_THANH_TOAN);

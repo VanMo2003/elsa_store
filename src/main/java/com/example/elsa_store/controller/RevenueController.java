@@ -50,4 +50,9 @@ public class RevenueController {
     ) {
         return ApiResponse.ok(revenueService.getTopProducts(from.atStartOfDay(), to.plusDays(1).atStartOfDay(), statuses, limit));
     }
+
+    @GetMapping("/dashboard")
+    public ApiResponse<DashboardResponse> dashboard() {
+        return ApiResponse.ok(revenueService.getDashboard());
+    }
 }

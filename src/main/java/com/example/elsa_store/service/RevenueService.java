@@ -13,4 +13,6 @@ public interface RevenueService {
     RevenueTimeSeriesResponse getTimeSeries(LocalDateTime from, LocalDateTime to, RevenueGroupBy groupBy, List<Integer> statuses);
 
     List<ProductRevenueResponse> getTopProducts(LocalDateTime from, LocalDateTime to, List<Integer> statuses, int limit);
+
+    DashboardResponse getDashboard();
 }

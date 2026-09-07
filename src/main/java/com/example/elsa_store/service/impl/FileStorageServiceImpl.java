@@ -19,12 +19,12 @@ public class FileStorageServiceImpl implements FileStorageService {
     public String uploadHotelImage(MultipartFile file) {
         try {
             String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path path = Paths.get(uploadDir + "hotels/" + fileName);
+            Path path = Paths.get(uploadDir + "products/" + fileName);
 
             Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());
 
-            return "/uploads/hotels/" + fileName;
+            return "/" + uploadDir + "products/" + fileName;
         } catch (Exception e) {
             throw new RuntimeException("Upload failed: " + e.getMessage());
         }

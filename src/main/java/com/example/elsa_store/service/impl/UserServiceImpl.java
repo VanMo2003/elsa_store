@@ -6,6 +6,8 @@ import com.example.elsa_store.dto.response.UserResponse;
 import com.example.elsa_store.entity.User;
 import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.mapper.UserMapper;
+import com.example.elsa_store.repository.DeviceTokenRepository;
+import com.example.elsa_store.repository.NotificationRepository;
 import com.example.elsa_store.repository.UserRepository;
 import com.example.elsa_store.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationRepository notificationRepository;
+    private final DeviceTokenRepository deviceTokenRepository;
 
 
     @Override
@@ -49,6 +53,9 @@ public class UserServiceImpl implements UserService {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User not found");
         }
+        // Thông báo và token thiết bị tham chiếu tới user nên phải xoá trước.
+        notificationRepository.deleteAllByUserId(id);
+        deviceTokenRepository.deleteAllByUserId(id);
         userRepository.deleteById(id);
     }
 

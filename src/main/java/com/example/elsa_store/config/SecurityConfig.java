@@ -28,7 +28,8 @@ public class SecurityConfig {
     @Value("${jwt.signer-key}")
     private String SIGNER_KEY;
 
-    private final String[] PUBLIC_ENDPOINT_GET = {"/user/checkExistUser/{}", "/storage/{}"};
+    // "/app-links/*": trang chuyển link trong email sang deep link elsastore:// của app (không cần đăng nhập).
+    private final String[] PUBLIC_ENDPOINT_GET = {"/user/checkExistUser/{}", "/storage/{}", "/app-links/*"};
     private final String[] PUBLIC_ENDPOINT_POST = {
         "/users", "/auth/login", "/auth/introspect", "/auth/refreshToken", "/storage/upload"
     };

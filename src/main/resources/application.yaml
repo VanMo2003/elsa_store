@@ -13,6 +13,19 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+  # Email đơn hàng / thanh toán. Để trống MAIL_USERNAME thì chỉ ghi log, không gửi.
+  # Gmail: MAIL_USERNAME = địa chỉ Gmail, MAIL_PASSWORD = App Password 16 ký tự.
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      "[mail.smtp.auth]": ${MAIL_SMTP_AUTH:true}
+      "[mail.smtp.starttls.enable]": ${MAIL_SMTP_STARTTLS:true}
+      "[mail.smtp.connectiontimeout]": 10000
+      "[mail.smtp.timeout]": 10000
+      "[mail.smtp.writetimeout]": 10000
 jwt:
   signer-key: "6lhXE9HRxzm7EyIVWdl0XPx9eoGdgXm8VNfpaBQ1dUDpZF6NcF8z4fDAO15JFAdF"
   valid-duration: 3600 # 1 tiếng
@@ -21,6 +34,17 @@ jwt:
 
 file:
   upload-dir: uploads/
+
+app:
+  # Địa chỉ API mà điện thoại mở được; nút "Mở ứng dụng" trong email trỏ tới {public-url}/app-links/...
+  public-url: ${APP_PUBLIC_URL:http://localhost:8080/elsa-store/api}
+  mail:
+    from: ${MAIL_FROM:}
+
+firebase:
+  # File JSON service account của Firebase (Project settings > Service accounts). Để trống thì chỉ có
+  # thông báo trong app, không gửi push.
+  credentials-path: ${FIREBASE_CREDENTIALS:}
 
 vnpay:
   tmnCode : "KUHZ6TQJ"

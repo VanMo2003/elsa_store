@@ -1,0 +1,169 @@
+package com.example.elsa_store.service.impl;
+
+import com.example.elsa_store.constant.NotificationType;
+import com.example.elsa_store.constant.OrderStatus;
+import com.example.elsa_store.constant.PaymentStatus;
+import com.example.elsa_store.entity.Customer;
+import com.example.elsa_store.entity.Order;
+import com.example.elsa_store.entity.OrderItem;
+import com.example.elsa_store.entity.Product;
+import com.example.elsa_store.entity.ProductVariant;
+import com.example.elsa_store.entity.User;
+import com.example.elsa_store.event.OrderMailEvent;
+import com.example.elsa_store.service.NotificationService;
+import com.example.elsa_store.utils.AppLinks;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+
+class OrderNotificationServiceImplTest {
+
+    private final NotificationService notifications = mock(NotificationService.class);
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+    private final OrderNotificationServiceImpl service = new OrderNotificationServiceImpl(notifications, events);
+
+    private static User user(String name, String email) {
+        User user = User.builder().username(name).email(email).fullName("Nguyễn Văn " + name).build();
+        user.setId(7L);
+        return user;
+    }
+
+    private static Order order(User buyer) {
+        Product product = Product.builder().name("Giày Samba OG").build();
+        ProductVariant variant =
+                ProductVariant.builder().product(product).color("Trắng").size("42").build();
+        OrderItem item = OrderItem.builder()
+                .productVariant(variant)
+                .quantity(2)
+                .unitPrice(600_000.0)
+                .lineTotal(1_200_000.0)
+                .build();
+        Order order = Order.builder()
+                .code("ORD-1")
+                .status(OrderStatus.CHUA_XAC_NHAN)
+                .paymentStatus(PaymentStatus.CHO_THANH_TOAN)
+                .finalAmount(1_200_000.0)
+                .items(List.of(item))
+                .build();
+        order.setId(99L);
+        order.setCustomer(Customer.builder().user(buyer).build());
+        return order;
+    }
+
+    private OrderMailEvent publishedMail() {
+        ArgumentCaptor<Object> published = ArgumentCaptor.forClass(Object.class);
+        verify(events).publishEvent(published.capture());
+        return (OrderMailEvent) published.getValue();
+    }
+
+    @Test
+    void placingAnOrderNotifiesTheCustomerAndTheStaff() {
+        User buyer = user("an", "an@example.com");
+
+        service.orderPlaced(order(buyer));
+
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.ORDER_PLACED), any(), eq(AppLinks.orders()), eq(99L));
+        verify(notifications)
+                .notifyStaff(eq(NotificationType.NEW_ORDER), any(), eq(AppLinks.orders()), eq(99L));
+        OrderMailEvent mail = publishedMail();
+        assertEquals(NotificationType.ORDER_PLACED, mail.type());
+        assertEquals("an@example.com", mail.email());
+        assertEquals("ORD-1", mail.orderCode());
+        assertEquals("Giày Samba OG (Trắng, size 42)", mail.items().get(0).name());
+    }
+
+    @Test
+    void ordersWithoutACustomerFallBackToTheOrderCreator() {
+        User creator = user("bao", "bao@example.com");
+        Order order = order(null);
+        order.setCustomer(null);
+        order.setUser(creator);
+
+        service.orderPlaced(order);
+
+        verify(notifications).notify(eq(creator), eq(NotificationType.ORDER_PLACED), any(), anyString(), anyLong());
+    }
+
+    @Test
+    void statusChangesNotifyOnlyOnTheMilestonesCustomersCareAbout() {
+        User buyer = user("an", "an@example.com");
+        Order order = order(buyer);
+
+        order.setStatus(OrderStatus.DA_XAC_NHAN);
+        service.statusChanged(order, OrderStatus.CHUA_XAC_NHAN);
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.ORDER_CONFIRMED), any(), anyString(), anyLong());
+
+        order.setStatus(OrderStatus.DA_HUY);
+        service.statusChanged(order, OrderStatus.DA_XAC_NHAN);
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.ORDER_CANCELLED), any(), anyString(), anyLong());
+
+        order.setStatus(OrderStatus.HOAN_THANH);
+        service.statusChanged(order, OrderStatus.DA_XAC_NHAN);
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.ORDER_COMPLETED), any(), anyString(), anyLong());
+    }
+
+    @Test
+    void anUnchangedStatusIsNotNotifiedAgain() {
+        Order order = order(user("an", "an@example.com"));
+        order.setStatus(OrderStatus.DA_XAC_NHAN);
+
+        service.statusChanged(order, OrderStatus.DA_XAC_NHAN);
+
+        verifyNoInteractions(notifications, events);
+    }
+
+    @Test
+    void paymentChangesNotifyOnlyOnSuccessOrFailure() {
+        User buyer = user("an", "an@example.com");
+        Order order = order(buyer);
+
+        order.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
+        service.paymentChanged(order, PaymentStatus.CHO_THANH_TOAN);
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.PAYMENT_SUCCESS), any(), anyString(), anyLong());
+
+        order.setPaymentStatus(PaymentStatus.THAT_BAI);
+        service.paymentChanged(order, PaymentStatus.CHO_THANH_TOAN);
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.PAYMENT_FAILED), any(), anyString(), anyLong());
+    }
+
+    @Test
+    void aRepeatedVnPayCallbackDoesNotSendTheSameNewsTwice() {
+        Order order = order(user("an", "an@example.com"));
+        order.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
+
+        // VNPay gọi lại khi đơn đã ở trạng thái đã thanh toán.
+        service.paymentChanged(order, PaymentStatus.DA_THANH_TOAN);
+
+        verifyNoInteractions(notifications, events);
+    }
+
+    @Test
+    void movingBackToPendingPaymentSendsNothing() {
+        Order order = order(user("an", "an@example.com"));
+        order.setPaymentStatus(PaymentStatus.CHO_THANH_TOAN);
+
+        service.paymentChanged(order, PaymentStatus.CHUA_THANH_TOAN);
+
+        verify(notifications, never()).notify(any(), any(), any(), any(), any());
+        assertSame(PaymentStatus.CHO_THANH_TOAN, order.getPaymentStatus());
+    }
+}

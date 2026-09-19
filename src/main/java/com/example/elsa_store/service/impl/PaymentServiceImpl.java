@@ -13,6 +13,7 @@ import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.mapper.PaymentMapper;
 import com.example.elsa_store.repository.OrderRepository;
 import com.example.elsa_store.repository.PaymentRepository;
+import com.example.elsa_store.service.OrderNotificationService;
 import com.example.elsa_store.service.PaymentService;
 import com.example.elsa_store.utils.VNPayUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,12 +30,15 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final VNPayConfig vnPayConfig;
+    private final OrderNotificationService orderNotificationService;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
-                              OrderRepository orderRepository, VNPayConfig vnPayConfig) {
+                              OrderRepository orderRepository, VNPayConfig vnPayConfig,
+                              OrderNotificationService orderNotificationService) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.vnPayConfig = vnPayConfig;
+        this.orderNotificationService = orderNotificationService;
     }
 
     @Override
@@ -147,6 +151,8 @@ public class PaymentServiceImpl implements PaymentService {
 //        Payment payment = paymentRepository.findTopByOrder_IdOrderByIdDesc(orderId)
 //                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
+        PaymentStatus previousPaymentStatus = order.getPaymentStatus();
+
         if ("00".equals(responseCode)) {
             // Thanh toán thành công
 
@@ -165,5 +171,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 //        paymentRepository.save(payment);
         orderRepository.save(order);
+        // Chỉ báo khi trạng thái thanh toán thật sự đổi, để VNPay gọi lại nhiều lần không gửi trùng thông báo/email.
+        orderNotificationService.paymentChanged(order, previousPaymentStatus);
     }
 }

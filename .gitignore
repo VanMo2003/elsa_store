@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secrets (cấu hình riêng theo từng người chạy — xem README) ###
+.env*
+!.env.example
+secrets/
+*service-account*.json

@@ -8,6 +8,7 @@ import com.example.elsa_store.dto.response.OrderResponse;
 import com.example.elsa_store.entity.*;
 import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.repository.*;
+import com.example.elsa_store.service.OrderNotificationService;
 import com.example.elsa_store.service.OrderService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,16 +26,19 @@ public class OrderServiceImpl implements OrderService {
     private final AddressRepository addressRepository;
     private final ProductVariantRepository productVariantRepository;
     private final UserRepository userRepository;
+    private final OrderNotificationService orderNotificationService;
 
     public OrderServiceImpl(OrderRepository orderRepository,
                             CustomerRepository customerRepository,
                             AddressRepository addressRepository,
-                            ProductVariantRepository productVariantRepository, UserRepository userRepository) {
+                            ProductVariantRepository productVariantRepository, UserRepository userRepository,
+                            OrderNotificationService orderNotificationService) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.addressRepository = addressRepository;
         this.productVariantRepository = productVariantRepository;
         this.userRepository = userRepository;
+        this.orderNotificationService = orderNotificationService;
     }
 
     @Override
@@ -92,6 +96,7 @@ public class OrderServiceImpl implements OrderService {
         order.setFinalAmount(total);
 
         order = orderRepository.save(order);
+        orderNotificationService.orderPlaced(order);
         return toResponse(order);
     }
 
@@ -145,8 +150,11 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Không thể hủy đơn đã thanh toán");
         }
 
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(status);
-        return toResponse(orderRepository.save(order));
+        order = orderRepository.save(order);
+        orderNotificationService.statusChanged(order, previousStatus);
+        return toResponse(order);
     }
 
     @Override
@@ -154,9 +162,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
+        PaymentStatus previousPaymentStatus = order.getPaymentStatus();
         order.setPaymentStatus(paymentStatus);
 
-        return toResponse(orderRepository.save(order));
+        order = orderRepository.save(order);
+        orderNotificationService.paymentChanged(order, previousPaymentStatus);
+        return toResponse(order);
     }
 
     private OrderResponse toResponse(Order order) {

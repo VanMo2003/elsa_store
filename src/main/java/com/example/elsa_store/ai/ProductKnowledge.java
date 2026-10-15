@@ -206,6 +206,7 @@ public class ProductKnowledge {
         return switch (order.getStatus()) {
             case CHUA_XAC_NHAN -> "CHỜ CỬA HÀNG XÁC NHẬN";
             case DA_XAC_NHAN -> "ĐÃ XÁC NHẬN";
+            case DANG_GIAO -> "ĐANG GIAO HÀNG";
             case HOAN_THANH -> "HOÀN THÀNH";
             case DA_HUY -> "ĐÃ HUỶ";
         };

@@ -28,8 +28,8 @@ import java.util.*;
  * mình (kèm khách hàng nếu có). Mỗi đơn thuộc đúng một cửa hàng. Xoá đơn: chỉ chủ và quản lý. ADMIN chỉ xem.
  *
  * <p>Giá luôn tính lại ở máy chủ ({@link PricingService}); tồn kho trừ lúc đặt và hoàn lại khi đơn bị huỷ
- * ({@link StockService}). Trạng thái chỉ đi theo {@link #NEXT}: chờ xác nhận → đã xác nhận → hoàn thành, huỷ được khi
- * chưa hoàn thành.
+ * ({@link StockService}). Trạng thái chỉ đi theo {@link #NEXT}: chờ xác nhận → đã xác nhận → (đang giao) → hoàn thành,
+ * huỷ được khi chưa hoàn thành. Mỗi lần đổi để lại một mốc trong {@link OrderTimeline}.
  */
 @Service
 @Transactional
@@ -39,11 +39,15 @@ public class OrderServiceImpl implements OrderService {
     static final String METHOD_VNPAY = "VNPAY";
     static final int MAX_LINES = 50;
     static final int MAX_QUANTITY_PER_LINE = 999;
+    static final int MAX_REASON_LENGTH = 255;
 
     /** Các bước chuyển trạng thái hợp lệ. */
     static final Map<OrderStatus, Set<OrderStatus>> NEXT = Map.of(
             OrderStatus.CHUA_XAC_NHAN, EnumSet.of(OrderStatus.DA_XAC_NHAN, OrderStatus.DA_HUY),
-            OrderStatus.DA_XAC_NHAN, EnumSet.of(OrderStatus.HOAN_THANH, OrderStatus.DA_HUY),
+            // Đơn bán tại quầy giao tay ngay nên được hoàn thành thẳng, không qua "đang giao".
+            OrderStatus.DA_XAC_NHAN, EnumSet.of(OrderStatus.DANG_GIAO, OrderStatus.HOAN_THANH, OrderStatus.DA_HUY),
+            // Giao không thành (khách không nhận, sai địa chỉ…) thì huỷ để hàng về kho.
+            OrderStatus.DANG_GIAO, EnumSet.of(OrderStatus.HOAN_THANH, OrderStatus.DA_HUY),
             OrderStatus.HOAN_THANH, EnumSet.noneOf(OrderStatus.class),
             OrderStatus.DA_HUY, EnumSet.noneOf(OrderStatus.class));
 
@@ -61,6 +65,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserAccountFactory accountFactory;
     private final PricingService pricingService;
     private final StockService stockService;
+    private final OrderTimeline timeline;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -72,7 +77,8 @@ public class OrderServiceImpl implements OrderService {
             AccessGuard accessGuard,
             UserAccountFactory accountFactory,
             PricingService pricingService,
-            StockService stockService) {
+            StockService stockService,
+            OrderTimeline timeline) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.addressRepository = addressRepository;
@@ -83,6 +89,7 @@ public class OrderServiceImpl implements OrderService {
         this.accountFactory = accountFactory;
         this.pricingService = pricingService;
         this.stockService = stockService;
+        this.timeline = timeline;
     }
 
     // ------------------------------------------------------------------ đặt đơn
@@ -160,12 +167,13 @@ public class OrderServiceImpl implements OrderService {
         order.setDiscountNote(quote.discountNote());
 
         order = orderRepository.save(order);
+        timeline.record(order, OrderStatus.CHUA_XAC_NHAN, current, null);
         stockService.recordSale(order, current);
         if (!counterSale && Boolean.TRUE.equals(request.getFromCart())) {
             removeFromCart(current.getId(), wanted.keySet());
         }
         orderNotificationService.orderPlaced(order);
-        return toResponse(order, viewer(current));
+        return toResponse(order, viewer(current), true);
     }
 
     @Override
@@ -353,7 +361,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getById(Long id) {
         Order order = find(id);
         authorize(order, Access.READ);
-        return toResponse(order, viewer(accessGuard.currentUser()));
+        return toResponse(order, viewer(accessGuard.currentUser()), true);
     }
 
     @Override
@@ -399,23 +407,31 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() != OrderStatus.HOAN_THANH && order.getStatus() != OrderStatus.DA_HUY) {
             stockService.releaseOrder(order, "Xoá đơn", accessGuard.currentUser());
         }
+        timeline.deleteFor(order);
         orderRepository.delete(order);
     }
 
     @Override
-    public OrderResponse updateStatus(Long orderId, OrderStatus status) {
+    public OrderResponse updateStatus(Long orderId, OrderStatus status, String reason) {
         if (status == null) {
             throw new AppException(ErrorCode.BAD_REQUEST, "status: must not be null");
+        }
+        String note = trimToNull(reason);
+        if (note != null && note.length() > MAX_REASON_LENGTH) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "reason: must be at most " + MAX_REASON_LENGTH + " characters");
         }
         Order order = find(orderId);
         User current = accessGuard.currentUser();
         if (current.getRole() == Role.USER) {
-            // Khách chỉ được huỷ đơn của mình khi cửa hàng chưa xác nhận (bấm huỷ lần nữa thì không đổi gì).
+            // Khách chỉ được huỷ đơn của mình khi cửa hàng chưa xác nhận, và xác nhận đã nhận hàng khi đơn đang giao
+            // (bấm lần nữa thì không đổi gì).
             boolean own = order.getUser() != null && order.getUser().getId().equals(current.getId());
-            if (own && status == OrderStatus.DA_HUY && order.getStatus() == OrderStatus.DA_HUY) {
-                return toResponse(order, viewer(current));
+            if (own && status == order.getStatus() && (status == OrderStatus.DA_HUY || status == OrderStatus.HOAN_THANH)) {
+                return toResponse(order, viewer(current), true);
             }
-            if (!own || status != OrderStatus.DA_HUY || order.getStatus() != OrderStatus.CHUA_XAC_NHAN) {
+            boolean cancel = status == OrderStatus.DA_HUY && order.getStatus() == OrderStatus.CHUA_XAC_NHAN;
+            boolean received = status == OrderStatus.HOAN_THANH && order.getStatus() == OrderStatus.DANG_GIAO;
+            if (!own || !(cancel || received)) {
                 throw new AppException(ErrorCode.UN_AUTHORIZED);
             }
         } else {
@@ -424,16 +440,16 @@ public class OrderServiceImpl implements OrderService {
 
         OrderStatus previousStatus = order.getStatus();
         if (previousStatus == status) {
-            return toResponse(order, viewer(current));
+            return toResponse(order, viewer(current), true);
         }
         if (previousStatus != null && !NEXT.getOrDefault(previousStatus, Set.of()).contains(status)) {
             throw new AppException(ErrorCode.INVALID_ORDER_TRANSITION);
         }
+        if (status == OrderStatus.DANG_GIAO && order.getShippingAddress() == null) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "Đơn không có địa chỉ giao hàng");
+        }
         PaymentStatus paymentStatus = order.getPaymentStatus();
-        if (status == OrderStatus.HOAN_THANH
-                && paymentStatus != PaymentStatus.DA_THANH_TOAN
-                && paymentStatus != PaymentStatus.CHUA_THANH_TOAN
-                && paymentStatus != null) {
+        if (status == OrderStatus.HOAN_THANH && !completable(paymentStatus)) {
             throw new AppException(ErrorCode.BAD_REQUEST, "Không thể hoàn thành khi chưa thanh toán");
         }
         if (status == OrderStatus.DA_HUY && paymentStatus == PaymentStatus.DA_THANH_TOAN) {
@@ -442,6 +458,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(status);
         if (status == OrderStatus.DA_HUY) {
+            order.setCancelReason(note);
             stockService.releaseOrder(order, "Huỷ đơn", current);
         }
         if (status == OrderStatus.HOAN_THANH) {
@@ -452,8 +469,14 @@ public class OrderServiceImpl implements OrderService {
             order.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
         }
         order = orderRepository.save(order);
-        orderNotificationService.statusChanged(order, previousStatus);
-        return toResponse(order, viewer(current));
+        timeline.record(order, status, current, note);
+        orderNotificationService.statusChanged(order, previousStatus, current);
+        return toResponse(order, viewer(current), true);
+    }
+
+    /** Hoàn thành được khi đã trả, hoặc trả khi nhận hàng (COD) chưa thu; VNPay đang chờ / lỗi thì chưa. */
+    private static boolean completable(PaymentStatus payment) {
+        return payment == null || payment == PaymentStatus.DA_THANH_TOAN || payment == PaymentStatus.CHUA_THANH_TOAN;
     }
 
     @Override
@@ -469,7 +492,7 @@ public class OrderServiceImpl implements OrderService {
 
         order = orderRepository.save(order);
         orderNotificationService.paymentChanged(order, previousPaymentStatus);
-        return toResponse(order, viewer(accessGuard.currentUser()));
+        return toResponse(order, viewer(accessGuard.currentUser()), true);
     }
 
     private Order find(Long id) {
@@ -519,11 +542,16 @@ public class OrderServiceImpl implements OrderService {
             return List.of();
         }
         User user = viewer.user();
+        PaymentStatus payment = order.getPaymentStatus();
         if (user.getRole() == Role.USER) {
             boolean own = order.getUser() != null && order.getUser().getId().equals(user.getId());
-            return own && status == OrderStatus.CHUA_XAC_NHAN && order.getPaymentStatus() != PaymentStatus.DA_THANH_TOAN
-                    ? List.of(OrderStatus.DA_HUY)
-                    : List.of();
+            if (own && status == OrderStatus.CHUA_XAC_NHAN && payment != PaymentStatus.DA_THANH_TOAN) {
+                return List.of(OrderStatus.DA_HUY);
+            }
+            if (own && status == OrderStatus.DANG_GIAO && completable(payment)) {
+                return List.of(OrderStatus.HOAN_THANH);
+            }
+            return List.of();
         }
         boolean ownStore = viewer.store() != null
                 && viewer.store().isApproved()
@@ -532,16 +560,16 @@ public class OrderServiceImpl implements OrderService {
         if (!user.getRole().isStoreRole() || !ownStore) {
             return List.of();
         }
-        PaymentStatus payment = order.getPaymentStatus();
         List<OrderStatus> result = new ArrayList<>();
-        for (OrderStatus next : List.of(OrderStatus.DA_XAC_NHAN, OrderStatus.HOAN_THANH, OrderStatus.DA_HUY)) {
+        for (OrderStatus next : List.of(
+                OrderStatus.DA_XAC_NHAN, OrderStatus.DANG_GIAO, OrderStatus.HOAN_THANH, OrderStatus.DA_HUY)) {
             if (!NEXT.getOrDefault(status, Set.of()).contains(next)) {
                 continue;
             }
-            if (next == OrderStatus.HOAN_THANH
-                    && payment != null
-                    && payment != PaymentStatus.DA_THANH_TOAN
-                    && payment != PaymentStatus.CHUA_THANH_TOAN) {
+            if (next == OrderStatus.DANG_GIAO && order.getShippingAddress() == null) {
+                continue;
+            }
+            if (next == OrderStatus.HOAN_THANH && !completable(payment)) {
                 continue;
             }
             if (next == OrderStatus.DA_HUY && payment == PaymentStatus.DA_THANH_TOAN) {
@@ -553,6 +581,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderResponse toResponse(Order order, Viewer viewer) {
+        return toResponse(order, viewer, false);
+    }
+
+    /** {@code withTimeline}: kèm dòng thời gian (một truy vấn) — chỉ dùng cho API một đơn. */
+    private OrderResponse toResponse(Order order, Viewer viewer, boolean withTimeline) {
         OrderResponse res = new OrderResponse();
         res.setId(order.getId());
         res.setCode(order.getCode());
@@ -609,6 +642,10 @@ public class OrderServiceImpl implements OrderService {
         }
         res.setItems(itemResponses);
         res.setAllowedNextStatuses(allowedNext(order, viewer));
+        res.setCancelReason(order.getCancelReason());
+        if (withTimeline && order.getId() != null) {
+            res.setTimeline(timeline.entries(order, viewer == null ? null : viewer.user()));
+        }
         return res;
     }
 

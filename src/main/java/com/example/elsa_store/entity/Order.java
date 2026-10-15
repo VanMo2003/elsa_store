@@ -5,6 +5,8 @@ import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.constant.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,9 +55,15 @@ public class Order extends BaseEntity {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    /** Lưu dạng chuỗi (không dùng kiểu enum của MySQL) để thêm trạng thái mới không phải sửa cột. */
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "status", length = 30)
     private OrderStatus status;
+
+    /** Lý do huỷ (khách hoặc cửa hàng nhập khi huỷ); trống với đơn chưa huỷ hoặc huỷ trước khi có cột này. */
+    @Column(name = "cancel_reason", length = 255)
+    private String cancelReason;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")

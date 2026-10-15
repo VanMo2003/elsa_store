@@ -17,7 +17,9 @@ import java.util.List;
  * <ol>
  *   <li>{@code users.role}: số thứ tự enum cũ (ADMIN, STAFF, WAREHOUSE, CUSTOMER) → tên vai trò mới, bỏ ràng buộc
  *       {@code check} kiểu số của Hibernate;</li>
- *   <li>{@code customers.user_id}: cho phép null (khách vãng lai do nhân viên tạo tại quầy).</li>
+ *   <li>{@code customers.user_id}: cho phép null (khách vãng lai do nhân viên tạo tại quầy);</li>
+ *   <li>{@code orders.status}, {@code notifications.type}: kiểu {@code enum} của MySQL → chuỗi, để thêm được trạng
+ *       thái / loại thông báo mới.</li>
  * </ol>
  *
  * Mỗi bước tự kiểm tra và bỏ qua khi CSDL đã mới hoặc chưa có bảng (chạy trên CSDL trống là không làm gì).
@@ -41,6 +43,25 @@ public class LegacySchemaMigration implements InitializingBean {
         } catch (Exception e) {
             log.error("Legacy schema migration failed - check users.role and customers.user_id manually", e);
         }
+        try {
+            enumColumnToVarchar("orders", "status", "varchar(30) null");
+            enumColumnToVarchar("notifications", "type", "varchar(40) not null");
+        } catch (Exception e) {
+            log.error("Cannot convert orders.status / notifications.type to varchar - new statuses will not save", e);
+        }
+    }
+
+    /**
+     * Hibernate 6 tạo cột {@code @Enumerated(STRING)} thành kiểu {@code enum(...)} của MySQL với đúng các giá trị lúc
+     * tạo bảng, và {@code ddl-auto=update} không bao giờ sửa lại — thêm trạng thái mới (DANG_GIAO, ORDER_SHIPPING) sẽ
+     * bị MySQL từ chối khi lưu. Đổi cột sang chuỗi giữ nguyên dữ liệu; entity cũng đã khai báo kiểu chuỗi cho CSDL mới.
+     */
+    private void enumColumnToVarchar(String table, String column, String definition) {
+        if (!"enum".equalsIgnoreCase(columnInfo(table, column, "data_type"))) {
+            return;
+        }
+        log.warn("{}.{} is a MySQL enum - converting to {}", table, column, definition);
+        jdbc.execute("alter table " + table + " modify " + column + " " + definition);
     }
 
     /**

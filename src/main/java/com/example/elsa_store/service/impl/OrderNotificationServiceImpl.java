@@ -39,23 +39,47 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
     }
 
     @Override
-    public void statusChanged(Order order, OrderStatus previous) {
+    public void statusChanged(Order order, OrderStatus previous, User actor) {
         OrderStatus status = order.getStatus();
         if (status == null || status == previous) {
             return;
         }
         User recipient = recipientOf(order);
+        boolean byBuyer = actor != null && recipient != null && actor.getId() != null
+                && actor.getId().equals(recipient.getId());
+        if (byBuyer) {
+            // Khách tự làm thì không báo lại cho khách; cửa hàng mới là người cần biết.
+            notifyStoreOfCustomerAction(order, status, customerNameOf(order, recipient));
+            return;
+        }
         if (recipient == null) {
             return;
         }
         switch (status) {
             case DA_XAC_NHAN ->
                 deliver(recipient, order, NotificationType.ORDER_CONFIRMED, NotificationMessages.orderConfirmed(order));
+            case DANG_GIAO ->
+                deliver(recipient, order, NotificationType.ORDER_SHIPPING, NotificationMessages.orderShipping(order));
             case DA_HUY ->
                 deliver(recipient, order, NotificationType.ORDER_CANCELLED, NotificationMessages.orderCancelled(order));
             case HOAN_THANH ->
                 deliver(recipient, order, NotificationType.ORDER_COMPLETED, NotificationMessages.orderCompleted(order));
             default -> {}
+        }
+    }
+
+    private void notifyStoreOfCustomerAction(Order order, OrderStatus status, String customerName) {
+        if (order.getStore() == null) {
+            return;
+        }
+        NotificationMessages.Message message = switch (status) {
+            case DA_HUY -> NotificationMessages.cancelledByCustomer(order, customerName);
+            case HOAN_THANH -> NotificationMessages.receivedByCustomer(order, customerName);
+            default -> null;
+        };
+        if (message != null) {
+            NotificationType type = status == OrderStatus.DA_HUY ? NotificationType.ORDER_CANCELLED : NotificationType.ORDER_COMPLETED;
+            notificationService.notifyStore(order.getStore(), type, message, AppLinks.orders(), order.getId());
         }
     }
 

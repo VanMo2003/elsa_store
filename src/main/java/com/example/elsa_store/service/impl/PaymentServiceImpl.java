@@ -53,6 +53,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderNotificationService orderNotificationService;
     private final AccessGuard accessGuard;
     private final TransactionTemplate transactionTemplate;
+    private final OrderTimeline timeline;
 
     public PaymentServiceImpl(
             PaymentRepository paymentRepository,
@@ -60,13 +61,15 @@ public class PaymentServiceImpl implements PaymentService {
             VNPayConfig vnPayConfig,
             OrderNotificationService orderNotificationService,
             AccessGuard accessGuard,
-            PlatformTransactionManager transactionManager) {
+            PlatformTransactionManager transactionManager,
+            OrderTimeline timeline) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.vnPayConfig = vnPayConfig;
         this.orderNotificationService = orderNotificationService;
         this.accessGuard = accessGuard;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.timeline = timeline;
     }
 
     @Override
@@ -269,6 +272,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         PaymentStatus previous = order.getPaymentStatus();
+        boolean autoConfirmed = false;
         if (success) {
             payment.setStatus(PaymentStatus.DA_THANH_TOAN);
             payment.setPaidAt(LocalDateTime.now());
@@ -276,6 +280,7 @@ public class PaymentServiceImpl implements PaymentService {
             // Trả trước thì cửa hàng không cần gọi xác nhận nữa.
             if (order.getStatus() == OrderStatus.CHUA_XAC_NHAN) {
                 order.setStatus(OrderStatus.DA_XAC_NHAN);
+                autoConfirmed = true;
             }
         } else {
             payment.setStatus(PaymentStatus.THAT_BAI);
@@ -285,6 +290,9 @@ public class PaymentServiceImpl implements PaymentService {
         }
         paymentRepository.save(payment);
         orderRepository.save(order);
+        if (autoConfirmed) {
+            timeline.record(order, OrderStatus.DA_XAC_NHAN, null, "Đã thanh toán qua VNPay");
+        }
         // Chỉ báo khi trạng thái thanh toán thật sự đổi, để VNPay gọi lại nhiều lần không gửi trùng thông báo / email.
         orderNotificationService.paymentChanged(order, previous);
         return new Outcome(OutcomeKind.APPLIED, result(order, payment, responseCode));

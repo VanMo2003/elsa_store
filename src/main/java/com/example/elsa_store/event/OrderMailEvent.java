@@ -17,7 +17,9 @@ public record OrderMailEvent(
         String customerName,
         String orderCode,
         Double finalAmount,
-        List<Line> items) {
+        List<Line> items,
+        /** Lý do huỷ (chỉ có ở email huỷ đơn khi người huỷ có nhập). */
+        String cancelReason) {
 
     public record Line(String name, int quantity, double lineTotal) {}
 
@@ -28,7 +30,8 @@ public record OrderMailEvent(
         String name = recipient.getFullName() == null || recipient.getFullName().isBlank()
                 ? recipient.getUsername()
                 : recipient.getFullName();
-        return new OrderMailEvent(type, recipient.getEmail(), name, order.getCode(), order.getFinalAmount(), lines);
+        return new OrderMailEvent(type, recipient.getEmail(), name, order.getCode(), order.getFinalAmount(), lines,
+                type == NotificationType.ORDER_CANCELLED ? order.getCancelReason() : null);
     }
 
     private static Line line(OrderItem item) {

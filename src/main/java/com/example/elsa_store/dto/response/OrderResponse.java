@@ -43,6 +43,25 @@ public class OrderResponse {
     private String handledByName;
     /** Trạng thái mà người đang xem được phép chuyển đơn sang — app chỉ hiện đúng các nút này. */
     private List<OrderStatus> allowedNextStatuses;
+    /** Lý do huỷ (khi đơn đã huỷ và người huỷ có nhập). */
+    private String cancelReason;
+    /**
+     * Dòng thời gian, cũ nhất trước — chỉ có ở API xem / đổi một đơn (danh sách để trống cho nhẹ). Đơn cũ chưa có lịch
+     * sử được dựng lại từ ngày đặt và ngày hoàn thành.
+     */
+    private List<TimelineEntry> timeline;
+
+    @Getter
+    @Setter
+    public static class TimelineEntry {
+        private OrderStatus status;
+        private LocalDateTime at;
+        /** Tên người đổi; trống khi hệ thống tự đổi hoặc không rõ. */
+        private String byName;
+        /** {@code CUSTOMER}, {@code STORE} hoặc {@code SYSTEM} — để app ghi "Bạn" / "Cửa hàng". */
+        private String byRole;
+        private String note;
+    }
 
     @Getter
     @Setter

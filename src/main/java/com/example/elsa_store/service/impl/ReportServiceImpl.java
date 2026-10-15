@@ -380,6 +380,7 @@ public class ReportServiceImpl implements ReportService {
                 .monthUncostedQuantity(monthCost.uncostedQuantity())
                 .processingOrders(countStatus(scope, OrderStatus.CHUA_XAC_NHAN))
                 .confirmedOrders(countStatus(scope, OrderStatus.DA_XAC_NHAN))
+                .shippingOrders(countStatus(scope, OrderStatus.DANG_GIAO))
                 .completedOrders(countStatus(scope, OrderStatus.HOAN_THANH))
                 .todayOrders(orderRepository.countInRange(startOfToday, startOfTomorrow, null, scope))
                 .lowStockVariants(lowStock)

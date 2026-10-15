@@ -48,8 +48,9 @@ class OrderServiceImplTest {
     private final PromotionProductRepository promotionLinks = mock(PromotionProductRepository.class);
     private final PricingService pricing = new PricingService(
             promotions, promotionLinks, Clock.fixed(Instant.parse("2026-10-14T03:00:00Z"), ZoneId.of("UTC")));
+    private final OrderTimeline timeline = mock(OrderTimeline.class);
     private final OrderServiceImpl service = new OrderServiceImpl(
-            orders, customers, addresses, variants, carts, notifications, accessGuard, accounts, pricing, stock);
+            orders, customers, addresses, variants, carts, notifications, accessGuard, accounts, pricing, stock, timeline);
 
     private User buyer;
     private User staff;
@@ -238,7 +239,8 @@ class OrderServiceImplTest {
 
         order.setStatus(OrderStatus.DA_HUY);
         assertThrows(AppException.class, () -> service.updateStatus(900L, OrderStatus.HOAN_THANH));
-        verify(notifications, never()).statusChanged(any(), any());
+        verify(notifications, never()).statusChanged(any(), any(), any());
+        verify(timeline, never()).record(any(), any(), any(), any());
     }
 
     @Test
@@ -278,6 +280,75 @@ class OrderServiceImplTest {
         placed(OrderStatus.DA_XAC_NHAN, PaymentStatus.DA_THANH_TOAN);
         OrderResponse paid = service.getById(900L);
         assertEquals(List.of(OrderStatus.HOAN_THANH), paid.getAllowedNextStatuses(), "đã thanh toán thì không huỷ");
+    }
+
+    @Test
+    void shippingStepIsOfferedOnlyForOrdersWithADeliveryAddress() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        Order counter = placed(OrderStatus.DA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
+        assertEquals(List.of(OrderStatus.HOAN_THANH, OrderStatus.DA_HUY), service.getById(900L).getAllowedNextStatuses());
+        AppException ex = assertThrows(AppException.class, () -> service.updateStatus(900L, OrderStatus.DANG_GIAO));
+        assertEquals(ErrorCode.BAD_REQUEST, ex.getErrorCode());
+        assertEquals(OrderStatus.DA_XAC_NHAN, counter.getStatus());
+
+        Order online = placed(OrderStatus.DA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
+        online.setShippingAddress("1 Nguyen Hue, Q1");
+        assertEquals(List.of(OrderStatus.DANG_GIAO, OrderStatus.HOAN_THANH, OrderStatus.DA_HUY),
+                service.getById(900L).getAllowedNextStatuses());
+        OrderResponse res = service.updateStatus(900L, OrderStatus.DANG_GIAO);
+        assertEquals(OrderStatus.DANG_GIAO, res.getStatus());
+        assertEquals(List.of(OrderStatus.HOAN_THANH, OrderStatus.DA_HUY), res.getAllowedNextStatuses());
+        verify(timeline).record(online, OrderStatus.DANG_GIAO, staff, null);
+        verify(notifications).statusChanged(online, OrderStatus.DA_XAC_NHAN, staff);
+        verify(stock, never()).releaseOrder(any(), any(), any());
+    }
+
+    @Test
+    void customerConfirmsReceiptOnlyWhileTheOrderIsBeingDelivered() {
+        Order order = placed(OrderStatus.DANG_GIAO, PaymentStatus.CHUA_THANH_TOAN);
+        order.setShippingAddress("1 Nguyen Hue, Q1");
+        assertEquals(List.of(OrderStatus.HOAN_THANH), service.getById(900L).getAllowedNextStatuses());
+        // Đang giao thì khách không tự huỷ được nữa.
+        assertThrows(AppException.class, () -> service.updateStatus(900L, OrderStatus.DA_HUY));
+
+        OrderResponse res = service.updateStatus(900L, OrderStatus.HOAN_THANH);
+        assertEquals(OrderStatus.HOAN_THANH, res.getStatus());
+        assertEquals(PaymentStatus.DA_THANH_TOAN, res.getPaymentStatus(), "COD giao xong là đã thu tiền");
+        assertNotNull(order.getCompletedAt());
+        verify(notifications).statusChanged(order, OrderStatus.DANG_GIAO, buyer);
+        // Bấm lại không lỗi, không ghi thêm mốc.
+        service.updateStatus(900L, OrderStatus.HOAN_THANH);
+        verify(timeline, times(1)).record(any(), any(), any(), any());
+
+        User stranger = User.builder().username("khach002").role(Role.USER).build();
+        stranger.setId(9L);
+        when(accessGuard.currentUser()).thenReturn(stranger);
+        placed(OrderStatus.DANG_GIAO, PaymentStatus.CHUA_THANH_TOAN).setShippingAddress("x");
+        assertThrows(AppException.class, () -> service.updateStatus(900L, OrderStatus.HOAN_THANH));
+    }
+
+    @Test
+    void cancelReasonIsTrimmedStoredAndPutOnTheTimeline() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        Order order = placed(OrderStatus.DANG_GIAO, PaymentStatus.CHUA_THANH_TOAN);
+        order.setShippingAddress("1 Nguyen Hue, Q1");
+        AppException tooLong = assertThrows(AppException.class,
+                () -> service.updateStatus(900L, OrderStatus.DA_HUY, "x".repeat(256)));
+        assertEquals(ErrorCode.BAD_REQUEST, tooLong.getErrorCode());
+
+        OrderResponse res = service.updateStatus(900L, OrderStatus.DA_HUY, "  Khách không nhận hàng  ");
+        assertEquals("Khách không nhận hàng", res.getCancelReason());
+        assertEquals("Khách không nhận hàng", order.getCancelReason());
+        verify(stock).releaseOrder(order, "Huỷ đơn", staff);
+        verify(timeline).record(order, OrderStatus.DA_HUY, staff, "Khách không nhận hàng");
+    }
+
+    @Test
+    void placingAnOrderStartsItsTimeline() {
+        OrderResponse res = service.create(customerOrder());
+        verify(timeline).record(any(Order.class), eq(OrderStatus.CHUA_XAC_NHAN), eq(buyer), isNull());
+        verify(timeline).entries(any(Order.class), eq(buyer));
+        assertEquals(OrderStatus.CHUA_XAC_NHAN, res.getStatus());
     }
 
     @Test

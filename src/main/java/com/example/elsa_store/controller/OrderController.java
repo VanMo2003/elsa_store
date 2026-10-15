@@ -43,7 +43,9 @@ public class OrderController {
     public ApiResponse<OrderResponse> updateOrderStatus(
             @PathVariable Long orderId,
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) PaymentStatus paymentStatus
+            @RequestParam(required = false) PaymentStatus paymentStatus,
+            // Lý do huỷ / ghi chú của mốc (tuỳ chọn).
+            @RequestParam(required = false) String reason
     ) {
         if (status == null && paymentStatus == null) {
             throw new IllegalArgumentException("Bạn phải truyền status hoặc paymentStatus");
@@ -55,7 +57,7 @@ public class OrderController {
 
         OrderResponse orderResponse =
                 (status != null)
-                        ? orderService.updateStatus(orderId, status)
+                        ? orderService.updateStatus(orderId, status, reason)
                         : orderService.updatePaymentStatus(orderId, paymentStatus);
 
         return ApiResponse.ok(orderResponse);

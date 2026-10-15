@@ -28,8 +28,11 @@ public class DashboardResponse {
     /** Đơn chờ xác nhận. */
     private Long processingOrders;
 
-    /** Đơn đã xác nhận, chờ giao xong. */
+    /** Đơn đã xác nhận, đang chuẩn bị (chưa giao cho đơn vị vận chuyển). */
     private Long confirmedOrders;
+
+    /** Đơn đang giao (đã giao cho đơn vị vận chuyển, chờ khách nhận). */
+    private Long shippingOrders;
 
     private Long completedOrders;
 

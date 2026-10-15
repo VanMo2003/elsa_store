@@ -12,5 +12,7 @@ public enum NotificationType {
     /** Gửi cho ADMIN khi có cửa hàng đăng ký (hoặc gửi lại hồ sơ) cần duyệt. */
     STORE_REGISTERED,
     STORE_APPROVED,
-    STORE_REJECTED
+    STORE_REJECTED,
+    /** Đơn đã giao cho đơn vị vận chuyển. Giá trị mới luôn thêm vào cuối. */
+    ORDER_SHIPPING
 }

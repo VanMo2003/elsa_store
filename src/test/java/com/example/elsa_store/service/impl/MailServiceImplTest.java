@@ -28,13 +28,18 @@ class MailServiceImplTest {
     private static final String PUBLIC_URL = "http://192.168.1.10:8080/elsa-store/api/";
 
     private static OrderMailEvent event(NotificationType type) {
+        return event(type, null);
+    }
+
+    private static OrderMailEvent event(NotificationType type, String cancelReason) {
         return new OrderMailEvent(
                 type,
                 "khach@example.com",
                 "Nguyễn Văn A",
                 "ORD-1768188571731",
                 1_250_000.0,
-                List.of(new OrderMailEvent.Line("Giày Samba <OG> (Trắng, size 42)", 2, 1_250_000)));
+                List.of(new OrderMailEvent.Line("Giày Samba <OG> (Trắng, size 42)", 2, 1_250_000)),
+                cancelReason);
     }
 
     @SuppressWarnings("unchecked")
@@ -90,6 +95,7 @@ class MailServiceImplTest {
         List<NotificationType> customerFacing = List.of(
                 NotificationType.ORDER_PLACED,
                 NotificationType.ORDER_CONFIRMED,
+                NotificationType.ORDER_SHIPPING,
                 NotificationType.ORDER_CANCELLED,
                 NotificationType.ORDER_COMPLETED,
                 NotificationType.PAYMENT_SUCCESS,
@@ -99,6 +105,22 @@ class MailServiceImplTest {
         }
 
         verify(sender, org.mockito.Mockito.times(customerFacing.size())).send(any(MimeMessage.class));
+    }
+
+    @Test
+    void cancellationMailTellsTheReason() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenAnswer(call -> new MimeMessage((Session) null));
+        MailServiceImpl service = new MailServiceImpl(provider(sender), "shop@example.com", "", PUBLIC_URL);
+
+        service.sendOrderMail(event(NotificationType.ORDER_CANCELLED, "Hết size <42>"));
+        service.sendOrderMail(event(NotificationType.ORDER_SHIPPING));
+
+        ArgumentCaptor<MimeMessage> sent = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender, org.mockito.Mockito.times(2)).send(sent.capture());
+        String cancelled = textOf(sent.getAllValues().get(0));
+        assertTrue(cancelled.contains("lý do: Hết size &lt;42&gt;"), "lý do huỷ phải có và được escape HTML");
+        assertEquals("[Elsa Store] Đơn hàng ORD-1768188571731 đang được giao", sent.getAllValues().get(1).getSubject());
     }
 
     @Test

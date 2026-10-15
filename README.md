@@ -167,10 +167,17 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   trước). Biến thể đã theo dõi thì trừ kho nguyên tử khi đặt (`UPDATE … WHERE quantity >= :q`, khoá theo thứ tự id biến
   thể nên hai đơn cùng lúc không deadlock và kho không bao giờ âm); hết hàng báo `1023` kèm số còn lại. Huỷ / xoá đơn
   chưa giao thì hoàn đúng phần đã trừ, mỗi dòng một lần.
-- **Trạng thái:** `CHUA_XAC_NHAN → DA_XAC_NHAN → HOAN_THANH`, huỷ được khi chưa hoàn thành và chưa thanh toán; bước sai
-  báo `1024`. Khách chỉ huỷ được đơn của mình khi cửa hàng chưa xác nhận (bấm lại không lỗi). Mỗi đơn trả
-  `allowedNextStatuses` để app chỉ hiện nút hợp lệ. Đơn COD hoàn thành tự chuyển "đã thanh toán"; lúc hoàn thành được
-  ghi vào `orders.completed_at` — ngày ghi nhận doanh thu.
+- **Trạng thái:** `CHUA_XAC_NHAN → DA_XAC_NHAN → DANG_GIAO → HOAN_THANH`. Đơn không có địa chỉ giao (bán tại quầy) bỏ
+  qua "đang giao", hoàn thành thẳng từ "đã xác nhận". Huỷ được khi chưa hoàn thành và chưa thanh toán — đang giao mà giao
+  không thành thì cửa hàng huỷ để hàng về kho; bước sai báo `1024`. Khách huỷ được đơn của mình khi cửa hàng chưa xác
+  nhận, và bấm **đã nhận được hàng** (`HOAN_THANH`) khi đơn đang giao (bấm lại không lỗi); hai việc này báo cho cửa hàng
+  thay vì báo lại cho khách. Mỗi đơn trả `allowedNextStatuses` để app chỉ hiện nút hợp lệ. Đơn COD hoàn thành tự chuyển
+  "đã thanh toán"; lúc hoàn thành được ghi vào `orders.completed_at` — ngày ghi nhận doanh thu.
+- **Lý do huỷ và dòng thời gian:** `PUT /orders/{id}/status?status=&reason=` — `reason` (≤ 255 ký tự) là lý do huỷ, lưu
+  ở `cancelReason` và đi kèm thông báo / email gửi khách. Mỗi lần đổi trạng thái (kể cả VNPay tự xác nhận khi đã trả)
+  ghi một mốc vào `order_status_history`; API một đơn (`GET /orders/{id}`, đổi trạng thái) trả `timeline`: trạng thái,
+  lúc nào, ai làm (`byRole` = `CUSTOMER` / `STORE` / `SYSTEM`; khách không thấy tên nhân viên), ghi chú. Đơn đặt trước
+  khi có bảng này được dựng lại từ ngày đặt / ngày hoàn thành.
 - **VNPay** (sandbox mặc định): `GET /payment/vn-pay?orderId=` tạo link với số tiền lấy từ đơn trong DB (đơn dưới 5.000đ
   hoặc đã huỷ / đã trả bị từ chối). `GET /payment/vn-pay-callback` (trình duyệt / app quay về) và `GET /payment/vnpay-ipn`
   (VNPay gọi máy chủ) đều công khai và **xác thực chữ ký HMAC-SHA512** cùng số tiền; xử lý lặp lại không đổi gì thêm
@@ -305,7 +312,9 @@ Quy tắc chính:
 
 Khi khởi động, `LegacySchemaMigration` chạy **trước Hibernate** để bỏ ràng buộc `check (role between 0 and 3)` mà
 Hibernate cũ tạo cho cột số, rồi đổi cột `users.role` kiểu số cũ
-(0 → ADMIN, 1 và 2 → STAFF, còn lại → USER) sang chuỗi và cho phép `customers.user_id` để trống; sau đó
+(0 → ADMIN, 1 và 2 → STAFF, còn lại → USER) sang chuỗi, cho phép `customers.user_id` để trống và đổi `orders.status`,
+`notifications.type` từ kiểu `enum(...)` của MySQL (Hibernate tạo, không bao giờ tự thêm giá trị) sang chuỗi để lưu được
+trạng thái mới như `DANG_GIAO`; sau đó
 `LegacyDataMigration` gom sản phẩm, nhà cung cấp, khuyến mãi, phiếu nhập, đơn hàng và nhân sự chưa thuộc cửa
 hàng nào vào cửa hàng mặc định **"Elsa Store"** (tạo chủ `owner123` / `owner123` nếu chưa có — hãy đổi mật
 khẩu ngay). Hai bước đều chạy lại an toàn nhiều lần.
@@ -370,10 +379,10 @@ dùng cho `docker compose`).
 | `AI_AUTO_REPLY_DELAY_SECONDS` | `60` | Chờ bao lâu trước khi trợ lý tự trả lời thay cửa hàng đã bật tự trả lời |
 
 Bảng `notifications`, `device_tokens`, `conversations`, `chat_messages`, `stock_movements`, `password_reset_codes`,
-`product_reviews` và `wishlist_items` được Hibernate tạo tự động
-(`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `orders.completed_at`, `product_variants.cost_price`,
-`order_items.cost_price`, `purchase_orders.code/note/received_at`, `users.token_version`…) được thêm cùng cách, đều cho
-phép để trống nên dữ liệu cũ không cần chuyển đổi.
+`product_reviews`, `wishlist_items` và `order_status_history` được Hibernate tạo tự động
+(`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `orders.completed_at`, `orders.cancel_reason`,
+`product_variants.cost_price`, `order_items.cost_price`, `purchase_orders.code/note/received_at`, `users.token_version`…)
+được thêm cùng cách, đều cho phép để trống nên dữ liệu cũ không cần chuyển đổi.
 
 ## Ghi chú
 

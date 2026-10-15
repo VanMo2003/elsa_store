@@ -42,8 +42,33 @@ public final class NotificationMessages {
                 "Đơn " + order.getCode() + " đã được xác nhận và đang được chuẩn bị.");
     }
 
+    public static Message orderShipping(Order order) {
+        return new Message(
+                "Đơn hàng đang được giao",
+                "Đơn " + order.getCode() + " đã được giao cho đơn vị vận chuyển. Bạn chú ý điện thoại để nhận hàng nhé.");
+    }
+
     public static Message orderCancelled(Order order) {
-        return new Message("Đơn hàng đã bị huỷ", "Đơn " + order.getCode() + " đã bị huỷ.");
+        String reason = order.getCancelReason();
+        return new Message(
+                "Đơn hàng đã bị huỷ",
+                "Đơn " + order.getCode() + " đã bị huỷ" + (reason == null ? "." : ". Lý do: " + reason));
+    }
+
+    /** Cho cửa hàng: khách tự huỷ đơn chưa xác nhận. */
+    public static Message cancelledByCustomer(Order order, String customerName) {
+        String reason = order.getCancelReason();
+        return new Message(
+                "Khách đã huỷ đơn",
+                customerName + " đã huỷ đơn " + order.getCode() + (reason == null ? "." : ". Lý do: " + reason));
+    }
+
+    /** Cho cửa hàng: khách bấm "Đã nhận được hàng". */
+    public static Message receivedByCustomer(Order order, String customerName) {
+        return new Message(
+                "Khách đã nhận hàng",
+                customerName + " đã xác nhận nhận được đơn " + order.getCode() + " ("
+                        + money(order.getFinalAmount()) + ").");
     }
 
     public static Message orderCompleted(Order order) {

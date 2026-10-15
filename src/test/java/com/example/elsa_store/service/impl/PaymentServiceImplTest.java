@@ -87,7 +87,8 @@ class PaymentServiceImplTest {
         ReflectionTestUtils.setField(config, "vnp_Command", "pay");
         ReflectionTestUtils.setField(config, "orderType", "other");
         service = new PaymentServiceImpl(
-                payments, orders, config, notifications, accessGuard, new NoopTransactionManager());
+                payments, orders, config, notifications, accessGuard, new NoopTransactionManager(),
+                mock(OrderTimeline.class));
 
         buyer = User.builder().username("khach001").build();
         buyer.setId(7L);

@@ -22,7 +22,12 @@ public interface OrderService {
 
     void delete(Long id);
 
-    OrderResponse updateStatus(Long orderId, OrderStatus status);
+    default OrderResponse updateStatus(Long orderId, OrderStatus status) {
+        return updateStatus(orderId, status, null);
+    }
+
+    /** {@code reason}: lý do huỷ (lưu vào đơn và dòng thời gian) hoặc ghi chú của mốc; có thể trống. */
+    OrderResponse updateStatus(Long orderId, OrderStatus status, String reason);
 
     OrderResponse updatePaymentStatus(Long orderId, PaymentStatus paymentStatus);
 }

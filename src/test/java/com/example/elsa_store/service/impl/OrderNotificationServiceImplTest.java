@@ -13,6 +13,7 @@ import com.example.elsa_store.entity.User;
 import com.example.elsa_store.event.OrderMailEvent;
 import com.example.elsa_store.service.NotificationService;
 import com.example.elsa_store.utils.AppLinks;
+import com.example.elsa_store.utils.NotificationMessages;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,6 +22,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -122,6 +124,51 @@ class OrderNotificationServiceImplTest {
         service.statusChanged(order, OrderStatus.DA_XAC_NHAN);
         verify(notifications)
                 .notify(eq(buyer), eq(NotificationType.ORDER_COMPLETED), any(), anyString(), anyLong());
+    }
+
+    @Test
+    void shippingAndStoreSideCancellationsTellTheCustomerWithTheReason() {
+        User buyer = user("an", "an@example.com");
+        User staff = User.builder().username("nv").build();
+        staff.setId(8L);
+        Order order = order(buyer);
+
+        order.setStatus(OrderStatus.DANG_GIAO);
+        service.statusChanged(order, OrderStatus.DA_XAC_NHAN, staff);
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.ORDER_SHIPPING), any(), anyString(), anyLong());
+
+        order.setStatus(OrderStatus.DA_HUY);
+        order.setCancelReason("Khách không nghe máy");
+        service.statusChanged(order, OrderStatus.DANG_GIAO, staff);
+        ArgumentCaptor<NotificationMessages.Message> message = ArgumentCaptor.forClass(NotificationMessages.Message.class);
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.ORDER_CANCELLED), message.capture(), anyString(), anyLong());
+        assertTrue(message.getValue().body().contains("Lý do: Khách không nghe máy"), message.getValue().body());
+        verify(notifications, never()).notifyStore(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void whatTheCustomerDoesThemselvesIsToldToTheStoreInstead() {
+        User buyer = user("an", "an@example.com");
+        Order order = order(buyer);
+
+        order.setStatus(OrderStatus.DA_HUY);
+        order.setCancelReason("Đặt nhầm size");
+        service.statusChanged(order, OrderStatus.CHUA_XAC_NHAN, buyer);
+        ArgumentCaptor<NotificationMessages.Message> message = ArgumentCaptor.forClass(NotificationMessages.Message.class);
+        verify(notifications).notifyStore(
+                eq(order.getStore()), eq(NotificationType.ORDER_CANCELLED), message.capture(), anyString(), eq(99L));
+        assertTrue(message.getValue().body().contains("Đặt nhầm size"));
+
+        order.setStatus(OrderStatus.HOAN_THANH);
+        service.statusChanged(order, OrderStatus.DANG_GIAO, buyer);
+        verify(notifications).notifyStore(
+                eq(order.getStore()), eq(NotificationType.ORDER_COMPLETED), any(), anyString(), eq(99L));
+
+        // Không báo lại cho chính khách, không gửi email.
+        verify(notifications, never()).notify(any(), any(), any(), any(), any());
+        verifyNoInteractions(events);
     }
 
     @Test

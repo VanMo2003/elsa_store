@@ -3,6 +3,8 @@ package com.example.elsa_store.entity;
 
 import com.example.elsa_store.constant.NotificationType;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -21,7 +23,9 @@ public class Notification extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     User user;
 
+    /** Lưu dạng chuỗi (không dùng kiểu enum của MySQL) để thêm loại mới không phải sửa cột. */
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "type", length = 40, nullable = false)
     NotificationType type;
 

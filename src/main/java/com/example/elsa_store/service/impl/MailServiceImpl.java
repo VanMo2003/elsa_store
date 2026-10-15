@@ -263,11 +263,18 @@ public class MailServiceImpl implements MailService {
                         "[Elsa Store] Đơn hàng " + code + " đã được xác nhận",
                         "Đơn hàng đã được xác nhận",
                         "Đơn " + code + " đã được xác nhận và đang được chuẩn bị.");
+            case ORDER_SHIPPING ->
+                new Copy(
+                        "[Elsa Store] Đơn hàng " + code + " đang được giao",
+                        "Đơn hàng đang được giao",
+                        "Đơn " + code + " đã được giao cho đơn vị vận chuyển. Bạn chú ý điện thoại để nhận hàng nhé.");
             case ORDER_CANCELLED ->
                 new Copy(
                         "[Elsa Store] Đơn hàng " + code + " đã bị huỷ",
                         "Đơn hàng đã bị huỷ",
-                        "Đơn " + code + " đã bị huỷ. Nếu cần hỗ trợ, hãy liên hệ Elsa Store.");
+                        "Đơn " + code + " đã bị huỷ"
+                                + (event.cancelReason() == null ? "" : " (lý do: " + event.cancelReason() + ")")
+                                + ". Nếu cần hỗ trợ, hãy liên hệ Elsa Store.");
             case ORDER_COMPLETED ->
                 new Copy(
                         "[Elsa Store] Đơn hàng " + code + " đã hoàn thành",

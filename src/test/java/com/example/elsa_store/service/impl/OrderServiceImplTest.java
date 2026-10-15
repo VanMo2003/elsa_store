@@ -58,7 +58,7 @@ class OrderServiceImplTest {
     private final OrderExcelExporter excel = mock(OrderExcelExporter.class);
     private final OrderServiceImpl service = new OrderServiceImpl(
             orders, customers, addresses, variants, carts, notifications, accessGuard, accounts, pricing, stock, timeline,
-            stockAlerts, excel);
+            stockAlerts, excel, new ReturnPolicy(7));
 
     private User buyer;
     private User staff;

@@ -291,7 +291,8 @@ public class MailServiceImpl implements MailService {
                         "Thanh toán chưa thành công",
                         "Thanh toán cho đơn " + code + " chưa thành công. Bạn có thể mở ứng dụng để thử thanh toán lại.");
             // Thông báo nội bộ (đơn mới cho cửa hàng, hồ sơ cửa hàng cho ADMIN) chỉ hiện trong app, không gửi email đơn hàng.
-            case NEW_ORDER, STORE_REGISTERED, STORE_APPROVED, STORE_REJECTED, LOW_STOCK -> null;
+            case NEW_ORDER, STORE_REGISTERED, STORE_APPROVED, STORE_REJECTED, LOW_STOCK, RETURN_REQUESTED,
+                    RETURN_UPDATED -> null;
         };
     }
 

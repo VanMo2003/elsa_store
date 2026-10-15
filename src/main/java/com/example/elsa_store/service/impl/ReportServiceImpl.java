@@ -1,6 +1,7 @@
 package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.constant.OrderStatus;
+import com.example.elsa_store.constant.ReturnStatus;
 import com.example.elsa_store.constant.RevenueGroupBy;
 import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.response.*;
@@ -14,6 +15,7 @@ import com.example.elsa_store.repository.InventoryRepository;
 import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.OrderRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
+import com.example.elsa_store.repository.ReturnRequestRepository;
 import com.example.elsa_store.repository.StoreRepository;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.service.ExcelReportService;
@@ -46,6 +48,7 @@ public class ReportServiceImpl implements ReportService {
     private final StoreRepository storeRepository;
     private final AccessGuard accessGuard;
     private final ExcelReportService excelReportService;
+    private final ReturnRequestRepository returnRequestRepository;
 
     // ------------------------------------------------------------------ phạm vi và tham số
 
@@ -135,6 +138,9 @@ public class ReportServiceImpl implements ReportService {
         double shipping = number(row[4]).doubleValue();
         Cost cost = cost(start(from), endExclusive(to), status, scope);
         double profit = net - cost.amount();
+        List<Object[]> refundRows = returnRequestRepository.refundSummary(start(from), endExclusive(to), scope);
+        Object[] refund = refundRows.isEmpty() ? new Object[] {0.0, 0L} : refundRows.get(0);
+        double refundTotal = number(refund[0]).doubleValue();
         return RevenueSummaryResponse.builder()
                 .from(from)
                 .to(to)
@@ -144,6 +150,9 @@ public class ReportServiceImpl implements ReportService {
                 .netRevenue(net)
                 .shippingTotal(shipping)
                 .averageOrderValue(ordersCount == 0 ? 0.0 : net / ordersCount)
+                .refundTotal(refundTotal)
+                .refundCount(number(refund[1]).longValue())
+                .netAfterRefunds(net - refundTotal)
                 .costOfGoods(cost.amount())
                 .grossProfit(profit)
                 .profitMargin(net > 0 ? round1(profit / net * 100) : null)
@@ -383,6 +392,9 @@ public class ReportServiceImpl implements ReportService {
                 .processingOrders(countStatus(scope, OrderStatus.CHUA_XAC_NHAN))
                 .confirmedOrders(countStatus(scope, OrderStatus.DA_XAC_NHAN))
                 .shippingOrders(countStatus(scope, OrderStatus.DANG_GIAO))
+                .pendingReturns(scope == null
+                        ? null
+                        : returnRequestRepository.countByStore_IdAndStatus(scope, ReturnStatus.CHO_DUYET))
                 .completedOrders(countStatus(scope, OrderStatus.HOAN_THANH))
                 .todayOrders(orderRepository.countInRange(startOfToday, startOfTomorrow, null, scope))
                 .lowStockVariants(lowStock)

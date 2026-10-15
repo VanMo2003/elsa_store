@@ -72,6 +72,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderTimeline timeline;
     private final StockAlerts stockAlerts;
     private final OrderExcelExporter excelExporter;
+    private final ReturnPolicy returnPolicy;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -86,7 +87,8 @@ public class OrderServiceImpl implements OrderService {
             StockService stockService,
             OrderTimeline timeline,
             StockAlerts stockAlerts,
-            OrderExcelExporter excelExporter) {
+            OrderExcelExporter excelExporter,
+            ReturnPolicy returnPolicy) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.addressRepository = addressRepository;
@@ -100,6 +102,7 @@ public class OrderServiceImpl implements OrderService {
         this.timeline = timeline;
         this.stockAlerts = stockAlerts;
         this.excelExporter = excelExporter;
+        this.returnPolicy = returnPolicy;
     }
 
     // ------------------------------------------------------------------ đặt đơn
@@ -776,6 +779,7 @@ public class OrderServiceImpl implements OrderService {
         res.setItems(itemResponses);
         res.setAllowedNextStatuses(allowedNext(order, viewer));
         res.setCancelReason(order.getCancelReason());
+        res.setReturnDeadline(returnPolicy.deadline(order));
         if (withTimeline && order.getId() != null) {
             res.setTimeline(timeline.entries(order, viewer == null ? null : viewer.user()));
         }

@@ -126,6 +126,18 @@ step(F3, "Danh sách đánh giá (công khai)", "GET", "/products/{{productId}}/
 step(F3, "Cửa hàng: đánh giá chưa trả lời", "GET", "/reviews/store", token="staffToken", query={"unreplied": "true"})
 step(F3, "Cửa hàng trả lời đánh giá", "PUT", "/reviews/{{reviewId}}/reply", token="staffToken",
      body={"reply": "Cảm ơn bạn đã ủng hộ Elsa!"})
+step(F3, "Khách gửi yêu cầu trả 1 sản phẩm", "POST", "/returns", token="customerToken",
+     body={"orderId": "{{orderId}}", "reason": "Sai kích cỡ", "note": "Chật quá",
+           "items": [{"productVariantId": "{{variantId}}", "quantity": 1}]},
+     saves=[("returnId", "j.data.id", lambda j: j["data"]["id"])],
+     note="Chỉ đơn đã hoàn thành, trong 7 ngày; suggestedRefund = giá khách đã trả cho món đó.")
+step(F3, "Cửa hàng: yêu cầu trả hàng chờ duyệt", "GET", "/returns", token="staffToken", query={"status": "CHO_DUYET"})
+step(F3, "Nhân viên duyệt yêu cầu trả hàng", "PUT", "/returns/{{returnId}}/approve", token="staffToken",
+     body={"note": "Bạn gửi hàng về 1 Nguyễn Huệ, Q1 nhé"})
+step(F3, "Chủ xác nhận nhận hàng và hoàn tiền (hàng về kho)", "PUT", "/returns/{{returnId}}/refund", token="ownerToken",
+     body={"note": "Đã chuyển khoản"})
+step(F3, "Khách xem yêu cầu trả hàng của đơn", "GET", "/returns/me", token="customerToken",
+     query={"orderId": "{{orderId}}"})
 step(F3, "Thả tim sản phẩm", "POST", "/wishlist/{{productId}}", token="customerToken")
 step(F3, "Danh sách yêu thích", "GET", "/wishlist", token="customerToken")
 step(F3, "Bỏ tim", "DELETE", "/wishlist/{{productId}}", token="customerToken")

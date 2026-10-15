@@ -39,6 +39,11 @@ public class ExcelReportServiceImpl implements ExcelReportService {
                 r = pair(overview, styles, r, "Phí giao hàng khách trả", summary.getShippingTotal(), true);
             }
             r = pair(overview, styles, r, "Doanh thu thuần", summary.getNetRevenue(), true);
+            if (summary.getRefundTotal() != null && summary.getRefundTotal() > 0) {
+                r = pair(overview, styles, r, "Hoàn tiền trả hàng (" + summary.getRefundCount() + " yêu cầu)",
+                        summary.getRefundTotal(), true);
+                r = pair(overview, styles, r, "Doanh thu sau hoàn tiền", summary.getNetAfterRefunds(), true);
+            }
             r = pair(overview, styles, r, "Giá trị đơn trung bình", summary.getAverageOrderValue(), true);
             r = pair(overview, styles, r, "Giá vốn hàng bán", summary.getCostOfGoods(), true);
             r = pair(overview, styles, r, "Lợi nhuận gộp", summary.getGrossProfit(), true);

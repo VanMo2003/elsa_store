@@ -22,6 +22,11 @@ public class RevenueSummaryResponse {
     private Double shippingTotal;  // sum(shippingFee)
 
     private Double averageOrderValue; // netRevenue / ordersCount
+    /** Tiền hoàn cho khách trả hàng trong kỳ (theo ngày hoàn) và số yêu cầu đã hoàn. */
+    private Double refundTotal;
+    private Long refundCount;
+    /** Doanh thu thực thu trừ tiền hoàn trả hàng. */
+    private Double netAfterRefunds;
     /** Giá vốn hàng đã bán (chỉ các dòng đã có giá vốn). */
     private Double costOfGoods;
     /** Lợi nhuận gộp = doanh thu thực thu − giá vốn. */

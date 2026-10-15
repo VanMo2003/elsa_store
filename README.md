@@ -30,6 +30,8 @@ chỉ được ghi log.
 | Khách tự huỷ đơn / bấm đã nhận hàng | Chủ, quản lý, nhân viên của cửa hàng | Trong app + push |
 | Một đơn làm sản phẩm vừa xuống dưới mức cảnh báo tồn kho hoặc hết hàng (`LOW_STOCK`, mở `elsastore://inventory`) | Chủ, quản lý (nhân viên không xem được kho) | Trong app + push |
 | Tiền VNPay về cho đơn đã huỷ | Chủ, quản lý, nhân viên | Trong app + push ("Cần hoàn tiền cho khách") |
+| Khách gửi yêu cầu trả hàng | Chủ, quản lý, nhân viên | Trong app + push (`RETURN_REQUESTED`) |
+| Yêu cầu trả hàng được duyệt / bị từ chối / đã hoàn tiền | Khách | Trong app + push (`RETURN_UPDATED`) |
 | Thanh toán chuyển sang thành công / thất bại (callback VNPay hoặc `PUT /orders/{id}/status?paymentStatus=`) | Khách | Trong app + push + email |
 | Có hồ sơ mở cửa hàng mới (hoặc chủ gửi lại hồ sơ) | Admin | Trong app + push |
 | Hồ sơ được duyệt / bị từ chối (kèm lý do) | Chủ cửa hàng | Trong app + push + email |
@@ -235,6 +237,28 @@ khuyến mãi / còn hàng / điểm đánh giá như danh sách sản phẩm), 
 `POST /wishlist/{productId}` (bấm lại không lỗi, tối đa 200 sản phẩm) và `DELETE /wishlist/{productId}` — hai lệnh này
 trả lại mảng id mới. Sản phẩm bị ẩn tự biến khỏi danh sách; xoá sản phẩm / tài khoản thì dòng yêu thích được dọn theo.
 
+## Đổi / trả hàng
+
+Khách gửi yêu cầu trả hàng cho đơn **đã hoàn thành** trong 7 ngày (`ORDER_RETURN_WINDOW_DAYS`) kể từ lúc hoàn thành; đơn
+trả về `returnDeadline`. Mỗi đơn chỉ một yêu cầu đang mở, tổng số trả không vượt số đã mua (trả nhiều lần được).
+`CHO_DUYET → DA_DUYET → DA_HOAN_TIEN`, hoặc `TU_CHOI` (cửa hàng, bắt buộc lý do) / `DA_HUY` (khách huỷ khi còn chờ).
+Mã yêu cầu `TH-yyMMdd-XXXX`.
+
+| Endpoint | Ai | Việc |
+|---|---|---|
+| `POST /returns` `{orderId, items: [{productVariantId, quantity}], reason, note?}` | khách mua đơn | Gửi yêu cầu; BE tính `suggestedRefund` = giá khách đã trả cho các món (giảm giá cả đơn chia đều theo giá trị, **không hoàn phí giao**) |
+| `GET /returns/me?orderId&page&size` | khách | Yêu cầu của mình (lọc theo đơn) |
+| `PUT /returns/{id}/cancel` | khách | Huỷ khi còn chờ duyệt |
+| `GET /returns?status&storeId&page&size` | chủ, quản lý, nhân viên; ADMIN xem | Yêu cầu gửi tới cửa hàng |
+| `GET /returns/{id}` | khách của yêu cầu, người của cửa hàng, ADMIN | Chi tiết + `allowedActions` của người xem |
+| `PUT /returns/{id}/approve` `{note?}` | chủ, quản lý, nhân viên | Đồng ý, nhắn khách cách gửi hàng |
+| `PUT /returns/{id}/reject` `{note}` | chủ, quản lý, nhân viên | Từ chối kèm lý do |
+| `PUT /returns/{id}/refund` `{refundAmount?, note?}` | chủ, quản lý | Đã nhận hàng và hoàn tiền (mặc định số gợi ý, không quá số khách đã trả); hàng về kho (thẻ kho `RETURN`, ghi "Khách trả hàng TH-…"); hoàn thẳng từ chờ duyệt được (khách mang hàng tới quầy) |
+
+Mỗi bước báo cho bên kia (`RETURN_REQUESTED` cho cửa hàng, `RETURN_UPDATED` cho khách, mở `elsastore://returns`). Báo
+cáo tổng hợp có `refundTotal`, `refundCount` (theo ngày hoàn tiền) và `netAfterRefunds` = doanh thu thực thu − tiền hoàn;
+tổng quan có `pendingReturns`. Lợi nhuận gộp chưa trừ hàng trả.
+
 ## Doanh thu, kho và nhập hàng
 
 Chỉ chủ và quản lý của cửa hàng dùng các API dưới đây; ADMIN xem báo cáo (chọn `storeId` hoặc toàn hệ thống) và phiếu
@@ -322,8 +346,10 @@ cửa hàng; danh mục là dùng chung và chỉ ADMIN quản lý. Mọi kiểm
 | Khách hàng của cửa hàng, tạo đơn tại quầy, đổi trạng thái đơn | – | ✔ | ✔ | ✔ | – |
 | Báo cáo doanh thu, lợi nhuận, kênh bán, sản phẩm, khách hàng, nhân viên, xuất Excel | ✔ (chỉ xem) | ✔ | ✔ | ✘ | – |
 | Trả lời đánh giá sản phẩm của cửa hàng | – | ✔ | ✔ | ✔ | – |
+| Duyệt / từ chối yêu cầu trả hàng | – (chỉ xem) | ✔ | ✔ | ✔ | – |
+| Hoàn tiền trả hàng (hàng về kho) | – | ✔ | ✔ | ✘ | – |
 | Giỏ hàng, đặt hàng, huỷ đơn chưa xác nhận của mình | – | – | – | – | ✔ |
-| Đánh giá sản phẩm đã nhận, danh sách yêu thích | – | – | – | – | ✔ |
+| Đánh giá sản phẩm đã nhận, danh sách yêu thích, yêu cầu trả hàng | – | – | – | – | ✔ |
 
 Quy tắc chính:
 
@@ -347,7 +373,8 @@ Khi khởi động, `LegacySchemaMigration` chạy **trước Hibernate** để 
 Hibernate cũ tạo cho cột số, rồi đổi cột `users.role` kiểu số cũ
 (0 → ADMIN, 1 và 2 → STAFF, còn lại → USER) sang chuỗi, cho phép `customers.user_id` để trống và đổi `orders.status`,
 `notifications.type` từ kiểu `enum(...)` của MySQL (Hibernate tạo, không bao giờ tự thêm giá trị) sang chuỗi để lưu được
-trạng thái mới như `DANG_GIAO`; sau đó
+trạng thái mới như `DANG_GIAO`, và gỡ các ràng buộc `check (… in ('A','B'))` mà Hibernate tạo cho cột enum lưu dạng chuỗi
+trên CSDL mới (nếu không, giá trị thêm ở bản sau bị MySQL từ chối); sau đó
 `LegacyDataMigration` gom sản phẩm, nhà cung cấp, khuyến mãi, phiếu nhập, đơn hàng và nhân sự chưa thuộc cửa
 hàng nào vào cửa hàng mặc định **"Elsa Store"** (tạo chủ `owner123` / `owner123` nếu chưa có — hãy đổi mật
 khẩu ngay). Hai bước đều chạy lại an toàn nhiều lần.
@@ -373,10 +400,10 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 63 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 68 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
-kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách đánh giá, cửa hàng trả lời, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi
+kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi
 mật khẩu. File được sinh từ `postman/build_collection.py` (sửa danh sách request ở đó rồi sinh lại; `--run <baseUrl>`
 chạy thử cả bộ trên một BE đang chạy).
 
@@ -403,6 +430,7 @@ dùng cho `docker compose`).
 | `APP_PUBLIC_URL` | `http://localhost:8080/elsa-store/api` | Địa chỉ API công khai cho link trong email |
 | `ORDER_UNPAID_CANCEL_MINUTES` | `30` | Tự huỷ đơn VNPay chưa trả sau chừng này phút (tối thiểu 20); `0` = tắt |
 | `ORDER_AUTO_COMPLETE_DAYS` | `7` | Tự hoàn thành đơn đang giao sau chừng này ngày; `0` = tắt |
+| `ORDER_RETURN_WINDOW_DAYS` | `7` | Khách gửi yêu cầu trả hàng trong chừng này ngày sau khi đơn hoàn thành; `0` = tắt |
 | `FIREBASE_CREDENTIALS` | trống | Đường dẫn file JSON service account Firebase; trống thì tắt push |
 | `GEMINI_API_KEY` | trống | Khoá Google AI Studio; có khoá thì bật trợ lý AI (provider tự chọn là `gemini`) |
 | `ANTHROPIC_API_KEY` | trống | Dùng Claude thay Gemini (provider `anthropic`) |
@@ -416,7 +444,7 @@ dùng cho `docker compose`).
 | `AI_AUTO_REPLY_DELAY_SECONDS` | `60` | Chờ bao lâu trước khi trợ lý tự trả lời thay cửa hàng đã bật tự trả lời |
 
 Bảng `notifications`, `device_tokens`, `conversations`, `chat_messages`, `stock_movements`, `password_reset_codes`,
-`product_reviews`, `wishlist_items` và `order_status_history` được Hibernate tạo tự động
+`product_reviews`, `wishlist_items`, `order_status_history`, `return_requests` và `return_items` được Hibernate tạo tự động
 (`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `stores.shipping_fee`,
 `stores.free_shipping_threshold`, `orders.completed_at`, `orders.cancel_reason`, `orders.shipping_fee`,
 `product_variants.cost_price`, `order_items.cost_price`, `purchase_orders.code/note/received_at`, `users.token_version`…)

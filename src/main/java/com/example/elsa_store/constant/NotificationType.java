@@ -16,5 +16,9 @@ public enum NotificationType {
     /** Đơn đã giao cho đơn vị vận chuyển. Giá trị mới luôn thêm vào cuối. */
     ORDER_SHIPPING,
     /** Cho chủ / quản lý: sản phẩm vừa bán xuống dưới mức cảnh báo tồn kho hoặc hết hàng. */
-    LOW_STOCK
+    LOW_STOCK,
+    /** Cho cửa hàng: khách gửi yêu cầu trả hàng. */
+    RETURN_REQUESTED,
+    /** Cho khách: yêu cầu trả hàng được duyệt / bị từ chối / đã hoàn tiền. */
+    RETURN_UPDATED
 }

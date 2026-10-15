@@ -36,6 +36,9 @@ public class DashboardResponse {
 
     private Long completedOrders;
 
+    /** Yêu cầu trả hàng chờ duyệt (khi xem một cửa hàng). */
+    private Long pendingReturns;
+
     /** Đơn đặt hôm nay (mọi trạng thái). */
     private Long todayOrders;
 

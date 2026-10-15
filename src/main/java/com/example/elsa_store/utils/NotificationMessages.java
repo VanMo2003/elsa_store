@@ -1,6 +1,7 @@
 package com.example.elsa_store.utils;
 
 import com.example.elsa_store.entity.Order;
+import com.example.elsa_store.entity.ReturnRequest;
 import com.example.elsa_store.entity.Store;
 
 import java.text.NumberFormat;
@@ -63,6 +64,34 @@ public final class NotificationMessages {
         return new Message(
                 "Khách đã huỷ đơn",
                 customerName + " đã huỷ đơn " + order.getCode() + (reason == null ? "." : ". Lý do: " + reason));
+    }
+
+    /** Cho cửa hàng: khách vừa gửi yêu cầu trả hàng. */
+    public static Message returnRequested(ReturnRequest r, String customerName) {
+        return new Message(
+                "Có yêu cầu trả hàng mới",
+                customerName + " muốn trả hàng của đơn " + r.getOrder().getCode() + ". Lý do: " + r.getReason());
+    }
+
+    public static Message returnApproved(ReturnRequest r) {
+        String note = r.getStoreNote();
+        return new Message(
+                "Yêu cầu trả hàng đã được duyệt",
+                "Cửa hàng đồng ý cho trả hàng của đơn " + r.getOrder().getCode()
+                        + (note == null ? ". Hãy gửi lại sản phẩm cho cửa hàng." : ". " + note));
+    }
+
+    public static Message returnRejected(ReturnRequest r) {
+        return new Message(
+                "Yêu cầu trả hàng bị từ chối",
+                "Yêu cầu trả hàng của đơn " + r.getOrder().getCode() + " không được chấp nhận. Lý do: " + r.getStoreNote());
+    }
+
+    public static Message returnRefunded(ReturnRequest r) {
+        return new Message(
+                "Đã hoàn tiền trả hàng",
+                "Cửa hàng đã nhận lại hàng và hoàn " + money(r.getRefundAmount()) + " cho đơn " + r.getOrder().getCode()
+                        + ".");
     }
 
     /** Một dòng trong cảnh báo tồn kho. */

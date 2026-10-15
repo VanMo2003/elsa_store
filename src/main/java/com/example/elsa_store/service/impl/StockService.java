@@ -207,6 +207,18 @@ public class StockService {
         }
     }
 
+    /**
+     * Khách trả hàng (đã hoàn tiền): cộng lại kho và ghi thẻ kho cho biến thể đang theo dõi kho; biến thể không theo dõi
+     * kho thì bỏ qua.
+     */
+    public void restock(ProductVariant variant, int quantity, Double unitCost, Ref ref, String note, User actor) {
+        if (quantity <= 0 || levels(List.of(variant.getId())).get(variant.getId()) == null) {
+            return;
+        }
+        release(variant, quantity);
+        write(variant, StockMovementType.RETURN, quantity, null, unitCost, ref, note, actor);
+    }
+
     /** {@code balanceAfter} null = đọc tồn kho hiện tại (đã gồm thay đổi vừa rồi, cùng giao dịch). */
     private void write(ProductVariant variant, StockMovementType type, int change, Integer balanceAfter,
                        Double unitCost, Ref ref, String note, User actor) {

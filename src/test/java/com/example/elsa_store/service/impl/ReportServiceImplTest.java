@@ -34,8 +34,9 @@ class ReportServiceImplTest {
     private final StoreRepository stores = mock(StoreRepository.class);
     private final AccessGuard accessGuard = mock(AccessGuard.class);
     private final ExcelReportService excel = mock(ExcelReportService.class);
+    private final ReturnRequestRepository returns = mock(ReturnRequestRepository.class);
     private final ReportServiceImpl service =
-            new ReportServiceImpl(orders, orderItems, inventories, variants, stores, accessGuard, excel);
+            new ReportServiceImpl(orders, orderItems, inventories, variants, stores, accessGuard, excel, returns);
 
     private static final LocalDate FROM = LocalDate.of(2026, 10, 1);
     private static final LocalDate TO = LocalDate.of(2026, 10, 14);

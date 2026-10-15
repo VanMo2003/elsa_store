@@ -45,6 +45,8 @@ public class OrderResponse {
     private String handledByName;
     /** Trạng thái mà người đang xem được phép chuyển đơn sang — app chỉ hiện đúng các nút này. */
     private List<OrderStatus> allowedNextStatuses;
+    /** Hạn cuối gửi yêu cầu trả hàng (chỉ đơn đã hoàn thành); trống = không trả được. */
+    private LocalDateTime returnDeadline;
     /** Lý do huỷ (khi đơn đã huỷ và người huỷ có nhập). */
     private String cancelReason;
     /**

@@ -81,6 +81,23 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void notifyStoreManagers(
+            Store store,
+            NotificationType type,
+            NotificationMessages.Message message,
+            String link,
+            Long referenceId) {
+        Map<Long, User> recipients = new LinkedHashMap<>();
+        if (store.getOwner() != null) {
+            recipients.put(store.getOwner().getId(), store.getOwner());
+        }
+        userRepository.findAllByStore_Id(store.getId()).stream()
+                .filter(member -> member.getRole() == Role.STORE_MANAGER || member.getRole() == Role.STORE_OWNER)
+                .forEach(member -> recipients.put(member.getId(), member));
+        send(recipients.values().stream().filter(User::isEnabled).toList(), type, message, link, referenceId);
+    }
+
+    @Override
     public void notifyAdmins(
             NotificationType type, NotificationMessages.Message message, String link, Long referenceId) {
         send(userRepository.findAllByRole(Role.ADMIN), type, message, link, referenceId);

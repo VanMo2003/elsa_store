@@ -241,6 +241,11 @@ public class StockService {
         return new AppException(ErrorCode.OUT_OF_STOCK, message);
     }
 
+    /** Tên sản phẩm kèm phân loại, ví dụ "Giày Samba (Trắng / 42)". */
+    static String label(ProductVariant variant) {
+        return variant.getProduct().getName() + options(variant);
+    }
+
     private static String options(ProductVariant variant) {
         String color = variant.getColor() == null ? "" : variant.getColor().trim();
         String size = variant.getSize() == null ? "" : variant.getSize().trim();

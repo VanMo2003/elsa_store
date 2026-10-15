@@ -66,6 +66,7 @@ public class OrderServiceImpl implements OrderService {
     private final PricingService pricingService;
     private final StockService stockService;
     private final OrderTimeline timeline;
+    private final StockAlerts stockAlerts;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -78,7 +79,8 @@ public class OrderServiceImpl implements OrderService {
             UserAccountFactory accountFactory,
             PricingService pricingService,
             StockService stockService,
-            OrderTimeline timeline) {
+            OrderTimeline timeline,
+            StockAlerts stockAlerts) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.addressRepository = addressRepository;
@@ -90,6 +92,7 @@ public class OrderServiceImpl implements OrderService {
         this.pricingService = pricingService;
         this.stockService = stockService;
         this.timeline = timeline;
+        this.stockAlerts = stockAlerts;
     }
 
     // ------------------------------------------------------------------ đặt đơn
@@ -171,6 +174,7 @@ public class OrderServiceImpl implements OrderService {
         order = orderRepository.save(order);
         timeline.record(order, OrderStatus.CHUA_XAC_NHAN, current, null);
         stockService.recordSale(order, current);
+        stockAlerts.afterSale(order);
         if (!counterSale && Boolean.TRUE.equals(request.getFromCart())) {
             removeFromCart(current.getId(), wanted.keySet());
         }

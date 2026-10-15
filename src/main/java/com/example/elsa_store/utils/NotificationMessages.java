@@ -4,7 +4,9 @@ import com.example.elsa_store.entity.Order;
 import com.example.elsa_store.entity.Store;
 
 import java.text.NumberFormat;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /** Nội dung tiếng Việt của thông báo hiện trong app và đẩy tới điện thoại, gom về một chỗ. */
 public final class NotificationMessages {
@@ -61,6 +63,18 @@ public final class NotificationMessages {
         return new Message(
                 "Khách đã huỷ đơn",
                 customerName + " đã huỷ đơn " + order.getCode() + (reason == null ? "." : ". Lý do: " + reason));
+    }
+
+    /** Một dòng trong cảnh báo tồn kho. */
+    public record StockLine(String name, int remaining, boolean soldOut) {}
+
+    /** Cho chủ / quản lý: các sản phẩm vừa sắp hết / hết hàng sau một đơn. */
+    public static Message lowStock(List<StockLine> lines) {
+        boolean anySoldOut = lines.stream().anyMatch(StockLine::soldOut);
+        String body = lines.stream()
+                .map(l -> l.soldOut() ? l.name() + " đã hết hàng" : l.name() + " chỉ còn " + l.remaining())
+                .collect(Collectors.joining("; "));
+        return new Message(anySoldOut ? "Có sản phẩm vừa hết hàng" : "Sản phẩm sắp hết hàng", body + ". Nhập thêm hàng nhé.");
     }
 
     /** Cho cửa hàng: tiền về cho đơn đã huỷ. */

@@ -26,7 +26,10 @@ chỉ được ghi log.
 |---|---|---|
 | Khách đặt đơn (`POST /orders`) | Khách | Trong app + push + email xác nhận |
 | Khách đặt đơn | Chủ, quản lý, nhân viên của cửa hàng | Trong app + push |
-| Đơn chuyển sang đã xác nhận / đã huỷ / hoàn thành | Khách | Trong app + push + email |
+| Đơn chuyển sang đã xác nhận / đang giao / đã huỷ (kèm lý do) / hoàn thành | Khách | Trong app + push + email |
+| Khách tự huỷ đơn / bấm đã nhận hàng | Chủ, quản lý, nhân viên của cửa hàng | Trong app + push |
+| Một đơn làm sản phẩm vừa xuống dưới mức cảnh báo tồn kho hoặc hết hàng (`LOW_STOCK`, mở `elsastore://inventory`) | Chủ, quản lý (nhân viên không xem được kho) | Trong app + push |
+| Tiền VNPay về cho đơn đã huỷ | Chủ, quản lý, nhân viên | Trong app + push ("Cần hoàn tiền cho khách") |
 | Thanh toán chuyển sang thành công / thất bại (callback VNPay hoặc `PUT /orders/{id}/status?paymentStatus=`) | Khách | Trong app + push + email |
 | Có hồ sơ mở cửa hàng mới (hoặc chủ gửi lại hồ sơ) | Admin | Trong app + push |
 | Hồ sơ được duyệt / bị từ chối (kèm lý do) | Chủ cửa hàng | Trong app + push + email |
@@ -250,6 +253,9 @@ cáo trả `uncostedQuantity > 0` để app cảnh báo (lợi nhuận đang cao
 | `PUT /inventories/variants/{variantId}` `{quantity?, minQuantity?, costPrice?, note?}` | Kiểm kê (số đếm thực tế; biến thể chưa theo dõi thì bắt đầu theo dõi), mức cảnh báo, giá vốn — trường để trống giữ nguyên |
 | `DELETE /inventories/variants/{variantId}` | Ngừng theo dõi kho (bán không giới hạn trở lại) |
 | `GET /inventories/variants/{variantId}/movements` | **Thẻ kho**: mọi lần nhập (`IMPORT`), bán (`SALE`), hoàn (`RETURN`), kiểm kê (`ADJUST`) kèm số thay đổi, tồn sau thay đổi, giá, chứng từ (mã đơn / mã phiếu nhập), người làm |
+
+**Cảnh báo tồn kho** (`StockAlerts`): sau mỗi đơn trừ kho, biến thể nào vừa **vượt xuống** mức cảnh báo (`minQuantity`)
+hoặc về 0 thì chủ và quản lý nhận một thông báo gộp cho cả đơn; đã ở dưới mức từ trước thì không báo lại.
 
 Mọi thay đổi số lượng — kể cả API cũ `POST/PUT/DELETE /inventories/{id}` — đi qua `StockService` để thẻ kho
 (`stock_movements`) luôn khớp với con số tồn hiện tại.

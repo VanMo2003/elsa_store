@@ -53,6 +53,22 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
         Integer getQuantity();
     }
 
+    /**
+     * Tồn kho và mức cảnh báo đọc thẳng từ CSDL. Không dùng entity {@link Inventory}: biến thể đã nạp sẵn tồn kho của
+     * nó trong phiên, còn lệnh trừ kho là câu update hàng loạt nên entity vẫn giữ số cũ.
+     */
+    @Query("select i.productVariant.id as variantId, i.quantity as quantity, i.minQuantity as minQuantity"
+            + " from Inventory i where i.productVariant.id in :variantIds")
+    List<AlertLevel> findAlertLevels(@Param("variantIds") Collection<Long> variantIds);
+
+    interface AlertLevel {
+        Long getVariantId();
+
+        Integer getQuantity();
+
+        Integer getMinQuantity();
+    }
+
     /** Theo từng sản phẩm: bao nhiêu biến thể có theo dõi kho, bao nhiêu biến thể trong đó còn hàng. */
     @Query("""
         select i.productVariant.product.id as productId,

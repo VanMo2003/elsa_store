@@ -49,8 +49,10 @@ class OrderServiceImplTest {
     private final PricingService pricing = new PricingService(
             promotions, promotionLinks, Clock.fixed(Instant.parse("2026-10-14T03:00:00Z"), ZoneId.of("UTC")));
     private final OrderTimeline timeline = mock(OrderTimeline.class);
+    private final StockAlerts stockAlerts = mock(StockAlerts.class);
     private final OrderServiceImpl service = new OrderServiceImpl(
-            orders, customers, addresses, variants, carts, notifications, accessGuard, accounts, pricing, stock, timeline);
+            orders, customers, addresses, variants, carts, notifications, accessGuard, accounts, pricing, stock, timeline,
+            stockAlerts);
 
     private User buyer;
     private User staff;
@@ -347,6 +349,7 @@ class OrderServiceImplTest {
     void placingAnOrderStartsItsTimeline() {
         OrderResponse res = service.create(customerOrder());
         verify(timeline).record(any(Order.class), eq(OrderStatus.CHUA_XAC_NHAN), eq(buyer), isNull());
+        verify(stockAlerts).afterSale(any(Order.class));
         verify(timeline).entries(any(Order.class), eq(buyer));
         assertEquals(OrderStatus.CHUA_XAC_NHAN, res.getStatus());
     }

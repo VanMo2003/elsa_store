@@ -27,6 +27,14 @@ public interface NotificationService {
             String link,
             Long referenceId);
 
+    /** Chỉ gửi cho chủ và quản lý của cửa hàng (ví dụ: cảnh báo tồn kho — nhân viên không xem được kho). */
+    void notifyStoreManagers(
+            Store store,
+            NotificationType type,
+            NotificationMessages.Message message,
+            String link,
+            Long referenceId);
+
     /** Gửi cho mọi ADMIN (ví dụ: có cửa hàng mới cần duyệt). */
     void notifyAdmins(NotificationType type, NotificationMessages.Message message, String link, Long referenceId);
 

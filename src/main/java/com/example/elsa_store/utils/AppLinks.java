@@ -7,6 +7,7 @@ public final class AppLinks {
     public static final String ORDERS = "orders";
     public static final String NOTIFICATIONS = "notifications";
     public static final String STORE_STATUS = "store-status";
+    public static final String INVENTORY = "inventory";
 
     private AppLinks() {}
 
@@ -20,6 +21,11 @@ public final class AppLinks {
 
     public static String notifications() {
         return deepLink(NOTIFICATIONS);
+    }
+
+    /** Kho hàng của cửa hàng (lọc sẵn các biến thể sắp hết). */
+    public static String inventory() {
+        return deepLink(INVENTORY);
     }
 
     /** Trạng thái duyệt cửa hàng của chủ đang đăng nhập. */

@@ -14,5 +14,7 @@ public enum NotificationType {
     STORE_APPROVED,
     STORE_REJECTED,
     /** Đơn đã giao cho đơn vị vận chuyển. Giá trị mới luôn thêm vào cuối. */
-    ORDER_SHIPPING
+    ORDER_SHIPPING,
+    /** Cho chủ / quản lý: sản phẩm vừa bán xuống dưới mức cảnh báo tồn kho hoặc hết hàng. */
+    LOW_STOCK
 }

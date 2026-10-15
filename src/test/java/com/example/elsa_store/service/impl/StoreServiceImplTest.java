@@ -11,7 +11,9 @@ import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.repository.StoreRepository;
 import com.example.elsa_store.security.AccessGuard;
+import com.example.elsa_store.service.FileStorageService;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +32,8 @@ class StoreServiceImplTest {
     private final ProductReviewRepository reviews = mock(ProductReviewRepository.class);
     private final ProductRepository products = mock(ProductRepository.class);
     private final OrderItemRepository orderItems = mock(OrderItemRepository.class);
-    private final StoreServiceImpl service = new StoreServiceImpl(stores, accessGuard, reviews, products, orderItems);
+    private final FileStorageService storage = mock(FileStorageService.class);
+    private final StoreServiceImpl service = new StoreServiceImpl(stores, accessGuard, reviews, products, orderItems, storage);
 
     private Store store(ApprovalStatus status) {
         Store store = Store.builder().name("Elsa").approvalStatus(status).email("chu@example.com").build();
@@ -98,5 +101,19 @@ class StoreServiceImplTest {
         assertEquals(false, open.getPaused());
         assertNull(open.getPauseNote());
         assertNull(mine.getPaused());
+    }
+
+    @Test
+    void logoIsStoredInTheStoresFolderAndCanBeRemoved() {
+        Store mine = Store.builder().name("Elsa").build();
+        mine.setId(3L);
+        when(accessGuard.requireStoreManager()).thenReturn(mine);
+        when(stores.save(any(Store.class))).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", new byte[] {1});
+        when(storage.storeStoreImage(file)).thenReturn("/uploads/stores/a.png");
+
+        assertEquals("/uploads/stores/a.png", service.updateImage(file).getImageUrl());
+        assertNull(service.removeImage().getImageUrl());
+        assertNull(mine.getImageUrl());
     }
 }

@@ -51,6 +51,16 @@ class FileStorageServiceImplTest {
     }
 
     @Test
+    void storeLogosGoToTheirOwnFolderWithTheSameChecks() throws Exception {
+        String url = service().storeStoreImage(new MockMultipartFile("file", "logo.png", "image/png", PNG));
+        try (Stream<Path> files = Files.list(root.resolve("uploads/stores"))) {
+            assertTrue(url.endsWith("/uploads/stores/" + files.findFirst().orElseThrow().getFileName()), url);
+        }
+        MockMultipartFile html = new MockMultipartFile("file", "logo.png", "image/png", "<svg/>".getBytes(StandardCharsets.UTF_8));
+        assertThrows(AppException.class, () -> service().storeStoreImage(html));
+    }
+
+    @Test
     void rejectsAnHtmlFilePretendingToBeAnImage() {
         MockMultipartFile html = new MockMultipartFile(
                 "files", "photo.jpg", "image/jpeg", "<html><script>alert(1)</script></html>".getBytes(StandardCharsets.UTF_8));

@@ -16,12 +16,14 @@ import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.repository.StoreRepository;
 import com.example.elsa_store.security.AccessGuard;
+import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.service.StoreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,6 +37,7 @@ public class StoreServiceImpl implements StoreService {
     private final ProductReviewRepository reviewRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -104,6 +107,21 @@ public class StoreServiceImpl implements StoreService {
         store.setPaused(paused ? Boolean.TRUE : null);
         String note = req.getNote() == null || req.getNote().isBlank() ? null : req.getNote().trim();
         store.setPauseNote(paused ? note : null);
+        return StoreMapper.toResponse(storeRepository.save(store));
+    }
+
+    @Override
+    public StoreResponse updateImage(MultipartFile file) {
+        Store store = accessGuard.requireStoreManager();
+        store.setImageUrl(fileStorageService.storeStoreImage(file));
+        return StoreMapper.toResponse(storeRepository.save(store));
+    }
+
+    /** File cũ giữ lại trên đĩa: tin nhắn chat đã gửi còn trỏ tới ảnh cửa hàng lúc đó. */
+    @Override
+    public StoreResponse removeImage() {
+        Store store = accessGuard.requireStoreManager();
+        store.setImageUrl(null);
         return StoreMapper.toResponse(storeRepository.save(store));
     }
 

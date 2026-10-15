@@ -28,18 +28,25 @@ public class FileStorageServiceImpl implements FileStorageService {
     static final String UNSUPPORTED_IMAGE = "Only JPEG, PNG, WEBP or GIF images can be uploaded";
 
     private static final String PRODUCT_FOLDER = "products";
+    private static final String STORE_FOLDER = "stores";
 
     private final String uploadDir;
-    private final Path productDir;
 
     public FileStorageServiceImpl(@Value("${file.upload-dir}") String uploadDir) {
         this.uploadDir = uploadDir.endsWith("/") ? uploadDir : uploadDir + "/";
-        this.productDir =
-                Path.of(this.uploadDir, PRODUCT_FOLDER).toAbsolutePath().normalize();
     }
 
     @Override
     public String storeProductImage(MultipartFile file) {
+        return storeImage(file, PRODUCT_FOLDER);
+    }
+
+    @Override
+    public String storeStoreImage(MultipartFile file) {
+        return storeImage(file, STORE_FOLDER);
+    }
+
+    private String storeImage(MultipartFile file, String folder) {
         if (file == null || file.isEmpty()) {
             throw new AppException(ErrorCode.BAD_REQUEST, "files: must not be empty");
         }
@@ -55,15 +62,16 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new AppException(ErrorCode.BAD_REQUEST, UNSUPPORTED_IMAGE);
         }
         String name = UUID.randomUUID() + "." + extension;
-        Path target = productDir.resolve(name).normalize();
+        Path dir = Path.of(uploadDir, folder).toAbsolutePath().normalize();
+        Path target = dir.resolve(name).normalize();
         try {
-            Files.createDirectories(productDir);
+            Files.createDirectories(dir);
             Files.write(target, bytes, StandardOpenOption.CREATE_NEW);
         } catch (IOException e) {
             log.error("Cannot store uploaded image at {}", target, e);
             throw new AppException(ErrorCode.INTERNAL_ERROR, "Upload failed");
         }
-        return "/" + uploadDir + PRODUCT_FOLDER + "/" + name;
+        return "/" + uploadDir + folder + "/" + name;
     }
 
     /** Đuôi file theo chữ ký đầu file, hoặc {@code null} nếu không phải ảnh được hỗ trợ. */

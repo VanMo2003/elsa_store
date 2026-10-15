@@ -228,6 +228,9 @@ App tạo sản phẩm bằng JSON rồi tải ảnh sau; tạo bằng multipart
 
 Chủ, quản lý, nhân viên của cửa hàng được thêm / gỡ / đổi ảnh; ảnh được kiểm tra theo nội dung tệp (xem Bảo mật).
 
+**Ảnh cửa hàng (logo):** `POST /stores/me/image` (multipart, phần `file`) lưu vào `/uploads/stores/` và đặt làm ảnh
+cửa hàng; `DELETE /stores/me/image` gỡ. Chủ và quản lý; ảnh hiện ở trang cửa hàng công khai và khung chat.
+
 ## Đánh giá sản phẩm và yêu thích
 
 **Đánh giá** (`product_reviews`): chỉ tài khoản khách (`USER`) có **đơn hoàn thành chứa sản phẩm** mới viết được, mỗi

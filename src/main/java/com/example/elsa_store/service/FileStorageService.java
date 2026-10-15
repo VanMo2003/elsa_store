@@ -8,4 +8,7 @@ public interface FileStorageService {
      * WEBP, GIF (nhận diện theo nội dung file); tên file do máy chủ đặt.
      */
     String storeProductImage(MultipartFile file);
+
+    /** Như {@link #storeProductImage} nhưng lưu vào {@code /uploads/stores/} (ảnh đại diện cửa hàng). */
+    String storeStoreImage(MultipartFile file);
 }

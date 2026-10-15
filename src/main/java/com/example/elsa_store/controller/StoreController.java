@@ -9,7 +9,9 @@ import com.example.elsa_store.dto.response.StoreResponse;
 import com.example.elsa_store.service.StoreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/stores")
@@ -40,6 +42,17 @@ public class StoreController {
     @PutMapping("/me/pause")
     public ApiResponse<StoreResponse> updatePause(@Valid @RequestBody StorePauseRequest req) {
         return ApiResponse.ok(storeService.updatePause(req));
+    }
+
+    /** Ảnh đại diện (logo) cửa hàng: multipart, phần {@code file} (chủ / quản lý). */
+    @PostMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<StoreResponse> updateImage(@RequestPart("file") MultipartFile file) {
+        return ApiResponse.ok(storeService.updateImage(file));
+    }
+
+    @DeleteMapping("/me/image")
+    public ApiResponse<StoreResponse> removeImage() {
+        return ApiResponse.ok(storeService.removeImage());
     }
 
     /** Phí giao hàng và mức miễn phí giao (chủ / quản lý). */

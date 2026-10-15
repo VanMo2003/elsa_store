@@ -5,6 +5,7 @@ import com.example.elsa_store.dto.request.StorePauseRequest;
 import com.example.elsa_store.dto.request.StoreUpdateRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.StoreResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface StoreService {
     /** Công khai: cửa hàng đã được duyệt. */
@@ -24,4 +25,10 @@ public interface StoreService {
 
     /** Chủ hoặc quản lý đặt phí giao hàng và mức miễn phí giao. */
     StoreResponse updateShipping(ShippingSettingsRequest req);
+
+    /** Đổi ảnh đại diện (logo) cửa hàng của người gọi (chủ / quản lý). */
+    StoreResponse updateImage(MultipartFile file);
+
+    /** Gỡ ảnh đại diện cửa hàng. */
+    StoreResponse removeImage();
 }

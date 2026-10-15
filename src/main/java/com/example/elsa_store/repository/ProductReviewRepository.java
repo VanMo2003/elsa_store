@@ -17,15 +17,21 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
 
     Optional<ProductReview> findByUser_IdAndProduct_Id(Long userId, Long productId);
 
-    /** Đánh giá của một sản phẩm, mới nhất trước; {@code rating} null = mọi số sao. */
+    /** Đánh giá của một sản phẩm, mới nhất trước; {@code rating} null = mọi số sao; {@code withImages} = chỉ đánh giá có ảnh. */
     @Query("""
         select r from ProductReview r
         where r.product.id = :productId and (:rating is null or r.rating = :rating)
+          and (:withImages = false or r.images is not empty)
         order by r.id desc
     """)
     Page<ProductReview> findForProduct(@Param("productId") Long productId,
                                        @Param("rating") Integer rating,
+                                       @Param("withImages") boolean withImages,
                                        Pageable pageable);
+
+    /** Số đánh giá có ảnh của một sản phẩm (nhãn bộ lọc "Có ảnh"). */
+    @Query("select count(r) from ProductReview r where r.product.id = :productId and r.images is not empty")
+    long countWithImages(@Param("productId") Long productId);
 
     /** Điểm trung bình và số lượt đánh giá theo từng sản phẩm — một truy vấn cho cả trang sản phẩm. */
     @Query("""

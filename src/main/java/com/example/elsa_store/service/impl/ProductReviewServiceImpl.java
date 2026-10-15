@@ -20,11 +20,13 @@ import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.security.AccessGuard;
+import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.ProductReviewService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -41,25 +43,28 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
     private final AccessGuard accessGuard;
+    private final FileStorageService fileStorageService;
 
     public ProductReviewServiceImpl(ProductReviewRepository reviewRepository,
                                     ProductRepository productRepository,
                                     OrderItemRepository orderItemRepository,
-                                    AccessGuard accessGuard) {
+                                    AccessGuard accessGuard,
+                                    FileStorageService fileStorageService) {
         this.reviewRepository = reviewRepository;
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
         this.accessGuard = accessGuard;
+        this.fileStorageService = fileStorageService;
     }
 
     // ------------------------------------------------------------------ đọc (công khai)
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ReviewResponse> list(Long productId, Integer rating, int page, int size) {
+    public PageResponse<ReviewResponse> list(Long productId, Integer rating, boolean withImages, int page, int size) {
         visibleProduct(productId);
         Long viewerId = accessGuard.currentUserOrEmpty().map(User::getId).orElse(null);
-        var result = reviewRepository.findForProduct(productId, validRating(rating),
+        var result = reviewRepository.findForProduct(productId, validRating(rating), withImages,
                 PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 50)));
         return PageResponse.from(result.map(r -> toResponse(r, viewerId)));
     }
@@ -85,6 +90,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                 .average(count == 0 ? null : round1((double) total / count))
                 .count(count)
                 .distribution(distribution)
+                .withImages(count == 0 ? 0L : reviewRepository.countWithImages(productId))
                 .build();
     }
 
@@ -136,6 +142,37 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         review.setVariantLabel(options(purchase.getProductVariant()));
         review.setOrderCode(purchase.getOrder().getCode());
         return toResponse(reviewRepository.save(review), user.getId());
+    }
+
+    @Override
+    public ReviewResponse addImages(Long productId, List<MultipartFile> files) {
+        User user = accessGuard.currentUser();
+        ProductReview review = myReview(user, productId);
+        if (files == null || files.isEmpty()) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "files: must not be empty");
+        }
+        if (review.getImages().size() + files.size() > ProductReview.MAX_IMAGES) {
+            throw new AppException(ErrorCode.BAD_REQUEST,
+                    "A review can have at most " + ProductReview.MAX_IMAGES + " images");
+        }
+        files.stream().map(fileStorageService::storeReviewImage).forEach(review.getImages()::add);
+        return toResponse(reviewRepository.save(review), user.getId());
+    }
+
+    @Override
+    public ReviewResponse removeImage(Long productId, String url) {
+        User user = accessGuard.currentUser();
+        ProductReview review = myReview(user, productId);
+        if (!review.getImages().remove(url)) {
+            throw new ResourceNotFoundException("Image not found");
+        }
+        return toResponse(reviewRepository.save(review), user.getId());
+    }
+
+    /** Đánh giá của chính khách cho sản phẩm (chưa viết thì 404). */
+    private ProductReview myReview(User user, Long productId) {
+        return reviewRepository.findByUser_IdAndProduct_Id(user.getId(), productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
     }
 
     @Override
@@ -231,6 +268,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                 .storeReply(r.getStoreReply())
                 .repliedAt(r.getRepliedAt())
                 .mine(viewerId != null && viewerId.equals(r.getUser().getId()))
+                .images(r.getImages() == null ? List.of() : List.copyOf(r.getImages()))
                 .build();
     }
 

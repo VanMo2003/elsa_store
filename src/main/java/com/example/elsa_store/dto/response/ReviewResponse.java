@@ -3,6 +3,7 @@ package com.example.elsa_store.dto.response;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,4 +27,6 @@ public class ReviewResponse {
     private LocalDateTime repliedAt;
     /** Đánh giá của chính người đang xem. */
     private Boolean mine;
+    /** Ảnh khách đính kèm (đường dẫn /uploads/reviews/...). */
+    private List<String> images;
 }

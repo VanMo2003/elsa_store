@@ -9,7 +9,11 @@ import com.example.elsa_store.dto.response.ReviewResponse;
 import com.example.elsa_store.dto.response.ReviewSummaryResponse;
 import com.example.elsa_store.service.ProductReviewService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /** Đánh giá sản phẩm: đọc công khai; khách đã nhận hàng viết / sửa / xoá; người của cửa hàng xem và trả lời. */
 @RestController
@@ -24,9 +28,10 @@ public class ProductReviewController {
     @GetMapping("/products/{productId}/reviews")
     public ApiResponse<PageResponse<ReviewResponse>> list(@PathVariable Long productId,
                                                           @RequestParam(required = false) Integer rating,
+                                                          @RequestParam(defaultValue = "false") boolean withImages,
                                                           @RequestParam(defaultValue = "0") int page,
                                                           @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.ok(reviewService.list(productId, rating, page, size));
+        return ApiResponse.ok(reviewService.list(productId, rating, withImages, page, size));
     }
 
     @GetMapping("/products/{productId}/reviews/summary")
@@ -43,6 +48,18 @@ public class ProductReviewController {
     @PostMapping("/products/{productId}/reviews")
     public ApiResponse<ReviewResponse> upsert(@PathVariable Long productId, @Valid @RequestBody ReviewRequest body) {
         return ApiResponse.ok(reviewService.upsert(productId, body));
+    }
+
+    /** Thêm ảnh vào đánh giá của mình (multipart, phần {@code files}); viết đánh giá trước rồi mới thêm ảnh. */
+    @PostMapping(value = "/products/{productId}/reviews/me/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ReviewResponse> addImages(@PathVariable Long productId,
+                                                 @RequestPart("files") List<MultipartFile> files) {
+        return ApiResponse.ok(reviewService.addImages(productId, files));
+    }
+
+    @DeleteMapping("/products/{productId}/reviews/me/images")
+    public ApiResponse<ReviewResponse> removeImage(@PathVariable Long productId, @RequestParam String url) {
+        return ApiResponse.ok(reviewService.removeImage(productId, url));
     }
 
     @DeleteMapping("/reviews/{id}")

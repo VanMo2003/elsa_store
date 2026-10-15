@@ -29,6 +29,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     private static final String PRODUCT_FOLDER = "products";
     private static final String STORE_FOLDER = "stores";
+    private static final String REVIEW_FOLDER = "reviews";
 
     private final String uploadDir;
 
@@ -44,6 +45,11 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     public String storeStoreImage(MultipartFile file) {
         return storeImage(file, STORE_FOLDER);
+    }
+
+    @Override
+    public String storeReviewImage(MultipartFile file) {
+        return storeImage(file, REVIEW_FOLDER);
     }
 
     private String storeImage(MultipartFile file, String folder) {

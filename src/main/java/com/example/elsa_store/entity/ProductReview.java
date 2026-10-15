@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Đánh giá sản phẩm của khách. Mỗi khách một đánh giá cho mỗi sản phẩm (viết lại thì sửa đánh giá cũ); chỉ khách đã nhận
@@ -57,4 +59,14 @@ public class ProductReview extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "replied_by")
     private User repliedBy;
+
+    /** Ảnh khách chụp kèm đánh giá (tối đa {@link #MAX_IMAGES}), theo thứ tự tải lên. */
+    @ElementCollection
+    @CollectionTable(name = "product_review_images", joinColumns = @JoinColumn(name = "review_id"))
+    @OrderColumn(name = "sort_order")
+    @Column(name = "image_url", length = 255, nullable = false)
+    @Builder.Default
+    private List<String> images = new ArrayList<>();
+
+    public static final int MAX_IMAGES = 5;
 }

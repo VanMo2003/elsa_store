@@ -240,11 +240,13 @@ Tên người viết được che (`khach001` → `k******1`). Danh sách / tìm
 
 | Endpoint | Ai | Việc |
 |---|---|---|
-| `GET /products/{id}/reviews?rating&page&size` | công khai | Đánh giá mới nhất trước, lọc theo số sao |
-| `GET /products/{id}/reviews/summary` | công khai | `average`, `count`, `distribution` (số đánh giá từng mức 1–5 sao) |
+| `GET /products/{id}/reviews?rating&withImages&page&size` | công khai | Đánh giá mới nhất trước, lọc theo số sao / chỉ đánh giá có ảnh; mỗi đánh giá có `images` |
+| `GET /products/{id}/reviews/summary` | công khai | `average`, `count`, `distribution` (số đánh giá từng mức 1–5 sao), `withImages` (số đánh giá có ảnh) |
 | `GET /products/{id}/reviews/me` | công khai | `canReview`, `reason` (`NOT_SIGNED_IN` / `NOT_CUSTOMER` / `NOT_PURCHASED`) và đánh giá đã viết nếu có |
 | `POST /products/{id}/reviews` `{rating 1–5, comment ≤ 1000 ký tự}` | khách đã nhận hàng | Viết / sửa đánh giá của mình; chưa mua hoặc không phải khách báo `1028` |
-| `DELETE /reviews/{id}` | người viết | Xoá đánh giá của mình |
+| `POST /products/{id}/reviews/me/images` (multipart, phần `files`) | người viết | Đính kèm ảnh vào đánh giá của mình (viết đánh giá trước), tối đa 5 ảnh, lưu ở `/uploads/reviews/` |
+| `DELETE /products/{id}/reviews/me/images?url=` | người viết | Gỡ một ảnh khỏi đánh giá của mình |
+| `DELETE /reviews/{id}` | người viết | Xoá đánh giá của mình (kèm danh sách ảnh) |
 | `GET /reviews/store?rating&unreplied&page&size` | chủ, quản lý, nhân viên | Đánh giá mọi sản phẩm của cửa hàng, lọc số sao / chưa trả lời |
 | `PUT /reviews/{id}/reply` `{reply}` | chủ, quản lý, nhân viên | Trả lời công khai dưới đánh giá (gửi lại = sửa) |
 

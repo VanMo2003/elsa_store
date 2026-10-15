@@ -5,6 +5,9 @@ import com.example.elsa_store.dto.request.ReviewRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.ReviewEligibilityResponse;
 import com.example.elsa_store.dto.response.ReviewResponse;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 import com.example.elsa_store.dto.response.ReviewSummaryResponse;
 
 /**
@@ -14,7 +17,7 @@ import com.example.elsa_store.dto.response.ReviewSummaryResponse;
 public interface ProductReviewService {
 
     /** {@code rating} null = mọi số sao. */
-    PageResponse<ReviewResponse> list(Long productId, Integer rating, int page, int size);
+    PageResponse<ReviewResponse> list(Long productId, Integer rating, boolean withImages, int page, int size);
 
     ReviewSummaryResponse summary(Long productId);
 
@@ -22,6 +25,12 @@ public interface ProductReviewService {
 
     /** Viết mới hoặc sửa đánh giá của chính mình. */
     ReviewResponse upsert(Long productId, ReviewRequest request);
+
+    /** Thêm ảnh vào đánh giá của chính khách cho sản phẩm này (phải viết đánh giá trước), tối đa 5 ảnh. */
+    ReviewResponse addImages(Long productId, List<MultipartFile> files);
+
+    /** Gỡ một ảnh khỏi đánh giá của chính khách. */
+    ReviewResponse removeImage(Long productId, String url);
 
     void delete(Long reviewId);
 

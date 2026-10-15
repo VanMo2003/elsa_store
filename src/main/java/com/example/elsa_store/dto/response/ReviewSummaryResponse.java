@@ -16,4 +16,6 @@ public class ReviewSummaryResponse {
     private Long count;
     /** Số lượt theo số sao: khoá "1".."5", đủ 5 khoá. */
     private Map<String, Long> distribution;
+    /** Số đánh giá có ảnh. */
+    private Long withImages;
 }

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -128,6 +129,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleMediaType(HttpMediaTypeNotSupportedException ex) {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                 .body(ApiResponse.fail("Unsupported content type", ErrorCode.BAD_REQUEST.getCode()));
+    }
+
+    /** Gửi sai định dạng tới API nhận tệp (không phải multipart hợp lệ) — trước đây rơi vào 500. */
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMultipart(MultipartException ex) {
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.fail("Expected a multipart/form-data request", ErrorCode.BAD_REQUEST.getCode()));
     }
 
     /** Đường dẫn không có (kể cả ảnh đã bị xoá trong /uploads) — trước đây rơi vào 500. */

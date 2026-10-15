@@ -25,12 +25,19 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PostMapping
+    /** Tạo sản phẩm kèm ảnh: multipart, phần {@code data} là JSON, phần {@code files} là ảnh. */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ProductResponse> create(
             @Valid @RequestPart("data") ProductRequest request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
         return ApiResponse.ok(productService.create(request, files));
+    }
+
+    /** Tạo sản phẩm bằng JSON (app gửi thông tin trước, ảnh tải sau qua {@code /{id}/images}). */
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<ProductResponse> createJson(@Valid @RequestBody ProductRequest request) {
+        return ApiResponse.ok(productService.create(request, null));
     }
 
     @PutMapping("/{id}")

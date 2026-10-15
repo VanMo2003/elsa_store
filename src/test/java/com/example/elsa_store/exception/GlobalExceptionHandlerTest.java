@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartException;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -59,11 +60,23 @@ class GlobalExceptionHandlerTest {
         String app() {
             throw new ResourceNotFoundException("Order not found");
         }
+
+        @GetMapping("/multipart")
+        String multipart() {
+            throw new MultipartException("Failed to parse multipart servlet request");
+        }
     }
 
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new Endpoints())
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
+
+    @Test
+    void wrongBodyFormatForAFileEndpointIsABadRequestNotA500() throws Exception {
+        mvc.perform(get("/multipart"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Expected a multipart/form-data request"));
+    }
 
     @Test
     void illegalArgumentIsABadRequestWithItsMessage() throws Exception {

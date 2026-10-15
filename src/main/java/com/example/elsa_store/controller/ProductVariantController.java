@@ -23,13 +23,19 @@ public class ProductVariantController {
         this.productVariantService = productVariantService;
     }
 
-    @PostMapping
+    /** Tạo phân loại kèm ảnh: multipart, phần {@code data} là JSON, phần {@code files} là ảnh. */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ProductVariantResponse> create(
             @Valid @RequestPart("data") ProductVariantRequest req,
             @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
         return ApiResponse.ok(productVariantService.create(req, files));
+    }
 
+    /** Tạo phân loại bằng JSON (ảnh tải sau qua {@code /{id}/images}). */
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<ProductVariantResponse> createJson(@Valid @RequestBody ProductVariantRequest req) {
+        return ApiResponse.ok(productVariantService.create(req, null));
     }
 
     @PutMapping("/{id}")

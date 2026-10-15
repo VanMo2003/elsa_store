@@ -95,6 +95,7 @@ step(F3, "Khách đăng ký tài khoản", "POST", "/users",
            "fullName": "Khách Demo", "phone": "0900000099"})
 step(F3, "Khách đăng nhập", "POST", "/auth/login", body={"username": "khach{{runSuffix}}", "password": "123456"},
      saves=[("customerToken", "j.data.accessToken", lambda j: j["data"]["accessToken"])])
+step(F3, "Gợi ý khi gõ ô tìm kiếm (công khai)", "GET", "/search/suggestions", query={"keyword": "giay"})
 step(F3, "Tìm sản phẩm (công khai)", "POST", "/products/search", body={"keyword": "giày", "page": 0, "sizePage": 10})
 step(F3, "Chi tiết sản phẩm (giá khuyến mãi, điểm đánh giá)", "GET", "/products/{{productId}}")
 step(F3, "Sản phẩm tương tự (công khai)", "GET", "/products/{{productId}}/related", query={"size": "8"})

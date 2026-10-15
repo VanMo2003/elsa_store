@@ -32,6 +32,19 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query(PUBLIC_PRODUCTS)
     List<Product> findPublic(@Param("categoryId") Long categoryId, @Param("storeId") Long storeId);
 
+    /** Tên sản phẩm đang bán khớp mẫu {@code like} (đã thoát ký tự đặc biệt), không trùng, sản phẩm mới trước. */
+    @Query("""
+        select p.name from Product p
+        where (p.status is null or p.status = 1)
+          and (p.store is null
+               or p.store.approvalStatus = com.example.elsa_store.constant.ApprovalStatus.APPROVED
+               or p.store.approvalStatus is null)
+          and lower(p.name) like :pattern escape '\\'
+        group by p.name
+        order by max(p.id) desc
+    """)
+    List<String> suggestNames(@Param("pattern") String pattern, Pageable pageable);
+
     /** Như {@link #findPublic(Long, Long)} nhưng giới hạn số dòng (mới nhất trước). */
     @Query(PUBLIC_PRODUCTS)
     List<Product> findPublic(@Param("categoryId") Long categoryId, @Param("storeId") Long storeId, Pageable pageable);

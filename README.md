@@ -225,6 +225,11 @@ Tên người viết được che (`khach001` → `k******1`). Danh sách / tìm
 | `GET /reviews/store?rating&unreplied&page&size` | chủ, quản lý, nhân viên | Đánh giá mọi sản phẩm của cửa hàng, lọc số sao / chưa trả lời |
 | `PUT /reviews/{id}/reply` `{reply}` | chủ, quản lý, nhân viên | Trả lời công khai dưới đánh giá (gửi lại = sửa) |
 
+**Trang cửa hàng công khai:** `GET /stores/{id}` (không cần đăng nhập, chỉ cửa hàng đã duyệt) trả tên, ảnh, địa chỉ, SĐT,
+giới thiệu, chính sách giao hàng và thêm `ratingAverage` / `ratingCount` (gộp đánh giá mọi sản phẩm), `productCount`
+(sản phẩm đang bán), `soldCount` (số món của đơn đã hoàn thành); không có email, tài khoản của chủ. Sản phẩm của cửa hàng
+lấy bằng `POST /products/search` với `storeId`.
+
 **Yêu thích** (`wishlist_items`, chỉ tài khoản khách): `GET /wishlist` (sản phẩm đã thả tim, mới nhất trước, đủ giá
 khuyến mãi / còn hàng / điểm đánh giá như danh sách sản phẩm), `GET /wishlist/ids` (mảng id để app tô tim nhanh),
 `POST /wishlist/{productId}` (bấm lại không lỗi, tối đa 200 sản phẩm) và `DELETE /wishlist/{productId}` — hai lệnh này

@@ -34,4 +34,11 @@ public class StoreResponse {
     Double shippingFee;
     /** Mức tiền hàng được miễn phí giao; trống = không có. */
     Double freeShippingThreshold;
+    /** Trang cửa hàng công khai: điểm đánh giá trung bình (một chữ số thập phân) trên mọi sản phẩm, trống khi chưa có. */
+    Double ratingAverage;
+    Long ratingCount;
+    /** Số sản phẩm đang bán. */
+    Long productCount;
+    /** Tổng số món đã giao xong. */
+    Long soldCount;
 }

@@ -30,4 +30,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findPublic(@Param("categoryId") Long categoryId, @Param("storeId") Long storeId);
 
     long countByStore_Id(Long storeId);
+
+    /** Sản phẩm đang bán của cửa hàng (trạng thái trống hoặc 1, như {@code ProductServiceImpl.isPublic}). */
+    @Query("select count(p) from Product p where p.store.id = :storeId and (p.status is null or p.status = 1)")
+    long countOnSale(@Param("storeId") Long storeId);
 }

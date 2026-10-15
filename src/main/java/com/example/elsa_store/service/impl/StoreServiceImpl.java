@@ -10,6 +10,9 @@ import com.example.elsa_store.exception.AppException;
 import com.example.elsa_store.exception.ErrorCode;
 import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.mapper.StoreMapper;
+import com.example.elsa_store.repository.OrderItemRepository;
+import com.example.elsa_store.repository.ProductRepository;
+import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.repository.StoreRepository;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.service.StoreService;
@@ -19,6 +22,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -26,6 +31,9 @@ public class StoreServiceImpl implements StoreService {
 
     private final StoreRepository storeRepository;
     private final AccessGuard accessGuard;
+    private final ProductReviewRepository reviewRepository;
+    private final ProductRepository productRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -42,7 +50,17 @@ public class StoreServiceImpl implements StoreService {
         if (!store.isApproved()) {
             throw new ResourceNotFoundException("Store not found with id=" + id);
         }
-        return StoreMapper.toPublicResponse(store);
+        StoreResponse response = StoreMapper.toPublicResponse(store);
+        List<Object[]> rating = reviewRepository.storeStats(id);
+        Object[] row = rating.isEmpty() ? new Object[] {null, 0L} : rating.get(0);
+        long count = row[1] instanceof Number n ? n.longValue() : 0;
+        response.setRatingCount(count);
+        response.setRatingAverage(count == 0 || !(row[0] instanceof Number avg)
+                ? null
+                : Math.round(avg.doubleValue() * 10) / 10.0);
+        response.setProductCount(productRepository.countOnSale(id));
+        response.setSoldCount(orderItemRepository.soldQuantity(id));
+        return response;
     }
 
     @Override

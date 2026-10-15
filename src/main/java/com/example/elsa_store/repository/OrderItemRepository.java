@@ -93,4 +93,12 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     List<OrderItem> completedPurchases(@Param("userId") Long userId,
                                        @Param("productId") Long productId,
                                        Pageable pageable);
+
+    /** Tổng số món đã giao xong của một cửa hàng ("đã bán"). */
+    @Query("""
+        select coalesce(sum(i.quantity), 0) from OrderItem i
+        where i.order.store.id = :storeId
+          and i.order.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+    """)
+    long soldQuantity(@Param("storeId") Long storeId);
 }

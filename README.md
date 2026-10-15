@@ -29,6 +29,8 @@ chỉ được ghi log.
 | Đơn chuyển sang đã xác nhận / đang giao / đã huỷ (kèm lý do) / hoàn thành | Khách | Trong app + push + email |
 | Khách tự huỷ đơn / bấm đã nhận hàng | Chủ, quản lý, nhân viên của cửa hàng | Trong app + push |
 | Một đơn làm sản phẩm vừa xuống dưới mức cảnh báo tồn kho hoặc hết hàng (`LOW_STOCK`, mở `elsastore://inventory`) | Chủ, quản lý (nhân viên không xem được kho) | Trong app + push |
+| Khách viết đánh giá mới (`REVIEW_NEW`, mở `elsastore://reviews`; sửa đánh giá thì không báo lại) | Chủ, quản lý, nhân viên | Trong app + push |
+| Cửa hàng trả lời / sửa câu trả lời đánh giá (`REVIEW_REPLIED`, mở `elsastore://products/{id}`) | Khách viết đánh giá | Trong app + push |
 | Tiền VNPay về cho đơn đã huỷ | Chủ, quản lý, nhân viên | Trong app + push ("Cần hoàn tiền cho khách") |
 | Khách gửi yêu cầu trả hàng | Chủ, quản lý, nhân viên | Trong app + push (`RETURN_REQUESTED`) |
 | Yêu cầu trả hàng được duyệt / bị từ chối / đã hoàn tiền | Khách | Trong app + push (`RETURN_UPDATED`) |

@@ -16,7 +16,9 @@ import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.security.AccessGuard.Access;
+import com.example.elsa_store.constant.NotificationType;
 import com.example.elsa_store.service.FileStorageService;
+import com.example.elsa_store.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -29,6 +31,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -39,8 +42,9 @@ class ProductReviewServiceImplTest {
     private final OrderItemRepository orderItems = mock(OrderItemRepository.class);
     private final AccessGuard accessGuard = mock(AccessGuard.class);
     private final FileStorageService storage = mock(FileStorageService.class);
+    private final NotificationService notifications = mock(NotificationService.class);
     private final ProductReviewServiceImpl service =
-            new ProductReviewServiceImpl(reviews, products, orderItems, accessGuard, storage);
+            new ProductReviewServiceImpl(reviews, products, orderItems, accessGuard, storage, notifications);
 
     private Store store;
     private Product shoes;
@@ -110,6 +114,20 @@ class ProductReviewServiceImplTest {
         List<MultipartFile> five = List.of(a, a, a, a, a);
         assertThrows(AppException.class, () -> service.addImages(10L, five), "1 + 5 > 5 ảnh");
         assertEquals(1, mine.getImages().size());
+    }
+
+    @Test
+    void storeIsToldAboutNewReviewsButNotAboutEdits() {
+        service.upsert(10L, new ReviewRequest(5, "Rat em chan"));
+        verify(notifications).notifyStore(eq(store), eq(NotificationType.REVIEW_NEW), argThat(m ->
+                m.title().contains("5") && m.body().contains("Giay") && m.body().contains("Rat em chan")),
+                eq("elsastore://reviews"), eq(99L));
+
+        ProductReview existing = ProductReview.builder().user(buyer).product(shoes).rating(5).build();
+        existing.setId(99L);
+        when(reviews.findByUser_IdAndProduct_Id(7L, 10L)).thenReturn(Optional.of(existing));
+        service.upsert(10L, new ReviewRequest(4, "Sua"));
+        verify(notifications, times(1)).notifyStore(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -194,6 +212,10 @@ class ProductReviewServiceImplTest {
         assertNotNull(res.getRepliedAt());
         assertSame(staff, review.getRepliedBy());
         assertFalse(res.getEdited(), "trả lời không tính là khách sửa đánh giá");
+        verify(notifications).notify(eq(buyer), eq(NotificationType.REVIEW_REPLIED), any(),
+                eq("elsastore://products/10"), eq(10L));
+        service.reply(50L, new ReviewReplyRequest("Cam on ban!"));
+        verify(notifications, times(1)).notify(any(), eq(NotificationType.REVIEW_REPLIED), any(), any(), any());
 
         when(accessGuard.currentUser()).thenReturn(staff);
         assertThrows(AppException.class, () -> service.delete(50L));

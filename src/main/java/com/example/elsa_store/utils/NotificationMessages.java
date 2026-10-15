@@ -1,6 +1,7 @@
 package com.example.elsa_store.utils;
 
 import com.example.elsa_store.entity.Order;
+import com.example.elsa_store.entity.ProductReview;
 import com.example.elsa_store.entity.ReturnRequest;
 import com.example.elsa_store.entity.Store;
 
@@ -104,6 +105,27 @@ public final class NotificationMessages {
                 .map(l -> l.soldOut() ? l.name() + " đã hết hàng" : l.name() + " chỉ còn " + l.remaining())
                 .collect(Collectors.joining("; "));
         return new Message(anySoldOut ? "Có sản phẩm vừa hết hàng" : "Sản phẩm sắp hết hàng", body + ". Nhập thêm hàng nhé.");
+    }
+
+    /** Cho cửa hàng: khách vừa đánh giá một sản phẩm. */
+    public static Message reviewNew(ProductReview review) {
+        String comment = review.getComment() == null ? "" : ": \u201C" + shorten(review.getComment(), 80) + "\u201D";
+        return new Message(
+                "Đánh giá mới " + review.getRating() + "\u2605",
+                "Khách vừa đánh giá " + review.getProduct().getName() + comment);
+    }
+
+    /** Cho khách: cửa hàng trả lời đánh giá. */
+    public static Message reviewReplied(ProductReview review) {
+        String store = review.getProduct().getStore() == null ? "Cửa hàng" : review.getProduct().getStore().getName();
+        return new Message(
+                store + " đã trả lời đánh giá của bạn",
+                "Về " + review.getProduct().getName() + ": \u201C" + shorten(review.getStoreReply(), 100) + "\u201D");
+    }
+
+    private static String shorten(String text, int max) {
+        String value = text.strip();
+        return value.length() <= max ? value : value.substring(0, max - 1).stripTrailing() + "\u2026";
     }
 
     /** Cho cửa hàng: tiền về cho đơn đã huỷ. */

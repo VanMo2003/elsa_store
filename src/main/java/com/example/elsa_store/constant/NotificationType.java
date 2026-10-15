@@ -20,5 +20,9 @@ public enum NotificationType {
     /** Cho cửa hàng: khách gửi yêu cầu trả hàng. */
     RETURN_REQUESTED,
     /** Cho khách: yêu cầu trả hàng được duyệt / bị từ chối / đã hoàn tiền. */
-    RETURN_UPDATED
+    RETURN_UPDATED,
+    /** Cho cửa hàng (chủ, quản lý, nhân viên): khách vừa viết đánh giá mới. */
+    REVIEW_NEW,
+    /** Cho khách: cửa hàng trả lời đánh giá của mình. */
+    REVIEW_REPLIED
 }

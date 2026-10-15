@@ -9,6 +9,7 @@ public final class AppLinks {
     public static final String STORE_STATUS = "store-status";
     public static final String INVENTORY = "inventory";
     public static final String RETURNS = "returns";
+    public static final String REVIEWS = "reviews";
 
     private AppLinks() {}
 
@@ -32,6 +33,16 @@ public final class AppLinks {
     /** Kho hàng của cửa hàng (lọc sẵn các biến thể sắp hết). */
     public static String inventory() {
         return deepLink(INVENTORY);
+    }
+
+    /** Đánh giá của khách về sản phẩm của cửa hàng (màn trả lời đánh giá). */
+    public static String storeReviews() {
+        return deepLink(REVIEWS);
+    }
+
+    /** Trang một sản phẩm. */
+    public static String product(Long productId) {
+        return deepLink("products/" + productId);
     }
 
     /** Trạng thái duyệt cửa hàng của chủ đang đăng nhập. */

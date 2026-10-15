@@ -1,5 +1,6 @@
 package com.example.elsa_store.service.impl;
 
+import com.example.elsa_store.constant.NotificationType;
 import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.request.ReviewReplyRequest;
 import com.example.elsa_store.dto.request.ReviewRequest;
@@ -21,6 +22,9 @@ import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.service.FileStorageService;
+import com.example.elsa_store.service.NotificationService;
+import com.example.elsa_store.utils.AppLinks;
+import com.example.elsa_store.utils.NotificationMessages;
 import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.ProductReviewService;
 import org.springframework.data.domain.PageRequest;
@@ -44,17 +48,20 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final OrderItemRepository orderItemRepository;
     private final AccessGuard accessGuard;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
     public ProductReviewServiceImpl(ProductReviewRepository reviewRepository,
                                     ProductRepository productRepository,
                                     OrderItemRepository orderItemRepository,
                                     AccessGuard accessGuard,
-                                    FileStorageService fileStorageService) {
+                                    FileStorageService fileStorageService,
+                                    NotificationService notificationService) {
         this.reviewRepository = reviewRepository;
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
         this.accessGuard = accessGuard;
         this.fileStorageService = fileStorageService;
+        this.notificationService = notificationService;
     }
 
     // ------------------------------------------------------------------ đọc (công khai)
@@ -130,7 +137,8 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         int rating = Objects.requireNonNull(validRating(request.getRating()));
 
         ProductReview review = reviewRepository.findByUser_IdAndProduct_Id(user.getId(), product.getId()).orElse(null);
-        if (review == null) {
+        boolean created = review == null;
+        if (created) {
             review = new ProductReview();
             review.setUser(user);
             review.setProduct(product);
@@ -141,7 +149,13 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         review.setComment(trimToNull(request.getComment()));
         review.setVariantLabel(options(purchase.getProductVariant()));
         review.setOrderCode(purchase.getOrder().getCode());
-        return toResponse(reviewRepository.save(review), user.getId());
+        ProductReview saved = reviewRepository.save(review);
+        // Chỉ báo khi có đánh giá mới; khách sửa lại thì không làm phiền cửa hàng thêm lần nữa.
+        if (created && product.getStore() != null) {
+            notificationService.notifyStore(product.getStore(), NotificationType.REVIEW_NEW,
+                    NotificationMessages.reviewNew(saved), AppLinks.storeReviews(), saved.getId());
+        }
+        return toResponse(saved, user.getId());
     }
 
     @Override
@@ -204,10 +218,17 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         if (reply == null) {
             throw new AppException(ErrorCode.BAD_REQUEST, "reply: must not be blank");
         }
+        boolean changed = !reply.equals(review.getStoreReply());
         review.setStoreReply(reply);
         review.setRepliedAt(LocalDateTime.now());
         review.setRepliedBy(staff);
-        return toResponse(reviewRepository.save(review), null);
+        ProductReview saved = reviewRepository.save(review);
+        if (changed) {
+            notificationService.notify(saved.getUser(), NotificationType.REVIEW_REPLIED,
+                    NotificationMessages.reviewReplied(saved), AppLinks.product(saved.getProduct().getId()),
+                    saved.getProduct().getId());
+        }
+        return toResponse(saved, null);
     }
 
     // ------------------------------------------------------------------ nội bộ

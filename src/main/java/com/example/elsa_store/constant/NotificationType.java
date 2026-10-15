@@ -24,5 +24,7 @@ public enum NotificationType {
     /** Cho cửa hàng (chủ, quản lý, nhân viên): khách vừa viết đánh giá mới. */
     REVIEW_NEW,
     /** Cho khách: cửa hàng trả lời đánh giá của mình. */
-    REVIEW_REPLIED
+    REVIEW_REPLIED,
+    /** Cho khách đã thả tim: sản phẩm đang hết hàng vừa có hàng lại. */
+    BACK_IN_STOCK
 }

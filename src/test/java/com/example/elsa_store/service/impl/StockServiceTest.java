@@ -26,7 +26,8 @@ class StockServiceTest {
     private final InventoryRepository inventories = mock(InventoryRepository.class);
     private final StockMovementRepository movements = mock(StockMovementRepository.class);
     private final EntityManager entityManager = mock(EntityManager.class);
-    private final StockService service = new StockService(inventories, movements);
+    private final BackInStock backInStock = mock(BackInStock.class);
+    private final StockService service = new StockService(inventories, movements, backInStock);
     private final List<StockMovement> written = new ArrayList<>();
 
     private Store store;

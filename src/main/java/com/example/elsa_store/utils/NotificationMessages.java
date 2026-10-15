@@ -1,6 +1,7 @@
 package com.example.elsa_store.utils;
 
 import com.example.elsa_store.entity.Order;
+import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductReview;
 import com.example.elsa_store.entity.ReturnRequest;
 import com.example.elsa_store.entity.Store;
@@ -113,6 +114,13 @@ public final class NotificationMessages {
         return new Message(
                 "Đánh giá mới " + review.getRating() + "\u2605",
                 "Khách vừa đánh giá " + review.getProduct().getName() + comment);
+    }
+
+    /** Cho khách đã thả tim: sản phẩm hết hàng vừa có lại. */
+    public static Message backInStock(Product product) {
+        return new Message(
+                "Có hàng trở lại",
+                product.getName() + " bạn đã thả tim đã có hàng lại. Đặt sớm kẻo hết!");
     }
 
     /** Cho khách: cửa hàng trả lời đánh giá. */

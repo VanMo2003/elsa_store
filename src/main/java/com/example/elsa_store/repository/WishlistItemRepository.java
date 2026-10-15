@@ -22,6 +22,9 @@ public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long
 
     long countByUser_Id(Long userId);
 
+    /** Khách đã thả tim một sản phẩm (báo "có hàng trở lại"). */
+    List<WishlistItem> findAllByProduct_Id(Long productId);
+
     @Modifying
     @Query("delete from WishlistItem w where w.product.id = :productId")
     int deleteAllByProductId(@Param("productId") Long productId);

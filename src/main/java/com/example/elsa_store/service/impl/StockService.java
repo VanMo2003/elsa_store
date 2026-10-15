@@ -39,9 +39,13 @@ public class StockService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public StockService(InventoryRepository inventoryRepository, StockMovementRepository movementRepository) {
+    private final BackInStock backInStock;
+
+    public StockService(InventoryRepository inventoryRepository, StockMovementRepository movementRepository,
+                        BackInStock backInStock) {
         this.inventoryRepository = inventoryRepository;
         this.movementRepository = movementRepository;
+        this.backInStock = backInStock;
     }
 
     /** Chứng từ gốc của một dòng thẻ kho. */
@@ -87,7 +91,9 @@ public class StockService {
     /** Hoàn kho cho dòng hàng đã trừ (đơn bị huỷ / xoá trước khi giao). */
     public void release(ProductVariant variant, int quantity) {
         if (quantity > 0) {
+            boolean wasSoldOut = backInStock.soldOut(variant);
             inventoryRepository.increment(variant.getId(), quantity);
+            backInStock.afterIncrease(variant, wasSoldOut);
         }
     }
 
@@ -106,12 +112,14 @@ public class StockService {
      * gia quyền và ghi thẻ kho. Dòng tồn kho bị khoá trong lúc tính để không lệch với đơn đang đặt cùng lúc.
      */
     public void receive(ProductVariant variant, int quantity, double unitCost, Ref ref, User actor) {
+        boolean wasSoldOut = backInStock.soldOut(variant);
         Inventory inventory = lockOrCreate(variant);
         int onHand = Math.max(0, nz(inventory.getQuantity()));
         variant.setCostPrice(averageCost(onHand, variant.getCostPrice(), quantity, unitCost));
         inventory.setQuantity(nz(inventory.getQuantity()) + quantity);
         inventoryRepository.save(inventory);
         write(variant, StockMovementType.IMPORT, quantity, inventory.getQuantity(), unitCost, ref, null, actor);
+        backInStock.afterIncrease(variant, wasSoldOut);
     }
 
     /**
@@ -120,6 +128,7 @@ public class StockService {
      */
     public Inventory adjust(ProductVariant variant, int counted, Integer minQuantity, String note, User actor) {
         boolean tracked = inventoryRepository.findByProductVariant_Id(variant.getId()).isPresent();
+        boolean wasSoldOut = backInStock.soldOut(variant);
         Inventory inventory = lockOrCreate(variant);
         int change = counted - (tracked ? nz(inventory.getQuantity()) : 0);
         inventory.setQuantity(counted);
@@ -130,6 +139,9 @@ public class StockService {
         if (change != 0 || !tracked) {
             String reason = note != null ? note : tracked ? "Kiểm kê" : "Bắt đầu theo dõi kho";
             write(variant, StockMovementType.ADJUST, change, counted, variant.getCostPrice(), Ref.NONE, reason, actor);
+        }
+        if (change > 0) {
+            backInStock.afterIncrease(variant, wasSoldOut);
         }
         return inventory;
     }

@@ -13,4 +13,6 @@ public class ReviewEligibilityResponse {
     /** NOT_SIGNED_IN, NOT_CUSTOMER, NOT_PURCHASED — khi không viết được. */
     private String reason;
     private ReviewResponse review;
+    /** Xu khách còn nhận được nếu đánh giá (và thêm ảnh) — để app ghi "Đánh giá nhận N xu". */
+    private Integer rewardCoins;
 }

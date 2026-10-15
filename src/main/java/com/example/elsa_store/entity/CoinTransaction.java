@@ -40,6 +40,11 @@ public class CoinTransaction extends BaseEntity {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    /** Sản phẩm được thưởng xu khi đánh giá (chỉ các dòng thưởng đánh giá). */
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
+
     @Column(name = "note", length = 255)
     private String note;
 }

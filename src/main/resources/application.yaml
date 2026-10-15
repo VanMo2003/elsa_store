@@ -61,6 +61,9 @@ app:
   coins:
     earn-percent: ${COINS_EARN_PERCENT:1}
     max-redeem-percent: ${COINS_MAX_REDEEM_PERCENT:50}
+    # Thưởng đánh giá: viết đánh giá đầu tiên cho một sản phẩm / lần đầu thêm ảnh (mỗi sản phẩm một lần).
+    review-reward: ${COINS_REVIEW_REWARD:100}
+    review-photo-reward: ${COINS_REVIEW_PHOTO_REWARD:200}
 
 firebase:
   # File JSON service account của Firebase (Project settings > Service accounts). Để trống thì chỉ có

@@ -29,4 +29,6 @@ public class ReviewResponse {
     private Boolean mine;
     /** Ảnh khách đính kèm (đường dẫn /uploads/reviews/...). */
     private List<String> images;
+    /** Xu vừa được thưởng ở lần gọi này (chỉ có trong phản hồi viết đánh giá / thêm ảnh). */
+    private Integer rewardCoins;
 }

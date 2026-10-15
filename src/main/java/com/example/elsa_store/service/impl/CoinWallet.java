@@ -6,6 +6,7 @@ import com.example.elsa_store.dto.response.CoinWalletResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.entity.CoinTransaction;
 import com.example.elsa_store.entity.Order;
+import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.User;
 import com.example.elsa_store.exception.AppException;
 import com.example.elsa_store.exception.ErrorCode;
@@ -135,6 +136,22 @@ public class CoinWallet {
         }
         write(user, -taken, balance - taken, CoinTransactionType.REVOKE, order,
                 "Thu lại xu do trả hàng đơn " + order.getCode());
+    }
+
+    /** Cộng xu thưởng không gắn đơn (thưởng đánh giá…). */
+    public void credit(User user, int amount, CoinTransactionType type, Product product, String note) {
+        if (!eligible(user) || amount <= 0) {
+            return;
+        }
+        int balance = lockedBalance(user);
+        repository.save(CoinTransaction.builder()
+                .user(user)
+                .amount(amount)
+                .balanceAfter(balance + amount)
+                .type(type)
+                .product(product)
+                .note(note)
+                .build());
     }
 
     /** Xoá đơn: giữ lịch sử xu nhưng bỏ liên kết tới đơn. */

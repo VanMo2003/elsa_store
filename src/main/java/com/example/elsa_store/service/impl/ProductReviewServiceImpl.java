@@ -27,6 +27,7 @@ import com.example.elsa_store.utils.AppLinks;
 import com.example.elsa_store.utils.NotificationMessages;
 import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.ProductReviewService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final AccessGuard accessGuard;
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
+    private ReviewRewards rewards;
 
     public ProductReviewServiceImpl(ProductReviewRepository reviewRepository,
                                     ProductRepository productRepository,
@@ -121,6 +123,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                 .canReview(purchased)
                 .reason(purchased ? null : "NOT_PURCHASED")
                 .review(mine)
+                .rewardCoins(purchased && rewards != null ? rewards.claimable(user, product) : 0)
                 .build();
     }
 
@@ -155,7 +158,9 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             notificationService.notifyStore(product.getStore(), NotificationType.REVIEW_NEW,
                     NotificationMessages.reviewNew(saved), AppLinks.storeReviews(), saved.getId());
         }
-        return toResponse(saved, user.getId());
+        ReviewResponse res = toResponse(saved, user.getId());
+        res.setRewardCoins(rewards == null ? 0 : rewards.afterReview(user, product));
+        return res;
     }
 
     @Override
@@ -170,7 +175,9 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                     "A review can have at most " + ProductReview.MAX_IMAGES + " images");
         }
         files.stream().map(fileStorageService::storeReviewImage).forEach(review.getImages()::add);
-        return toResponse(reviewRepository.save(review), user.getId());
+        ReviewResponse res = toResponse(reviewRepository.save(review), user.getId());
+        res.setRewardCoins(rewards == null ? 0 : rewards.afterPhotos(user, review.getProduct()));
+        return res;
     }
 
     @Override
@@ -181,6 +188,12 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             throw new ResourceNotFoundException("Image not found");
         }
         return toResponse(reviewRepository.save(review), user.getId());
+    }
+
+    /** Thưởng xu cho đánh giá (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
+    @Autowired
+    void setRewards(ReviewRewards rewards) {
+        this.rewards = rewards;
     }
 
     /** Đánh giá của chính khách cho sản phẩm (chưa viết thì 404). */

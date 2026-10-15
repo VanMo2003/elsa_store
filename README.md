@@ -298,6 +298,10 @@ kèm số dư sau và đơn liên quan); số dư = tổng sổ.
   InnoDB dùng ảnh chụp đầu giao dịch nên cả 4 đơn từng trừ được — lỗi đã sửa.)
 - Xu là khoản giảm của đơn nên doanh thu cửa hàng (theo `finalAmount`) đã trừ phần xu; báo cáo tóm tắt có `coinsTotal`
   (phần giảm do xu, đã nằm trong `discountTotal`). Thông báo "Đơn hàng đã hoàn thành" ghi số xu khách nhận được.
+- **Thưởng đánh giá:** viết đánh giá đầu tiên cho một sản phẩm +`COINS_REVIEW_REWARD` xu (mặc định 100), lần đầu thêm
+  ảnh +`COINS_REVIEW_PHOTO_REWARD` xu (mặc định 200) — mỗi khoản một lần cho mỗi sản phẩm (sổ ghi `product_id`, loại
+  `REVIEW_REWARD` / `PHOTO_REWARD`); sửa, xoá rồi viết lại không nhận lại, xoá đánh giá không thu lại. Phản hồi viết
+  đánh giá / thêm ảnh có `rewardCoins` (xu vừa nhận); `GET /products/{id}/reviews/me` có `rewardCoins` (xu còn nhận được).
 - `GET /coins/me?page&size` — số dư, quy tắc (`earnPercent`, `maxRedeemPercent`), lịch sử mới nhất trước.
 
 ## Đổi / trả hàng
@@ -496,6 +500,8 @@ dùng cho `docker compose`).
 | `ORDER_RETURN_WINDOW_DAYS` | `7` | Khách gửi yêu cầu trả hàng trong chừng này ngày sau khi đơn hoàn thành; `0` = tắt |
 | `COINS_EARN_PERCENT` | `1` | % tiền hàng thực trả đổi thành xu khi đơn hoàn thành |
 | `COINS_MAX_REDEEM_PERCENT` | `50` | % tiền hàng tối đa trả bằng xu trong một đơn (1 xu = 1đ) |
+| `COINS_REVIEW_REWARD` | `100` | Xu thưởng khi viết đánh giá đầu tiên cho một sản phẩm |
+| `COINS_REVIEW_PHOTO_REWARD` | `200` | Xu thưởng khi lần đầu thêm ảnh vào đánh giá |
 | `FIREBASE_CREDENTIALS` | trống | Đường dẫn file JSON service account Firebase; trống thì tắt push |
 | `GEMINI_API_KEY` | trống | Khoá Google AI Studio; có khoá thì bật trợ lý AI (provider tự chọn là `gemini`) |
 | `ANTHROPIC_API_KEY` | trống | Dùng Claude thay Gemini (provider `anthropic`) |

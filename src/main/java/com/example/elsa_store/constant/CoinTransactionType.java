@@ -9,5 +9,9 @@ public enum CoinTransactionType {
     /** Hoàn lại xu đã dùng vì đơn bị huỷ / xoá. */
     REFUND,
     /** Thu lại xu đã nhận vì khách trả hàng được hoàn tiền. */
-    REVOKE
+    REVOKE,
+    /** Thưởng viết đánh giá sản phẩm (mỗi sản phẩm một lần). */
+    REVIEW_REWARD,
+    /** Thưởng đánh giá có ảnh (mỗi sản phẩm một lần). */
+    PHOTO_REWARD
 }

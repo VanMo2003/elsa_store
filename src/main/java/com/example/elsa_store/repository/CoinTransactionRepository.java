@@ -28,6 +28,8 @@ public interface CoinTransactionRepository extends JpaRepository<CoinTransaction
 
     boolean existsByOrder_IdAndType(Long orderId, CoinTransactionType type);
 
+    boolean existsByUser_IdAndProduct_IdAndType(Long userId, Long productId, CoinTransactionType type);
+
     Page<CoinTransaction> findByUser_IdOrderByIdDesc(Long userId, Pageable pageable);
 
     /** Xoá đơn: giữ sổ xu (mã đơn còn trong ghi chú), chỉ bỏ liên kết tới đơn. */

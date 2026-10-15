@@ -127,11 +127,12 @@ public class ReportServiceImpl implements ReportService {
 
     private RevenueSummaryResponse summarize(LocalDate from, LocalDate to, List<OrderStatus> status, Long scope) {
         List<Object[]> rows = orderRepository.revenueSummary(start(from), endExclusive(to), status, scope);
-        Object[] row = rows.isEmpty() ? new Object[] {0L, 0.0, 0.0, 0.0} : rows.get(0);
+        Object[] row = rows.isEmpty() ? new Object[] {0L, 0.0, 0.0, 0.0, 0.0} : rows.get(0);
         long ordersCount = number(row[0]).longValue();
         double gross = number(row[1]).doubleValue();
         double discount = number(row[2]).doubleValue();
         double net = number(row[3]).doubleValue();
+        double shipping = number(row[4]).doubleValue();
         Cost cost = cost(start(from), endExclusive(to), status, scope);
         double profit = net - cost.amount();
         return RevenueSummaryResponse.builder()
@@ -141,6 +142,7 @@ public class ReportServiceImpl implements ReportService {
                 .grossRevenue(gross)
                 .discountTotal(discount)
                 .netRevenue(net)
+                .shippingTotal(shipping)
                 .averageOrderValue(ordersCount == 0 ? 0.0 : net / ordersCount)
                 .costOfGoods(cost.amount())
                 .grossProfit(profit)

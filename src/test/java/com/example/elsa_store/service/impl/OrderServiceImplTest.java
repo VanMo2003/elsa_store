@@ -352,6 +352,51 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void customerOrdersPayTheShippingFeeUntilTheFreeShippingThreshold() {
+        store.setShippingFee(30_000.0);
+        store.setFreeShippingThreshold(1_000_000.0);
+        OrderRequest small = OrderRequest.builder()
+                .receiverName("Nguyen Van A")
+                .receiverPhone("0901234567")
+                .shippingAddress("1 Nguyen Hue, Q1, TP HCM")
+                .items(new ArrayList<>(List.of(item(100L, 2))))
+                .build();
+
+        OrderQuoteResponse quote = service.quote(small);
+        assertEquals(30_000, quote.getShippingFee());
+        assertEquals(230_000, quote.getTotal(), "tiền hàng + phí giao");
+        assertEquals(800_000.0, quote.getAmountToFreeShipping());
+        assertEquals(1_000_000.0, quote.getFreeShippingThreshold());
+
+        OrderResponse placed = service.create(small);
+        assertEquals(30_000.0, placed.getShippingFee());
+        assertEquals(230_000.0, placed.getFinalAmount());
+        assertEquals(200_000.0, placed.getTotalAmount());
+
+        // 2 giày + 2 áo = 1.200.000đ: đủ mức miễn phí giao.
+        OrderQuoteResponse big = service.quote(customerOrder());
+        assertEquals(0, big.getShippingFee());
+        assertNull(big.getAmountToFreeShipping());
+        assertEquals(1_200_000, big.getTotal());
+    }
+
+    @Test
+    void counterSalesAndFreeShippingStoresChargeNoShipping() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        store.setShippingFee(30_000.0);
+        OrderRequest counter = OrderRequest.builder().items(new ArrayList<>(List.of(item(100L, 1)))).build();
+        OrderResponse sold = service.create(counter);
+        assertNull(sold.getShippingFee(), "bán tại quầy không có phí giao");
+        assertEquals(100_000.0, sold.getFinalAmount());
+
+        when(accessGuard.currentUser()).thenReturn(buyer);
+        store.setShippingFee(null);
+        OrderQuoteResponse quote = service.quote(customerOrder());
+        assertEquals(0, quote.getShippingFee());
+        assertNull(quote.getFreeShippingThreshold(), "cửa hàng giao miễn phí thì không có mức miễn phí");
+    }
+
+    @Test
     void quoteReportsStockProblemsWithoutReserving() {
         when(stock.levels(any())).thenReturn(Map.of(200L, 1));
         OrderQuoteResponse quote = service.quote(customerOrder());

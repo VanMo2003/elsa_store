@@ -1,6 +1,7 @@
 package com.example.elsa_store.controller;
 
 import com.example.elsa_store.dto.common.ApiResponse;
+import com.example.elsa_store.dto.request.ShippingSettingsRequest;
 import com.example.elsa_store.dto.request.StoreUpdateRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.StoreResponse;
@@ -32,6 +33,12 @@ public class StoreController {
     @PutMapping("/me")
     public ApiResponse<StoreResponse> updateMine(@Valid @RequestBody StoreUpdateRequest req) {
         return ApiResponse.ok(storeService.updateMine(req));
+    }
+
+    /** Phí giao hàng và mức miễn phí giao (chủ / quản lý). */
+    @PutMapping("/me/shipping")
+    public ApiResponse<StoreResponse> updateShipping(@Valid @RequestBody ShippingSettingsRequest req) {
+        return ApiResponse.ok(storeService.updateShipping(req));
     }
 
     @GetMapping("/{id:\\d+}")

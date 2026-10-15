@@ -22,6 +22,8 @@ public class StoreMapper {
                 .reviewedAt(s.getReviewedAt())
                 .ownerId(s.getOwner() != null ? s.getOwner().getId() : null)
                 .ownerUsername(s.getOwner() != null ? s.getOwner().getUsername() : null)
+                .shippingFee(shippingFee(s))
+                .freeShippingThreshold(s.getFreeShippingThreshold())
                 .build();
     }
 
@@ -36,6 +38,12 @@ public class StoreMapper {
                 .phone(s.getPhone())
                 .address(s.getAddress())
                 .approvalStatus(s.getApprovalStatus())
+                .shippingFee(shippingFee(s))
+                .freeShippingThreshold(shippingFee(s) > 0 ? s.getFreeShippingThreshold() : null)
                 .build();
+    }
+
+    private static double shippingFee(Store s) {
+        return s.getShippingFee() == null ? 0 : s.getShippingFee();
     }
 }

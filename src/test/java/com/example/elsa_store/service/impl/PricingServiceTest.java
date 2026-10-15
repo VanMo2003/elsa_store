@@ -76,6 +76,17 @@ class PricingServiceTest {
     }
 
     @Test
+    void shippingFeeIsWaivedFromTheThresholdAndForFreeShippingStores() {
+        assertEquals(0, PricingService.shippingFee(store, 100_000));
+        store.setShippingFee(25_000.4);
+        assertEquals(25_000, PricingService.shippingFee(store, 100_000));
+        store.setFreeShippingThreshold(500_000.0);
+        assertEquals(25_000, PricingService.shippingFee(store, 499_999));
+        assertEquals(0, PricingService.shippingFee(store, 500_000));
+        assertEquals(0, PricingService.shippingFee(null, 100_000));
+    }
+
+    @Test
     void bestPicksTheLargestDiscountAndNeverGoesBelowZero() {
         PricingService.Discounted price = PricingService.best(
                 1_800_000.0,

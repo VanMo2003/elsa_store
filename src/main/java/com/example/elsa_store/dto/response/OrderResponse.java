@@ -23,6 +23,8 @@ public class OrderResponse {
     private Double discountAmount;
     /** Số tiền khách trả. */
     private Double finalAmount;
+    /** Phí giao hàng đã cộng vào {@code finalAmount} (0 = miễn phí; trống ở đơn tại quầy / đơn cũ). */
+    private Double shippingFee;
     private OrderStatus status;
     private PaymentStatus paymentStatus;
     /** COD hoặc VNPAY. */

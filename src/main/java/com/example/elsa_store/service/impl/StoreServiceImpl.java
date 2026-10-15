@@ -1,5 +1,6 @@
 package com.example.elsa_store.service.impl;
 
+import com.example.elsa_store.dto.request.ShippingSettingsRequest;
 import com.example.elsa_store.dto.request.StoreUpdateRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.StoreResponse;
@@ -74,6 +75,17 @@ public class StoreServiceImpl implements StoreService {
         if (req.getAddress() != null && !req.getAddress().isBlank()) {
             store.setAddress(req.getAddress().trim());
         }
+        return StoreMapper.toResponse(storeRepository.save(store));
+    }
+
+    @Override
+    public StoreResponse updateShipping(ShippingSettingsRequest req) {
+        Store store = accessGuard.requireStoreManager();
+        Double fee = req.getShippingFee() == null || req.getShippingFee() <= 0 ? null : (double) Math.round(req.getShippingFee());
+        Double threshold = req.getFreeShippingThreshold() == null ? null : (double) Math.round(req.getFreeShippingThreshold());
+        store.setShippingFee(fee);
+        // Giao miễn phí sẵn thì mức miễn phí không còn ý nghĩa.
+        store.setFreeShippingThreshold(fee == null ? null : threshold);
         return StoreMapper.toResponse(storeRepository.save(store));
     }
 }

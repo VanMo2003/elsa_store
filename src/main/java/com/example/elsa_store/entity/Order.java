@@ -91,6 +91,13 @@ public class Order extends BaseEntity {
     @Column(name = "shipping_address", length = 500)
     private String shippingAddress;
 
+    /**
+     * Phí giao hàng đã tính vào {@code finalAmount}; 0 khi được miễn phí, trống ở đơn tại quầy và đơn cũ. Khách trả
+     * {@code finalAmount = totalAmount − discountAmount + shippingFee}.
+     */
+    @Column(name = "shipping_fee")
+    private Double shippingFee;
+
     /** COD hoặc VNPAY — cách khách chọn trả tiền lúc đặt. */
     @Column(name = "payment_method", length = 20)
     private String paymentMethod;

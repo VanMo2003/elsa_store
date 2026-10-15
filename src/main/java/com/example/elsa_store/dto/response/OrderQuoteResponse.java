@@ -30,6 +30,13 @@ public class OrderQuoteResponse {
     String couponCode;
     String orderPromotionName;
     double totalDiscount;
+    /** Phí giao hàng (0 = miễn phí; đơn tại quầy luôn 0). */
+    double shippingFee;
+    /** Mức tiền hàng được miễn phí giao của cửa hàng; null = không có. */
+    Double freeShippingThreshold;
+    /** Còn thiếu bao nhiêu tiền hàng để được miễn phí giao; null khi đã miễn phí hoặc cửa hàng không có mức này. */
+    Double amountToFreeShipping;
+    /** Khách phải trả: tiền hàng sau giảm + phí giao. */
     double total;
     String discountNote;
     /** Có dòng vượt tồn kho — app khoá nút đặt hàng. */

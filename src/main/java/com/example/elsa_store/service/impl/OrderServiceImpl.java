@@ -160,9 +160,11 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentMethod(online ? METHOD_VNPAY : METHOD_COD);
         order.setPaymentStatus(online ? PaymentStatus.CHO_THANH_TOAN : PaymentStatus.CHUA_THANH_TOAN);
         order.setItems(items);
+        double shipping = counterSale ? 0 : PricingService.shippingFee(store, quote.total());
         order.setTotalAmount(quote.originalSubtotal());
         order.setDiscountAmount(quote.totalDiscount());
-        order.setFinalAmount(quote.total());
+        order.setShippingFee(counterSale ? null : shipping);
+        order.setFinalAmount(PricingService.money(quote.total() + shipping));
         order.setCouponCode(quote.couponCode());
         order.setDiscountNote(quote.discountNote());
 
@@ -214,6 +216,12 @@ public class OrderServiceImpl implements OrderService {
                     .insufficientStock(insufficient)
                     .build());
         }
+        double shipping = counterSale ? 0 : PricingService.shippingFee(store, quote.total());
+        Double threshold = counterSale ? null : store.getFreeShippingThreshold();
+        boolean chargesShipping = !counterSale && store.getShippingFee() != null && store.getShippingFee() > 0;
+        Double missing = chargesShipping && threshold != null && shipping > 0
+                ? PricingService.money(threshold - quote.total())
+                : null;
         return OrderQuoteResponse.builder()
                 .storeId(store.getId())
                 .storeName(store.getName())
@@ -225,7 +233,10 @@ public class OrderServiceImpl implements OrderService {
                 .couponCode(quote.couponCode())
                 .orderPromotionName(quote.orderPromotionName())
                 .totalDiscount(quote.totalDiscount())
-                .total(quote.total())
+                .shippingFee(shipping)
+                .freeShippingThreshold(chargesShipping ? threshold : null)
+                .amountToFreeShipping(missing)
+                .total(PricingService.money(quote.total() + shipping))
                 .discountNote(quote.discountNote())
                 .stockProblem(stockProblem)
                 .build();
@@ -593,6 +604,7 @@ public class OrderServiceImpl implements OrderService {
         res.setCompletedAt(order.getCompletedAt());
         res.setTotalAmount(order.getTotalAmount());
         res.setDiscountAmount(order.getDiscountAmount());
+        res.setShippingFee(order.getShippingFee());
         res.setFinalAmount(order.getFinalAmount());
         res.setStatus(order.getStatus());
         res.setPaymentStatus(order.getPaymentStatus());

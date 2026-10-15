@@ -21,6 +21,10 @@ public class ProductDetailResponse {
     private Long categoryId;
     private Long storeId;
     private String storeName;
+    /** Phí giao của cửa hàng (0 = miễn phí giao hàng). */
+    private Double shippingFee;
+    /** Mức tiền hàng được miễn phí giao; null = không có. */
+    private Double freeShippingThreshold;
     private Integer status;
     private List<String> images;
     private List<ProductVariantResponse> productVariants;

@@ -67,6 +67,14 @@ public class Store extends BaseEntity {
     @Column(name = "ai_auto_reply")
     private Boolean aiAutoReply;
 
+    /** Phí giao hàng mỗi đơn khách tự đặt; trống / 0 = miễn phí giao hàng. */
+    @Column(name = "shipping_fee")
+    private Double shippingFee;
+
+    /** Đơn có tiền hàng (sau giảm giá) từ mức này được miễn phí giao; trống = không có mức miễn phí. */
+    @Column(name = "free_shipping_threshold")
+    private Double freeShippingThreshold;
+
     public boolean isApproved() {
         return approvalStatus == null || approvalStatus == ApprovalStatus.APPROVED;
     }

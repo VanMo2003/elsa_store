@@ -161,8 +161,15 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   phẩm được lưu **trong cùng một giao dịch** — không thể có khuyến mãi "giảm giá giày" lưu xong mà gắn sản phẩm lỗi rồi
   thành giảm cả cửa hàng. `productIds` bỏ trống = giữ nguyên, `[]` = gỡ hết (thành giảm cả đơn nếu không có mã). API cũ
   `PUT /promotions/{id}/products` vẫn dùng được.
-- Đơn lưu `totalAmount` (tiền hàng giá gốc), `discountAmount` (mọi khoản giảm) và `finalAmount` (khách trả); từng dòng
-  lưu giá gốc, giá bán, phần giảm và **giá vốn lúc bán** (`order_items.cost_price`). Mã đơn `ORD-yyMMdd-XXXXXX`.
+- **Phí giao hàng** theo cửa hàng: chủ / quản lý đặt bằng `PUT /stores/me/shipping` `{shippingFee, freeShippingThreshold}`
+  (làm tròn đồng; phí trống / 0 = giao miễn phí và bỏ luôn mức miễn phí). Đơn khách đặt có tiền hàng sau giảm từ
+  `freeShippingThreshold` được miễn phí giao; đơn tại quầy không tính phí. Báo giá trả `shippingFee`,
+  `freeShippingThreshold` và `amountToFreeShipping` (còn thiếu bao nhiêu để được miễn phí) — `total` đã gồm phí giao.
+  Mã giảm giá / mức đơn tối thiểu xét trên tiền hàng, không tính phí giao. Trang cửa hàng và chi tiết sản phẩm (công
+  khai) cũng có `shippingFee`, `freeShippingThreshold`.
+- Đơn lưu `totalAmount` (tiền hàng giá gốc), `discountAmount` (mọi khoản giảm), `shippingFee` và `finalAmount` (khách trả
+  = gốc − giảm + phí giao, cũng là số tiền gửi sang VNPay); từng dòng lưu giá gốc, giá bán, phần giảm và **giá vốn lúc
+  bán** (`order_items.cost_price`). Mã đơn `ORD-yyMMdd-XXXXXX`.
 - **Tồn kho:** biến thể **chưa có dòng tồn kho** là "không theo dõi kho" — bán không giới hạn (dữ liệu cũ vẫn chạy như
   trước). Biến thể đã theo dõi thì trừ kho nguyên tử khi đặt (`UPDATE … WHERE quantity >= :q`, khoá theo thứ tự id biến
   thể nên hai đơn cùng lúc không deadlock và kho không bao giờ âm); hết hàng báo `1023` kèm số còn lại. Huỷ / xoá đơn
@@ -218,7 +225,7 @@ nay" đúng giờ Việt Nam dù máy chủ đặt UTC.
 | Endpoint | Trả về |
 |---|---|
 | `GET /reports/dashboard` | Doanh thu hôm nay / hôm qua, tháng này / **cùng kỳ tháng trước** (cùng số ngày đầu tháng), lợi nhuận gộp tháng, đơn chờ xác nhận / đã xác nhận / hoàn thành, đơn đặt hôm nay, số biến thể sắp hết / hết hàng (khi xem một cửa hàng), doanh thu 7 ngày (đủ 7 điểm) |
-| `GET /reports/summary?from&to` | Số đơn, tiền hàng gốc, giảm giá, doanh thu thực thu, giá trị TB/đơn, **giá vốn, lợi nhuận gộp, biên lợi nhuận**, số lượng bán chưa có giá vốn, **kỳ liền trước cùng độ dài** (`previous`) và % tăng trưởng doanh thu / số đơn / lợi nhuận (`null` khi kỳ trước bằng 0) |
+| `GET /reports/summary?from&to` | Số đơn, tiền hàng gốc, giảm giá, phí giao hàng khách trả (`shippingTotal`), doanh thu thực thu, giá trị TB/đơn, **giá vốn, lợi nhuận gộp, biên lợi nhuận**, số lượng bán chưa có giá vốn, **kỳ liền trước cùng độ dài** (`previous`) và % tăng trưởng doanh thu / số đơn / lợi nhuận (`null` khi kỳ trước bằng 0) |
 | `GET /reports/breakdown?from&to` | Doanh thu theo cách trả tiền (`COD`, `VNPAY`, `OTHER`) và kênh bán (`ONLINE` khách tự đặt, `COUNTER` lập tại quầy), kèm tỷ trọng |
 | `GET /reports/revenue?groupBy=DAY\|WEEK\|MONTH\|YEAR`, `top-products` (kèm lợi nhuận, `null` khi còn món chưa có giá vốn), `revenue-by-category`, `top-customers`, `staff-performance`, `cancellation-rate`, `low-stock` | Như tên |
 | `GET /reports/export?from&to` | Excel: tổng quan (có lợi nhuận và so với kỳ trước), doanh thu theo ngày, danh mục, sản phẩm (giá vốn, lãi), **kênh bán**, khách hàng, nhân viên, tồn kho thấp, **giá trị kho** (khi xem một cửa hàng) |
@@ -285,7 +292,7 @@ cửa hàng; danh mục là dùng chung và chỉ ADMIN quản lý. Mọi kiểm
 | Thêm / sửa sản phẩm, biến thể | – | ✔ | ✔ | ✔ | – |
 | Kho hàng (kiểm kê, giá vốn, thẻ kho), phiếu nhập | – (phiếu nhập: chỉ xem) | ✔ | ✔ | ✘ | – |
 | **Xoá** sản phẩm, biến thể, khách hàng, đơn hàng | – | ✔ | ✔ | ✘ | – |
-| Nhà cung cấp, khuyến mãi | – | ✔ | ✔ | ✘ | – |
+| Nhà cung cấp, khuyến mãi, phí giao hàng | – | ✔ | ✔ | ✘ | – |
 | Khách hàng của cửa hàng, tạo đơn tại quầy, đổi trạng thái đơn | – | ✔ | ✔ | ✔ | – |
 | Báo cáo doanh thu, lợi nhuận, kênh bán, sản phẩm, khách hàng, nhân viên, xuất Excel | ✔ (chỉ xem) | ✔ | ✔ | ✘ | – |
 | Trả lời đánh giá sản phẩm của cửa hàng | – | ✔ | ✔ | ✔ | – |
@@ -380,7 +387,8 @@ dùng cho `docker compose`).
 
 Bảng `notifications`, `device_tokens`, `conversations`, `chat_messages`, `stock_movements`, `password_reset_codes`,
 `product_reviews`, `wishlist_items` và `order_status_history` được Hibernate tạo tự động
-(`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `orders.completed_at`, `orders.cancel_reason`,
+(`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `stores.shipping_fee`,
+`stores.free_shipping_threshold`, `orders.completed_at`, `orders.cancel_reason`, `orders.shipping_fee`,
 `product_variants.cost_price`, `order_items.cost_price`, `purchase_orders.code/note/received_at`, `users.token_version`…)
 được thêm cùng cách, đều cho phép để trống nên dữ liệu cũ không cần chuyển đổi.
 

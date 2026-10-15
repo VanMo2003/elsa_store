@@ -30,4 +30,8 @@ public class StoreResponse {
     LocalDateTime reviewedAt;
     Long ownerId;
     String ownerUsername;
+    /** Phí giao mỗi đơn; 0 = miễn phí giao hàng. */
+    Double shippingFee;
+    /** Mức tiền hàng được miễn phí giao; trống = không có. */
+    Double freeShippingThreshold;
 }

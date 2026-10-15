@@ -18,6 +18,8 @@ public class RevenueSummaryResponse {
     private Double grossRevenue;   // sum(totalAmount)
     private Double discountTotal;  // sum(discountAmount)
     private Double netRevenue;     // sum(finalAmount)
+    /** Phí giao hàng khách đã trả (nằm trong doanh thu thực thu): gộp − giảm + phí giao = thực thu. */
+    private Double shippingTotal;  // sum(shippingFee)
 
     private Double averageOrderValue; // netRevenue / ordersCount
     /** Giá vốn hàng đã bán (chỉ các dòng đã có giá vốn). */

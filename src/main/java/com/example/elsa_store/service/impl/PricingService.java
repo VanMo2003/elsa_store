@@ -129,6 +129,24 @@ public class PricingService {
         return money(Math.min(discount, amount));
     }
 
+    // ---------------------------------------------------------------- phí giao hàng
+
+    /**
+     * Phí giao của cửa hàng cho đơn có tiền hàng (sau mọi khoản giảm) là {@code goodsTotal}: 0 khi cửa hàng giao miễn
+     * phí hoặc đơn đạt mức miễn phí giao.
+     */
+    public static double shippingFee(Store store, double goodsTotal) {
+        double fee = store == null || store.getShippingFee() == null ? 0 : store.getShippingFee();
+        if (fee <= 0) {
+            return 0;
+        }
+        Double threshold = store.getFreeShippingThreshold();
+        if (threshold != null && goodsTotal >= threshold) {
+            return 0;
+        }
+        return money(fee);
+    }
+
     // ---------------------------------------------------------------- báo giá một đơn
 
     public record LineRequest(ProductVariant variant, int quantity) {}

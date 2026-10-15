@@ -1,5 +1,6 @@
 package com.example.elsa_store.service;
 
+import com.example.elsa_store.dto.request.ShippingSettingsRequest;
 import com.example.elsa_store.dto.request.StoreUpdateRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.StoreResponse;
@@ -16,4 +17,7 @@ public interface StoreService {
 
     /** Chủ hoặc quản lý sửa thông tin cửa hàng. */
     StoreResponse updateMine(StoreUpdateRequest req);
+
+    /** Chủ hoặc quản lý đặt phí giao hàng và mức miễn phí giao. */
+    StoreResponse updateShipping(ShippingSettingsRequest req);
 }

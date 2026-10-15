@@ -68,17 +68,19 @@ class ReportServiceImplTest {
         LocalDateTime end = TO.plusDays(1).atStartOfDay();
         LocalDateTime previousStart = LocalDate.of(2026, 9, 17).atStartOfDay();
         when(orders.revenueSummary(eq(start), eq(end), any(), eq(1L)))
-                .thenReturn(rows(new Object[] {10L, 12_000_000.0, 2_000_000.0, 10_000_000.0}));
+                .thenReturn(rows(new Object[] {10L, 12_000_000.0, 2_200_000.0, 10_000_000.0, 200_000.0}));
         when(orderItems.costSummary(eq(start), eq(end), any(), eq(1L)))
                 .thenReturn(rows(new Object[] {6_000_000.0, 3L}));
         when(orders.revenueSummary(eq(previousStart), eq(start), any(), eq(1L)))
-                .thenReturn(rows(new Object[] {8L, 8_000_000.0, 0.0, 8_000_000.0}));
+                .thenReturn(rows(new Object[] {8L, 8_000_000.0, 0.0, 8_000_000.0, 0.0}));
         when(orderItems.costSummary(eq(previousStart), eq(start), any(), eq(1L)))
                 .thenReturn(rows(new Object[] {5_000_000.0, 0L}));
 
         RevenueSummaryResponse res = service.summary(FROM, TO, null, null);
 
         assertEquals(10_000_000, res.getNetRevenue());
+        // Gộp − giảm + phí giao = thực thu.
+        assertEquals(200_000, res.getShippingTotal());
         assertEquals(6_000_000, res.getCostOfGoods());
         assertEquals(4_000_000, res.getGrossProfit());
         assertEquals(40.0, res.getProfitMargin());
@@ -97,7 +99,7 @@ class ReportServiceImplTest {
 
     @Test
     void emptyPeriodHasNoMarginAndNoGrowth() {
-        when(orders.revenueSummary(any(), any(), any(), any())).thenReturn(rows(new Object[] {0L, null, null, null}));
+        when(orders.revenueSummary(any(), any(), any(), any())).thenReturn(rows(new Object[] {0L, null, null, null, null}));
         when(orderItems.costSummary(any(), any(), any(), any())).thenReturn(rows(new Object[] {null, null}));
 
         RevenueSummaryResponse res = service.summary(FROM, TO, null, null);

@@ -4,6 +4,7 @@ package com.example.elsa_store.mapper;
 import com.example.elsa_store.dto.request.ProductRequest;
 import com.example.elsa_store.dto.response.ProductDetailResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
+import com.example.elsa_store.dto.response.StoreResponse;
 import com.example.elsa_store.entity.Category;
 import com.example.elsa_store.entity.Product;
 
@@ -58,6 +59,11 @@ public class ProductMapper {
         res.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
         res.setStoreId(product.getStore() != null ? product.getStore().getId() : null);
         res.setStoreName(product.getStore() != null ? product.getStore().getName() : null);
+        if (product.getStore() != null) {
+            StoreResponse store = StoreMapper.toPublicResponse(product.getStore());
+            res.setShippingFee(store.getShippingFee());
+            res.setFreeShippingThreshold(store.getFreeShippingThreshold());
+        }
         res.setStatus(product.getStatus());
         return res;
     }

@@ -1353,6 +1353,43 @@
           }
         },
         {
+          "name": "Trang chủ: đang giảm giá, bán chạy (công khai)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/home/highlights?size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "home",
+                "highlights"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
           "name": "Gợi ý khi gõ ô tìm kiếm (công khai)",
           "event": [
             {

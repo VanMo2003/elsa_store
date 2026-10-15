@@ -234,6 +234,10 @@ App tạo sản phẩm bằng JSON rồi tải ảnh sau; tạo bằng multipart
 
 Chủ, quản lý, nhân viên của cửa hàng được thêm / gỡ / đổi ảnh; ảnh được kiểm tra theo nội dung tệp (xem Bảo mật).
 
+**Trang chủ:** `GET /home/highlights?size=10` (công khai, tối đa 20 mỗi dải) — `onSale`: sản phẩm đang bán có khuyến mãi
+tự động đang chạy và thật sự được giảm, giảm nhiều trước; `bestSellers`: sản phẩm bán nhiều món nhất trong đơn hoàn
+thành 30 ngày qua (chưa có thì tính toàn bộ lịch sử), bỏ sản phẩm đang ẩn.
+
 **Gợi ý tìm kiếm:** `GET /search/suggestions?keyword=&size=8` (công khai) — từ 2 ký tự: tên sản phẩm đang bán chứa từ
 khoá (không trùng, mới trước, tối đa 10) và tối đa 3 cửa hàng đã duyệt khớp tên. Không phân biệt hoa thường / dấu (theo
 collation MySQL); `%`, `_` trong từ khoá được thoát nên không thành ký tự đại diện.
@@ -436,7 +440,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 73 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 74 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

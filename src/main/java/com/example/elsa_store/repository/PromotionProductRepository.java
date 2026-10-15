@@ -25,6 +25,16 @@ public interface PromotionProductRepository extends JpaRepository<PromotionProdu
     List<PromotionProduct> findActiveAutomatic(
             @Param("productIds") Collection<Long> productIds, @Param("today") LocalDate today);
 
+    /** Id sản phẩm đang có khuyến mãi tự động chạy hôm nay (dải "Đang giảm giá" ở trang chủ). */
+    @Query("""
+        select distinct pp.product.id from PromotionProduct pp join pp.promotion p
+        where p.status = 1
+          and (p.couponCode is null or p.couponCode = '')
+          and (p.startDate is null or p.startDate <= :today)
+          and (p.endDate is null or p.endDate >= :today)
+    """)
+    List<Long> productIdsOnSale(@Param("today") LocalDate today);
+
     List<PromotionProduct> findAllByPromotion_Id(Long promotionId);
 
     boolean existsByPromotion_IdAndProduct_Id(Long promotionId, Long productId);

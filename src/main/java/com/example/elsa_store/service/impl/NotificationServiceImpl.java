@@ -6,9 +6,12 @@ import com.example.elsa_store.dto.request.DeviceTokenRequest;
 import com.example.elsa_store.dto.response.NotificationCountResponse;
 import com.example.elsa_store.dto.response.NotificationResponse;
 import com.example.elsa_store.dto.response.PageResponse;
+import com.example.elsa_store.dto.response.TestPushResponse;
 import com.example.elsa_store.entity.DeviceToken;
 import com.example.elsa_store.entity.Notification;
+import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.entity.User;
+import com.example.elsa_store.event.PushNotificationListener;
 import com.example.elsa_store.event.PushRequestedEvent;
 import com.example.elsa_store.exception.AppException;
 import com.example.elsa_store.exception.ErrorCode;
@@ -18,6 +21,8 @@ import com.example.elsa_store.repository.DeviceTokenRepository;
 import com.example.elsa_store.repository.NotificationRepository;
 import com.example.elsa_store.repository.UserRepository;
 import com.example.elsa_store.service.NotificationService;
+import com.example.elsa_store.service.PushNotificationSender;
+import com.example.elsa_store.utils.AppLinks;
 import com.example.elsa_store.utils.NotificationMessages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,18 +35,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
+    private static final int MAX_TEST_PUSH_DELAY_SECONDS = 60;
+
     private final NotificationRepository notificationRepository;
     private final DeviceTokenRepository deviceTokenRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final PushNotificationSender pushNotificationSender;
+    private final PushNotificationListener pushNotificationListener;
 
     @Override
     public void notify(
@@ -54,9 +66,24 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void notifyStaff(
+    public void notifyStore(
+            Store store,
+            NotificationType type,
+            NotificationMessages.Message message,
+            String link,
+            Long referenceId) {
+        Map<Long, User> recipients = new LinkedHashMap<>();
+        if (store.getOwner() != null) {
+            recipients.put(store.getOwner().getId(), store.getOwner());
+        }
+        userRepository.findAllByStore_Id(store.getId()).forEach(member -> recipients.put(member.getId(), member));
+        send(recipients.values().stream().filter(User::isEnabled).toList(), type, message, link, referenceId);
+    }
+
+    @Override
+    public void notifyAdmins(
             NotificationType type, NotificationMessages.Message message, String link, Long referenceId) {
-        send(userRepository.findAllByRoleIn(List.of(Role.ADMIN, Role.STAFF)), type, message, link, referenceId);
+        send(userRepository.findAllByRole(Role.ADMIN), type, message, link, referenceId);
     }
 
     private void send(
@@ -141,6 +168,33 @@ public class NotificationServiceImpl implements NotificationService {
         device.setUser(current);
         device.setPlatform(req.getPlatform());
         deviceTokenRepository.save(device);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TestPushResponse sendTestPush(int delaySeconds) {
+        User current = currentUser();
+        int delay = Math.max(0, Math.min(delaySeconds, MAX_TEST_PUSH_DELAY_SECONDS));
+        int devices = deviceTokenRepository
+                .findTokensByUserIds(List.of(current.getId()))
+                .size();
+        boolean enabled = pushNotificationSender.isEnabled();
+        if (enabled && devices > 0) {
+            NotificationMessages.Message message = NotificationMessages.testPush();
+            PushRequestedEvent event = new PushRequestedEvent(
+                    List.of(current.getId()),
+                    message.title(),
+                    message.body(),
+                    Map.of("type", "TEST_PUSH", "link", AppLinks.notifications()));
+            // Gửi muộn để người thử kịp vuốt tắt app; đi thẳng tới sender, không tạo dòng trong hộp thông báo.
+            CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS)
+                    .execute(() -> pushNotificationListener.onPushRequested(event));
+        }
+        return TestPushResponse.builder()
+                .pushEnabled(enabled)
+                .devices(devices)
+                .delaySeconds(delay)
+                .build();
     }
 
     @Override

@@ -1,0 +1,22 @@
+package com.example.elsa_store.event;
+
+import com.example.elsa_store.service.MailService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+/** Gửi email kết quả xét duyệt ngoài luồng request, và chỉ khi giao dịch đã commit thật sự. */
+@Component
+@RequiredArgsConstructor
+public class StoreReviewMailListener {
+
+    private final MailService mailService;
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onStoreReviewed(StoreReviewedEvent event) {
+        mailService.sendStoreReview(event);
+    }
+}

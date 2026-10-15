@@ -17,4 +17,7 @@ public class AuthenticationResponse {
     String refreshToken;
     Role role;
     UserResponse user;
+
+    /** Cửa hàng của chủ / quản lý / nhân viên (kèm trạng thái duyệt) — app dùng để chọn màn hình sau đăng nhập. */
+    StoreResponse store;
 }

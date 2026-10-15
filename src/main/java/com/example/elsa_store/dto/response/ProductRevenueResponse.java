@@ -13,4 +13,9 @@ public class ProductRevenueResponse {
     private String imageUrl;
     private Long quantitySold;
     private Double revenue;
+    /** Giá vốn các dòng đã có giá vốn. */
+    private Double costOfGoods;
+    /** Lợi nhuận gộp; null khi còn đơn vị bán ra chưa có giá vốn. */
+    private Double profit;
+    private Long uncostedQuantity;
 }

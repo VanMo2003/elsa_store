@@ -1,6 +1,10 @@
 
 package com.example.elsa_store.dto.response;
 
+import com.example.elsa_store.constant.Role;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
 
     private Long id;
@@ -9,6 +13,9 @@ public class UserResponse {
     private String phone;
     private String fullName;
     private Boolean enabled;
+    private Role role;
+    private Long storeId;
+    private String storeName;
 
     public Long getId() { return id; }
 
@@ -33,4 +40,16 @@ public class UserResponse {
     public Boolean getEnabled() { return enabled; }
 
     public void setEnabled(Boolean enabled) { this.enabled = enabled; }
+
+    public Role getRole() { return role; }
+
+    public void setRole(Role role) { this.role = role; }
+
+    public Long getStoreId() { return storeId; }
+
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
+
+    public String getStoreName() { return storeName; }
+
+    public void setStoreName(String storeName) { this.storeName = storeName; }
 }

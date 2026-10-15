@@ -6,6 +6,7 @@ import com.example.elsa_store.dto.request.DeviceTokenRequest;
 import com.example.elsa_store.dto.response.NotificationCountResponse;
 import com.example.elsa_store.dto.response.NotificationResponse;
 import com.example.elsa_store.dto.response.PageResponse;
+import com.example.elsa_store.dto.response.TestPushResponse;
 import com.example.elsa_store.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,15 @@ public class NotificationController {
     public ApiResponse<Void> registerDevice(@Valid @RequestBody DeviceTokenRequest req) {
         notificationService.registerDevice(req);
         return ApiResponse.ok(null);
+    }
+
+    /**
+     * Gửi thông báo thử tới thiết bị của chính người gọi sau một lúc (mặc định 10 giây) để kiểm tra việc nhận push khi
+     * app đã tắt.
+     */
+    @PostMapping("/devices/test")
+    public ApiResponse<TestPushResponse> sendTestPush(@RequestParam(defaultValue = "10") int delaySeconds) {
+        return ApiResponse.ok(notificationService.sendTestPush(delaySeconds));
     }
 
     /** Gọi trước khi đăng xuất để thiết bị thôi nhận thông báo của tài khoản này. */

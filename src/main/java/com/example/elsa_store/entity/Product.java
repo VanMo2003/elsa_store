@@ -17,6 +17,10 @@ import java.util.List;
 public class Product extends BaseEntity {
 
     @ManyToOne
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
 

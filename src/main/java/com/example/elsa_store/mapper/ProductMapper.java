@@ -16,7 +16,7 @@ public class ProductMapper {
                 .description(request.getDescription())
                 .basePrice(request.getBasePrice())
                 .category(category)
-                .status(1)
+                .status(request.getStatus() != null ? request.getStatus() : 1)
                 .build();
     }
 
@@ -25,6 +25,9 @@ public class ProductMapper {
         product.setDescription(request.getDescription());
         product.setBasePrice(request.getBasePrice());
         product.setCategory(category);
+        if (request.getStatus() != null) {
+            product.setStatus(request.getStatus());
+        }
     }
 
     public static ProductResponse toResponse(Product product) {
@@ -36,6 +39,10 @@ public class ProductMapper {
         res.setDescription(product.getDescription());
         res.setBasePrice(product.getBasePrice());
         res.setCategoryName(product.getCategory() != null ? product.getCategory().getName() : null);
+        res.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+        res.setStoreId(product.getStore() != null ? product.getStore().getId() : null);
+        res.setStoreName(product.getStore() != null ? product.getStore().getName() : null);
+        res.setStatus(product.getStatus());
         return res;
     }
 
@@ -48,6 +55,10 @@ public class ProductMapper {
         res.setDescription(product.getDescription());
         res.setBasePrice(product.getBasePrice());
         res.setCategoryName(product.getCategory() != null ? product.getCategory().getName() : null);
+        res.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+        res.setStoreId(product.getStore() != null ? product.getStore().getId() : null);
+        res.setStoreName(product.getStore() != null ? product.getStore().getName() : null);
+        res.setStatus(product.getStatus());
         return res;
     }
 }

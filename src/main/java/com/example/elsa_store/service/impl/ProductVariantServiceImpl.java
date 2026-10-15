@@ -15,6 +15,8 @@ import com.example.elsa_store.repository.ProductVariantImageRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
 import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.service.ProductVariantService;
+import com.example.elsa_store.security.AccessGuard;
+import com.example.elsa_store.security.AccessGuard.Access;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,26 +33,33 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ProductVariantRepository productVariantRepository;
     private final FileStorageService fileStorageService;
     private final ProductVariantImageRepository productVariantImageRepository;
+    private final AccessGuard accessGuard;
+    private final CatalogPresenter catalog;
 
     public ProductVariantServiceImpl(ProductVariantRepository variantRepository,
-                                     ProductRepository productRepository, ProductVariantRepository productVariantRepository, FileStorageService fileStorageService, ProductVariantImageRepository productVariantImageRepository) {
+                                     ProductRepository productRepository, ProductVariantRepository productVariantRepository, FileStorageService fileStorageService, ProductVariantImageRepository productVariantImageRepository,
+                                     AccessGuard accessGuard,
+                                     CatalogPresenter catalog) {
+        this.accessGuard = accessGuard;
         this.variantRepository = variantRepository;
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
         this.fileStorageService = fileStorageService;
         this.productVariantImageRepository = productVariantImageRepository;
+        this.catalog = catalog;
     }
 
     @Override
     public ProductVariantResponse create(ProductVariantRequest req, List<MultipartFile> files) {
         Product product = productRepository.findById(req.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
         ProductVariant productVariant = ProductVariantMapper.toEntity(req, product);
         productVariant = variantRepository.save(productVariant);
 
         if (files != null && !files.isEmpty()) {
             List<String> urls = files.stream()
-                    .map(fileStorageService::uploadHotelImage)
+                    .map(fileStorageService::storeProductImage)
                     .toList();
 
             ProductVariant finalProductVariant = productVariant;
@@ -78,16 +87,19 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product variant not found"));
         Product product = productRepository.findById(req.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        // Vừa phải sửa được biến thể hiện tại, vừa phải sửa được sản phẩm đích (cùng một cửa hàng).
+        accessGuard.authorize(v.getProduct().getStore(), Access.STAFF_WRITE);
+        accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
         ProductVariantMapper.update(v, req, product);
         return ProductVariantMapper.toResponse(v);
     }
 
     @Override
     public void delete(Long id) {
-        if (!variantRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product variant not found");
-        }
-        variantRepository.deleteById(id);
+        ProductVariant variant = variantRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product variant not found"));
+        accessGuard.authorize(variant.getProduct().getStore(), Access.MANAGER_WRITE);
+        variantRepository.delete(variant);
     }
 
     @Override
@@ -97,27 +109,26 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
         ProductVariant productVariant = variantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product variant not found"));
+        requireVisible(productVariant.getProduct());
 
-        ProductVariantDetailResponse res = ProductVariantMapper.toDetailResponse(productVariant);
-        res.setImages(productVariantImages);
-
-        return res;
+        return catalog.variantDetail(productVariant, productVariantImages);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ProductVariantResponse> getAll(Long productId) {
-        return variantRepository.findAllByProduct_Id(productId).stream()
-                .map(ProductVariantMapper::toResponse)
-                .toList();
+        requireVisible(productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found")));
+        return catalog.variants(variantRepository.findAllByProduct_Id(productId));
     }
 
     @Override
     public List<String> uploadImages(Long productVariantId, List<MultipartFile> files) {
         ProductVariant productVariant = productVariantRepository.findById(productVariantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product VariantId not found with id=" + productVariantId));
+        accessGuard.authorize(productVariant.getProduct().getStore(), Access.STAFF_WRITE);
 
-        List<String> urls = files.stream().map(fileStorageService::uploadHotelImage).toList();
+        List<String> urls = files.stream().map(fileStorageService::storeProductImage).toList();
 
         List<ProductVariantImage> images = urls.stream().map(url ->
                 ProductVariantImage.builder()
@@ -129,5 +140,21 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         productVariantImageRepository.saveAll(images);
 
         return urls;
+    }
+
+    /** Sản phẩm phải đang bán và thuộc cửa hàng đã duyệt; ADMIN và người của cửa hàng đó xem được cả hàng ẩn. */
+    private void requireVisible(Product product) {
+        if (ProductServiceImpl.isPublic(product)) {
+            return;
+        }
+        var current = accessGuard.currentUserOrEmpty().orElse(null);
+        boolean allowed = current != null
+                && (current.getRole() == com.example.elsa_store.constant.Role.ADMIN
+                        || (accessGuard.storeOf(current) != null
+                                && product.getStore() != null
+                                && accessGuard.storeOf(current).getId().equals(product.getStore().getId())));
+        if (!allowed) {
+            throw new ResourceNotFoundException("Product not found");
+        }
     }
 }

@@ -5,7 +5,7 @@ import com.example.elsa_store.dto.request.ProductRequest;
 import com.example.elsa_store.dto.request.ProductSearchRequest;
 import com.example.elsa_store.dto.response.ProductDetailResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
-import org.springframework.data.domain.Page;
+import com.example.elsa_store.dto.response.PageResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -18,5 +18,11 @@ public interface ProductService {
     List<String> uploadImages(Long roomId, List<MultipartFile> files);
     List<ProductResponse> getAll();
     List<ProductResponse> getAllByCategory(Long categoryId);
-    Page<ProductResponse> search(ProductSearchRequest request);
+
+    /** Mọi sản phẩm của cửa hàng người gọi (kể cả đang ẩn) — màn quản lý của chủ / quản lý / nhân viên. */
+    List<ProductResponse> getMine();
+
+    /** Công khai: sản phẩm đang bán của một cửa hàng đã duyệt. */
+    List<ProductResponse> getAllByStore(Long storeId);
+    PageResponse<ProductResponse> search(ProductSearchRequest request);
 }

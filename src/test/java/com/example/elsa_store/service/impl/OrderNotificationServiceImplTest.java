@@ -8,6 +8,7 @@ import com.example.elsa_store.entity.Order;
 import com.example.elsa_store.entity.OrderItem;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductVariant;
+import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.entity.User;
 import com.example.elsa_store.event.OrderMailEvent;
 import com.example.elsa_store.service.NotificationService;
@@ -60,6 +61,9 @@ class OrderNotificationServiceImplTest {
                 .build();
         order.setId(99L);
         order.setCustomer(Customer.builder().user(buyer).build());
+        Store store = Store.builder().name("Elsa Store").build();
+        store.setId(5L);
+        order.setStore(store);
         return order;
     }
 
@@ -77,8 +81,9 @@ class OrderNotificationServiceImplTest {
 
         verify(notifications)
                 .notify(eq(buyer), eq(NotificationType.ORDER_PLACED), any(), eq(AppLinks.orders()), eq(99L));
+        // Người của cửa hàng bán (chủ, quản lý, nhân viên) nhận thông báo đơn mới.
         verify(notifications)
-                .notifyStaff(eq(NotificationType.NEW_ORDER), any(), eq(AppLinks.orders()), eq(99L));
+                .notifyStore(any(Store.class), eq(NotificationType.NEW_ORDER), any(), eq(AppLinks.orders()), eq(99L));
         OrderMailEvent mail = publishedMail();
         assertEquals(NotificationType.ORDER_PLACED, mail.type());
         assertEquals("an@example.com", mail.email());

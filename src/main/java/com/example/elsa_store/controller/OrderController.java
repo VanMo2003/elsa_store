@@ -4,6 +4,7 @@ package com.example.elsa_store.controller;
 import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.constant.PaymentStatus;
 import com.example.elsa_store.dto.request.OrderRequest;
+import com.example.elsa_store.dto.response.OrderQuoteResponse;
 import com.example.elsa_store.dto.response.OrderResponse;
 import com.example.elsa_store.service.OrderService;
 import jakarta.validation.Valid;
@@ -25,6 +26,12 @@ public class OrderController {
     @PostMapping
     public ApiResponse<OrderResponse> create(@Valid @RequestBody OrderRequest request) {
         return ApiResponse.ok(orderService.create(request));
+    }
+
+    /** Báo giá ở bước thanh toán (khuyến mãi, mã giảm giá, tồn kho) — không tạo đơn. */
+    @PostMapping("/quote")
+    public ApiResponse<OrderQuoteResponse> quote(@Valid @RequestBody OrderRequest request) {
+        return ApiResponse.ok(orderService.quote(request));
     }
 
     @GetMapping("/{id}")
@@ -55,11 +62,11 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/payment-status")
-    public OrderResponse updatePaymentStatus(
+    public ApiResponse<OrderResponse> updatePaymentStatus(
             @PathVariable Long orderId,
             @RequestParam PaymentStatus paymentStatus
     ) {
-        return orderService.updatePaymentStatus(orderId, paymentStatus);
+        return ApiResponse.ok(orderService.updatePaymentStatus(orderId, paymentStatus));
     }
 
     @GetMapping

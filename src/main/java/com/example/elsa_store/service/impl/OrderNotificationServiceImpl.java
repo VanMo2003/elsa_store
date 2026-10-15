@@ -27,12 +27,15 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
         if (recipient != null) {
             deliver(recipient, order, NotificationType.ORDER_PLACED, NotificationMessages.orderPlaced(order));
         }
-        String customerName = recipient == null ? "khách hàng" : displayName(recipient);
-        notificationService.notifyStaff(
-                NotificationType.NEW_ORDER,
-                NotificationMessages.newOrder(order, customerName),
-                AppLinks.orders(),
-                order.getId());
+        String customerName = customerNameOf(order, recipient);
+        if (order.getStore() != null) {
+            notificationService.notifyStore(
+                    order.getStore(),
+                    NotificationType.NEW_ORDER,
+                    NotificationMessages.newOrder(order, customerName),
+                    AppLinks.orders(),
+                    order.getId());
+        }
     }
 
     @Override
@@ -87,6 +90,14 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
             return order.getCustomer().getUser();
         }
         return order.getUser();
+    }
+
+    /** Khách vãng lai (không có tài khoản) vẫn có tên trên hồ sơ để hiện trong thông báo đơn mới. */
+    private static String customerNameOf(Order order, User recipient) {
+        if (order.getCustomer() != null && order.getCustomer().getFullName() != null) {
+            return order.getCustomer().getFullName();
+        }
+        return recipient == null ? "khách hàng" : displayName(recipient);
     }
 
     private static String displayName(User user) {

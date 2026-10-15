@@ -33,8 +33,25 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "created_by")
     private User user;
 
+    /** Cửa hàng bán đơn này. */
+    @ManyToOne
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    /** Nhân viên / quản lý lập đơn tại quầy; null khi khách tự đặt. */
+    @ManyToOne
+    @JoinColumn(name = "handled_by")
+    private User handledBy;
+
     @Column(name = "order_date")
     private LocalDateTime orderDate;
+
+    /**
+     * Lúc đơn chuyển sang HOAN_THANH — doanh thu được ghi nhận vào ngày này. Đơn hoàn thành trước khi có cột này để
+     * trống, báo cáo dùng ngày đặt thay thế.
+     */
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -55,6 +72,28 @@ public class Order extends BaseEntity {
 
     @Column(name = "note", length = 255)
     private String note;
+
+    // Thông tin giao hàng chụp lại lúc đặt (khách sửa / xoá sổ địa chỉ sau đó cũng không đổi đơn cũ).
+    @Column(name = "receiver_name", length = 100)
+    private String receiverName;
+
+    @Column(name = "receiver_phone", length = 20)
+    private String receiverPhone;
+
+    @Column(name = "shipping_address", length = 500)
+    private String shippingAddress;
+
+    /** COD hoặc VNPAY — cách khách chọn trả tiền lúc đặt. */
+    @Column(name = "payment_method", length = 20)
+    private String paymentMethod;
+
+    /** Mã giảm giá đã áp cho đơn (nếu có). */
+    @Column(name = "coupon_code", length = 50)
+    private String couponCode;
+
+    /** Mô tả các khoản giảm, ví dụ "Giảm giá sản phẩm 50.000đ; Mã SALE10 -20.000đ". */
+    @Column(name = "discount_note", length = 255)
+    private String discountNote;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items;

@@ -1,0 +1,79 @@
+package com.example.elsa_store.service.impl;
+
+import com.example.elsa_store.dto.request.StoreUpdateRequest;
+import com.example.elsa_store.dto.response.PageResponse;
+import com.example.elsa_store.dto.response.StoreResponse;
+import com.example.elsa_store.entity.Store;
+import com.example.elsa_store.entity.User;
+import com.example.elsa_store.exception.AppException;
+import com.example.elsa_store.exception.ErrorCode;
+import com.example.elsa_store.exception.ResourceNotFoundException;
+import com.example.elsa_store.mapper.StoreMapper;
+import com.example.elsa_store.repository.StoreRepository;
+import com.example.elsa_store.security.AccessGuard;
+import com.example.elsa_store.service.StoreService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class StoreServiceImpl implements StoreService {
+
+    private final StoreRepository storeRepository;
+    private final AccessGuard accessGuard;
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<StoreResponse> getAllPublic(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        return PageResponse.from(storeRepository.findAllApproved(pageable).map(StoreMapper::toPublicResponse));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StoreResponse getPublic(Long id) {
+        Store store = storeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Store not found with id=" + id));
+        if (!store.isApproved()) {
+            throw new ResourceNotFoundException("Store not found with id=" + id);
+        }
+        return StoreMapper.toPublicResponse(store);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StoreResponse getMine() {
+        User current = accessGuard.currentUser();
+        Store store = accessGuard.storeOf(current);
+        if (store == null) {
+            throw new AppException(ErrorCode.STORE_REQUIRED);
+        }
+        return StoreMapper.toResponse(store);
+    }
+
+    @Override
+    public StoreResponse updateMine(StoreUpdateRequest req) {
+        Store store = accessGuard.requireStoreManager();
+        store.setName(req.getName().trim());
+        if (req.getDescription() != null) {
+            store.setDescription(req.getDescription().isBlank() ? null : req.getDescription().trim());
+        }
+        if (req.getImageUrl() != null) {
+            store.setImageUrl(req.getImageUrl().isBlank() ? null : req.getImageUrl().trim());
+        }
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            store.setEmail(req.getEmail().trim());
+        }
+        if (req.getPhone() != null && !req.getPhone().isBlank()) {
+            store.setPhone(req.getPhone().trim());
+        }
+        if (req.getAddress() != null && !req.getAddress().isBlank()) {
+            store.setAddress(req.getAddress().trim());
+        }
+        return StoreMapper.toResponse(storeRepository.save(store));
+    }
+}

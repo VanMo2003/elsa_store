@@ -8,7 +8,7 @@ import com.example.elsa_store.dto.response.ProductResponse;
 import com.example.elsa_store.service.ProductService;
 import jakarta.validation.Valid;
 import com.example.elsa_store.dto.common.ApiResponse;
-import org.springframework.data.domain.Page;
+import com.example.elsa_store.dto.response.PageResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,8 +50,18 @@ public class ProductController {
         return ApiResponse.ok(productService.getById(id));
     }
 
+    /** Sản phẩm của cửa hàng người gọi, gồm cả sản phẩm đang ẩn. */
+    @GetMapping("/mine")
+    public ApiResponse<List<ProductResponse>> getMine() {
+        return ApiResponse.ok(productService.getMine());
+    }
+
     @GetMapping
-    public ApiResponse<List<ProductResponse>> getAll(@RequestParam(required = false) Long categoryId) {
+    public ApiResponse<List<ProductResponse>> getAll(
+            @RequestParam(required = false) Long categoryId, @RequestParam(required = false) Long storeId) {
+        if (storeId != null) {
+            return ApiResponse.ok(productService.getAllByStore(storeId));
+        }
         if (categoryId != null) {
             return ApiResponse.ok(productService.getAllByCategory(categoryId));
         }
@@ -67,7 +77,7 @@ public class ProductController {
     }
 
     @PostMapping("/search")
-    public ApiResponse<Page<ProductResponse>> search(@RequestBody ProductSearchRequest request) {
+    public ApiResponse<PageResponse<ProductResponse>> search(@RequestBody ProductSearchRequest request) {
         return ApiResponse.ok(productService.search(request));
     }
 }

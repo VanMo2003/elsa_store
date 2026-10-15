@@ -1,14 +1,17 @@
 
 package com.example.elsa_store.controller;
 
+import com.example.elsa_store.constant.Role;
+import com.example.elsa_store.dto.common.ApiResponse;
+import com.example.elsa_store.dto.request.ChangePasswordRequest;
 import com.example.elsa_store.dto.request.UserRequest;
+import com.example.elsa_store.dto.request.UserUpdateRequest;
+import com.example.elsa_store.dto.response.AuthenticationResponse;
+import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.UserResponse;
 import com.example.elsa_store.service.UserService;
 import jakarta.validation.Valid;
-import com.example.elsa_store.dto.common.ApiResponse;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -20,6 +23,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    /** Đăng ký công khai cho khách (vai trò USER). */
     @PostMapping
     public ApiResponse<UserResponse> create(@Valid @RequestBody UserRequest req) {
         return ApiResponse.ok(userService.create(req));
@@ -27,8 +31,14 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ApiResponse<UserResponse> update(@PathVariable Long id,
-                                               @Valid @RequestBody UserRequest req) {
+                                            @Valid @RequestBody UserUpdateRequest req) {
         return ApiResponse.ok(userService.update(id, req));
+    }
+
+    /** Đổi mật khẩu của chính mình: cần mật khẩu hiện tại; trả cặp token mới, các thiết bị khác bị đăng xuất. */
+    @PutMapping("/me/password")
+    public ApiResponse<AuthenticationResponse> changePassword(@Valid @RequestBody ChangePasswordRequest req) {
+        return ApiResponse.ok(userService.changePassword(req));
     }
 
     @DeleteMapping("/{id}")
@@ -37,13 +47,22 @@ public class UserController {
         return ApiResponse.ok(null);
     }
 
+    @GetMapping("/me")
+    public ApiResponse<UserResponse> getMe() {
+        return ApiResponse.ok(userService.getMe());
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<UserResponse> getById(@PathVariable Long id) {
         return ApiResponse.ok(userService.getById(id));
     }
 
+    /** Danh sách tài khoản — chỉ ADMIN. */
     @GetMapping
-    public ApiResponse<List<UserResponse>> getAll() {
-        return ApiResponse.ok(userService.getAll());
+    public ApiResponse<PageResponse<UserResponse>> getAll(
+            @RequestParam(required = false) Role role,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(userService.getAll(role, page, size));
     }
 }

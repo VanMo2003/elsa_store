@@ -1,0 +1,66 @@
+# Chạy MySQL + BE bằng một lệnh: `docker compose up -d --build` (xem README, mục "Chạy bằng Docker").
+# Mọi giá trị đều đổi được qua file .env cạnh file này (mẫu: .env.example).
+services:
+  elsa-db:
+    image: mysql:8.4
+    container_name: elsa-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-elsa_store_db}
+      MYSQL_USER: ${MYSQL_USER:-elsa_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-elsa_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      TZ: Asia/Ho_Chi_Minh
+    # Cổng 3307 trên máy để không đụng MySQL đang chạy sẵn ở 3306.
+    ports:
+      - "${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - elsa-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  elsa-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: elsa-app
+    restart: unless-stopped
+    depends_on:
+      elsa-db:
+        condition: service_healthy
+    ports:
+      - "${APP_HOST_PORT:-8080}:8080"
+    environment:
+      DB_URL: jdbc:mysql://elsa-db:3306/${MYSQL_DATABASE:-elsa_store_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+      DB_USERNAME: ${MYSQL_USER:-elsa_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-elsa_password}
+      # Spring coi biến rỗng là "đã đặt" (không lấy mặc định của application.yaml), nên các biến có mặc định phải ghi
+      # đủ ở đây. JWT_SIGNER_KEY: bắt buộc đổi khi triển khai thật (≥ 64 ký tự ngẫu nhiên); khoá dưới đây chỉ để chạy thử
+      # và BE sẽ log cảnh báo.
+      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-6lhXE9HRxzm7EyIVWdl0XPx9eoGdgXm8VNfpaBQ1dUDpZF6NcF8z4fDAO15JFAdF}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:8080/elsa-store/api}
+      # Mặc định: tài khoản sandbox công khai của VNPay.
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-KUHZ6TQJ}
+      VNPAY_SECRET_KEY: ${VNPAY_SECRET_KEY:-K20SB7Q7577Q70YWF5I512BL3IX95TP4}
+      VNPAY_URL: ${VNPAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      # Đặt file service account vào ./secrets/ rồi FIREBASE_CREDENTIALS=/app/secrets/<tên file>.json
+      FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./secrets:/app/secrets:ro
+
+volumes:
+  elsa-db-data:

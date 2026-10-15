@@ -13,6 +13,10 @@ import lombok.*;
 @Builder
 public class Supplier extends BaseEntity {
 
+    @ManyToOne
+    @JoinColumn(name = "store_id")
+    private Store store;
+
     @Column(name = "name", length = 200, nullable = false)
     private String name;
 

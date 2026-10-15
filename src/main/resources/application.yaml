@@ -6,13 +6,19 @@ server:
 spring:
   application:
     name: elsa_store
+  # Giá trị sau dấu ":" là mặc định cho máy phát triển; khi triển khai đặt DB_URL / DB_USERNAME / DB_PASSWORD.
   datasource:
-    url: jdbc:mysql://localhost:3306/elsa_store_db
-    username: root
-    password: 03092003
+    url: ${DB_URL:jdbc:mysql://localhost:3306/elsa_store_db}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:03092003}
   jpa:
     hibernate:
       ddl-auto: update
+  # Ảnh sản phẩm chụp bằng điện thoại thường 2–5 MB (mặc định của Spring chỉ 1 MB).
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:5MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:30MB}
   # Email đơn hàng / thanh toán. Để trống MAIL_USERNAME thì chỉ ghi log, không gửi.
   # Gmail: MAIL_USERNAME = địa chỉ Gmail, MAIL_PASSWORD = App Password 16 ký tự.
   mail:
@@ -27,9 +33,11 @@ spring:
       "[mail.smtp.timeout]": 10000
       "[mail.smtp.writetimeout]": 10000
 jwt:
-  signer-key: "6lhXE9HRxzm7EyIVWdl0XPx9eoGdgXm8VNfpaBQ1dUDpZF6NcF8z4fDAO15JFAdF"
-  valid-duration: 3600 # 1 tiếng
-  refreshable-duration: 604800 # 7 ngày
+  # Khoá ký token (HS512, tối thiểu 64 ký tự). Khoá mặc định chỉ dùng khi phát triển — BE ghi cảnh báo lúc khởi động
+  # nếu chưa đặt JWT_SIGNER_KEY.
+  signer-key: ${JWT_SIGNER_KEY:6lhXE9HRxzm7EyIVWdl0XPx9eoGdgXm8VNfpaBQ1dUDpZF6NcF8z4fDAO15JFAdF}
+  valid-duration: ${JWT_VALID_SECONDS:3600} # 1 tiếng
+  refreshable-duration: ${JWT_REFRESH_SECONDS:604800} # 7 ngày
 
 
 file:
@@ -46,11 +54,36 @@ firebase:
   # thông báo trong app, không gửi push.
   credentials-path: ${FIREBASE_CREDENTIALS:}
 
+ai:
+  # gemini (Google AI Studio, có gói miễn phí) | anthropic (Claude, trả phí) | openai (máy chủ chuẩn OpenAI khác:
+  # Groq, OpenRouter, Ollama…). Để trống thì tự chọn theo key đang có (GEMINI_API_KEY -> gemini).
+  provider: ${AI_PROVIDER:}
+  # Không có key nào thì mọi tính năng AI tự tắt. AI_API_KEY dùng cho mọi nhà cung cấp.
+  api-key: ${AI_API_KEY:}
+  gemini-api-key: ${GEMINI_API_KEY:}
+  anthropic-api-key: ${ANTHROPIC_API_KEY:}
+  # Để trống = địa chỉ mặc định của nhà cung cấp (đặt để trỏ vào máy chủ giả khi thử).
+  base-url: ${AI_BASE_URL:}
+  # Để trống = model mặc định: gemini-3.8-flash (gemini), claude-sonnet-5 (anthropic). Trợ lý tư vấn cần gọi công cụ.
+  assistant-model: ${AI_ASSISTANT_MODEL:}
+  fast-model: ${AI_FAST_MODEL:}
+  # Model thử tiếp khi model chính quá tải (503) hoặc hết lượt (429), cách nhau bởi dấu phẩy; "none" = tắt.
+  # Để trống = mặc định: gemini-3.5-flash,gemini-2.5-flash.
+  assistant-fallback-models: ${AI_ASSISTANT_FALLBACK_MODELS:}
+  fast-fallback-models: ${AI_FAST_FALLBACK_MODELS:}
+  timeout-seconds: ${AI_TIMEOUT_SECONDS:60}
+  # Cửa hàng bật "tự trả lời": khách nhắn mà sau chừng này giây chưa ai của cửa hàng trả lời thì trợ lý trả lời.
+  auto-reply-delay-seconds: ${AI_AUTO_REPLY_DELAY_SECONDS:60}
+
+# Mặc định là tài khoản sandbox (thử nghiệm) của VNPay; khi chạy thật đặt VNPAY_TMN_CODE / VNPAY_SECRET_KEY / VNPAY_URL.
 vnpay:
-  tmnCode : "KUHZ6TQJ"
-  secretKey : "K20SB7Q7577Q70YWF5I512BL3IX95TP4"
-  url : "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-  returnUrl : "http://localhost:8080/elsa-store/api/payment/vn-pay-callback"
-  version : "2.1.0"
-  command : "pay"
-  orderType : "other"
+  tmnCode: ${VNPAY_TMN_CODE:KUHZ6TQJ}
+  secretKey: ${VNPAY_SECRET_KEY:K20SB7Q7577Q70YWF5I512BL3IX95TP4}
+  url: ${VNPAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  # Nơi VNPay đưa người mua quay về. App bắt địa chỉ này trong WebView (theo đường dẫn /payment/vn-pay-callback) rồi tự
+  # gọi BE kiểm chữ ký; trình duyệt thường thì thấy trang kết quả. IPN (máy chủ VNPay gọi BE) là
+  # {APP_PUBLIC_URL}/payment/vnpay-ipn — khai báo trong trang quản trị VNPay khi BE có địa chỉ công khai.
+  returnUrl: ${VNPAY_RETURN_URL:${app.public-url}/payment/vn-pay-callback}
+  version: "2.1.0"
+  command: "pay"
+  orderType: "other"

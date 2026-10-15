@@ -2,23 +2,35 @@
 package com.example.elsa_store.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
+/** Địa chỉ giao hàng trong sổ địa chỉ của khách. {@code customerId} có thể bỏ trống: mặc định là chính khách đó. */
 public class AddressRequest {
 
-    @NotNull
     private Long customerId;
 
     @NotBlank
+    @Size(max = 100)
     private String fullName;
 
     @NotBlank
+    @Pattern(regexp = "[0-9+ .()-]{8,20}", message = "invalid")
     private String phone;
 
+    @Size(max = 100)
     private String province;
+
+    @Size(max = 100)
     private String district;
+
+    @Size(max = 100)
     private String ward;
+
+    @NotBlank
+    @Size(max = 255)
     private String detail;
+
     private Boolean isDefault;
 
     public Long getCustomerId() { return customerId; }

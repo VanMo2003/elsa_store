@@ -18,6 +18,21 @@ public class ProductDetailResponse {
     private String description;
     private Double basePrice;
     private String categoryName;
+    private Long categoryId;
+    private Long storeId;
+    private String storeName;
+    private Integer status;
     private List<String> images;
     private List<ProductVariantResponse> productVariants;
+    /** Giá sau khuyến mãi tự động của giá cơ bản (null nếu không được giảm). */
+    private Double salePrice;
+    private Integer discountPercent;
+    private String promotionName;
+    /** false = mọi biến thể đều hết hàng; null = chưa theo dõi kho. */
+    private Boolean inStock;
+
+    /** Điểm đánh giá trung bình (một chữ số thập phân); null khi chưa có đánh giá. */
+    private Double ratingAverage;
+
+    private Long ratingCount;
 }

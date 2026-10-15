@@ -33,6 +33,13 @@ public class ProductVariant extends BaseEntity {
     @Column(name = "price")
     private Double price;
 
+    /**
+     * Giá vốn bình quân của một đơn vị (chỉ chủ / quản lý thấy). Nhập hàng tự tính lại theo bình quân gia quyền; trống =
+     * chưa biết giá vốn (báo cáo lợi nhuận sẽ cảnh báo).
+     */
+    @Column(name = "cost_price")
+    private Double costPrice;
+
     @Column(name = "status")
     private Integer status;
 

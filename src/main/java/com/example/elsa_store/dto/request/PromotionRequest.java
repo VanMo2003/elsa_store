@@ -4,6 +4,7 @@ package com.example.elsa_store.dto.request;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PromotionRequest {
 
@@ -16,6 +17,12 @@ public class PromotionRequest {
     private Integer status;
     private String couponCode;
     private Double minOrderValue;
+
+    /**
+     * Sản phẩm được áp (cùng cửa hàng). {@code null} = giữ nguyên danh sách đang có; rỗng = không gắn sản phẩm nào (khuyến
+     * mãi không mã sẽ áp cho cả đơn). Lưu cùng giao dịch với khuyến mãi nên không thể "lưu nửa chừng".
+     */
+    private List<Long> productIds;
 
     public String getName() { return name; }
 
@@ -52,4 +59,8 @@ public class PromotionRequest {
     public Double getMinOrderValue() { return minOrderValue; }
 
     public void setMinOrderValue(Double minOrderValue) { this.minOrderValue = minOrderValue; }
+
+    public List<Long> getProductIds() { return productIds; }
+
+    public void setProductIds(List<Long> productIds) { this.productIds = productIds; }
 }

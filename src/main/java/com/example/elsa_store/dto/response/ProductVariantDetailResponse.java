@@ -22,4 +22,8 @@ public class ProductVariantDetailResponse {
     private Double price;
     private Integer status;
     private List<String> images = new ArrayList<>();
+    /** Giá sau khuyến mãi tự động (null nếu không được giảm). */
+    private Double salePrice;
+    /** Tồn kho hiện tại; null = không theo dõi kho. */
+    private Integer stock;
 }

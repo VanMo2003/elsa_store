@@ -37,7 +37,13 @@ public class AddressController {
         return ApiResponse.ok(null);
     }
 
-    @GetMapping("/{id}")
+    /** Sổ địa chỉ của khách đang đăng nhập; địa chỉ mặc định lên đầu. */
+    @GetMapping("/me")
+    public ApiResponse<List<AddressResponse>> getMine() {
+        return ApiResponse.ok(addressService.getMine());
+    }
+
+    @GetMapping("/{id:\\d+}")
     public ApiResponse<AddressResponse> getById(@PathVariable Long id) {
         return ApiResponse.ok(addressService.getById(id));
     }

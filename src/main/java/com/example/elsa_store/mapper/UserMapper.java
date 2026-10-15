@@ -3,8 +3,8 @@ package com.example.elsa_store.mapper;
 
 import com.example.elsa_store.dto.request.UserRequest;
 import com.example.elsa_store.dto.response.UserResponse;
+import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.entity.User;
-import org.mapstruct.Mapper;
 
 public class UserMapper {
 
@@ -20,13 +20,8 @@ public class UserMapper {
         return u;
     }
 
+    /** Cập nhật thông tin hồ sơ; mật khẩu, vai trò và trạng thái do service quyết định. */
     public static void update(User u, UserRequest req) {
-        if (req.getUsername() != null) {
-            u.setUsername(req.getUsername());
-        }
-        if (req.getPassword() != null) {
-            u.setPassword(req.getPassword());
-        }
         if (req.getEmail() != null) {
             u.setEmail(req.getEmail());
         }
@@ -36,12 +31,14 @@ public class UserMapper {
         if (req.getFullName() != null) {
             u.setFullName(req.getFullName());
         }
-        if (req.getEnabled() != null) {
-            u.setEnabled(req.getEnabled());
-        }
     }
 
     public static UserResponse toResponse(User u) {
+        return toResponse(u, null);
+    }
+
+    /** {@code store}: cửa hàng của người dùng (chủ → cửa hàng sở hữu; quản lý/nhân viên → nơi làm việc). */
+    public static UserResponse toResponse(User u, Store store) {
         UserResponse res = new UserResponse();
         res.setId(u.getId());
         res.setUsername(u.getUsername());
@@ -49,6 +46,12 @@ public class UserMapper {
         res.setPhone(u.getPhone());
         res.setFullName(u.getFullName());
         res.setEnabled(u.isEnabled());
+        res.setRole(u.getRole());
+        Store resolved = store != null ? store : u.getStore();
+        if (resolved != null) {
+            res.setStoreId(resolved.getId());
+            res.setStoreName(resolved.getName());
+        }
         return res;
     }
 }

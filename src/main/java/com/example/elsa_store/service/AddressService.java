@@ -13,4 +13,7 @@ public interface AddressService {
     void delete(Long id);
     AddressResponse getById(Long id);
     List<AddressResponse> getAllByCustomer(Long customerId);
+
+    /** Sổ địa chỉ của khách đang đăng nhập (mặc định lên đầu). */
+    List<AddressResponse> getMine();
 }

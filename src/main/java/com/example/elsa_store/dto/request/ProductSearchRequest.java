@@ -6,6 +6,7 @@ import lombok.Data;
 public class ProductSearchRequest {
     private String keyword;
     private Long categoryId;
+    private Long storeId;
 
     private Double minPrice;
     private Double maxPrice;

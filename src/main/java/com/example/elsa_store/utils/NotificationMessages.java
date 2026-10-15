@@ -1,6 +1,7 @@
 package com.example.elsa_store.utils;
 
 import com.example.elsa_store.entity.Order;
+import com.example.elsa_store.entity.Store;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -13,6 +14,13 @@ public final class NotificationMessages {
     private static final Locale VI = Locale.forLanguageTag("vi-VN");
 
     private NotificationMessages() {}
+
+    /** Nút "Gửi thông báo thử": chứng minh push tới được máy này kể cả khi app chạy nền hoặc đã tắt. */
+    public static Message testPush() {
+        return new Message(
+                "Thông báo thử",
+                "Máy đã nhận được thông báo khi app chạy nền hoặc đã tắt — bạn sẽ không bỏ lỡ tin nhắn và đơn mới.");
+    }
 
     public static Message newOrder(Order order, String customerName) {
         return new Message(
@@ -54,6 +62,50 @@ public final class NotificationMessages {
         return new Message(
                 "Thanh toán thất bại",
                 "Thanh toán cho đơn " + order.getCode() + " chưa thành công. Bạn có thể thử thanh toán lại.");
+    }
+
+    public static Message storeSubmitted(Store store, boolean resubmitted) {
+        if (resubmitted) {
+            return new Message(
+                    "Hồ sơ cửa hàng được gửi lại",
+                    store.getName() + " đã cập nhật hồ sơ và đang chờ xét duyệt lại.");
+        }
+        String owner = store.getOwnerName() == null || store.getOwnerName().isBlank()
+                ? ""
+                : " (" + store.getOwnerName() + ")";
+        return new Message("Cửa hàng mới đăng ký", store.getName() + owner + " vừa đăng ký và đang chờ xét duyệt.");
+    }
+
+    public static Message storeApproved(Store store) {
+        return new Message(
+                "Cửa hàng đã được duyệt",
+                "Cửa hàng " + store.getName()
+                        + " đã sẵn sàng. Mở ứng dụng để thêm sản phẩm, quản lý và nhân viên.");
+    }
+
+    public static Message storeRejected(Store store, String reason) {
+        String trimmed = reason.trim();
+        String separator = trimmed.matches(".*[.!?…]$") ? " " : ". ";
+        return new Message(
+                "Hồ sơ " + store.getName() + " chưa được duyệt",
+                "Lý do: " + trimmed + separator + "Cập nhật thông tin rồi gửi lại trong ứng dụng.");
+    }
+
+    /** Push cho khách: tên cửa hàng làm tiêu đề, nội dung tin làm phần thân. */
+    public static Message chatToCustomer(String storeName, String content) {
+        return new Message(storeName, preview(content));
+    }
+
+    /** Push cho đội ngũ cửa hàng: có cả tên khách để biết ai đang nhắn. */
+    public static Message chatToStore(String customerName, String content) {
+        String sender = customerName == null || customerName.isBlank() ? "Khách hàng" : customerName;
+        return new Message(sender, preview(content));
+    }
+
+    /** Rút gọn về một dòng ≤ 120 ký tự để làm đoạn xem trước. */
+    public static String preview(String content) {
+        String flat = content.strip().replaceAll("\\s+", " ");
+        return flat.length() <= 120 ? flat : flat.substring(0, 119) + "…";
     }
 
     /** 1200000 → "1.200.000đ". */

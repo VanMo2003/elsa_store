@@ -19,7 +19,7 @@ import java.util.Set;
 @RequestMapping("/app-links")
 public class AppLinkController {
 
-    private static final Set<String> TARGETS = Set.of(AppLinks.ORDERS, AppLinks.NOTIFICATIONS);
+    private static final Set<String> TARGETS = Set.of(AppLinks.ORDERS, AppLinks.NOTIFICATIONS, AppLinks.STORE_STATUS);
 
     private static final String PAGE =
             """

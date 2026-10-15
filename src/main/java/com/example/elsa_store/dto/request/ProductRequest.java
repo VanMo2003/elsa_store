@@ -17,6 +17,8 @@ public class ProductRequest {
     private Double basePrice;
 
     private Long categoryId;
+    /** 1: đang bán, 0: ẩn; bỏ trống thì giữ nguyên. */
+    private Integer status;
 
     public String getName() { return name; }
 
@@ -29,6 +31,10 @@ public class ProductRequest {
     public Double getBasePrice() { return basePrice; }
 
     public void setBasePrice(Double basePrice) { this.basePrice = basePrice; }
+
+    public Integer getStatus() { return status; }
+
+    public void setStatus(Integer status) { this.status = status; }
 
     public Long getCategoryId() { return categoryId; }
 

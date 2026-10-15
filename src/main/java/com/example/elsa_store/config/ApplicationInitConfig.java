@@ -35,6 +35,13 @@ public class ApplicationInitConfig {
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository) {
         return args -> {
+            // Tài khoản admin mặc định phải luôn dùng được (bản cũ tạo nó với enabled = false vì lỗi builder).
+            userRepository.findByUsername(ADMIN_USER_NAME)
+                    .filter(admin -> !admin.isEnabled())
+                    .ifPresent(admin -> {
+                        admin.setEnabled(true);
+                        userRepository.save(admin);
+                    });
             if (userRepository.findByUsername(ADMIN_USER_NAME).isEmpty()) {
 
                 User user = User.builder()
@@ -45,7 +52,8 @@ public class ApplicationInitConfig {
 
                 userRepository.save(user);
                 log.warn(
-                        "{ADMIN_USER_NAME} user has been create with default password: {ADMIN_PASSWORD}, please change it");
+                        "Created the default admin account '{}' with the default password - change it after the first login",
+                        ADMIN_USER_NAME);
             }
         };
     }

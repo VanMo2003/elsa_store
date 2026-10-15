@@ -2,25 +2,59 @@ package com.example.elsa_store.repository;
 
 import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.entity.Order;
-import org.springframework.data.jpa.repository.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
+/**
+ * Mọi truy vấn báo cáo nhận {@code storeId}: có giá trị thì chỉ tính cửa hàng đó, null thì tính toàn hệ thống
+ * (chỉ ADMIN được gọi với null). Khoảng thời gian là nửa mở {@code [from, to)}.
+ */
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findAllByUser_Id(Long userId);
+
+    List<Order> findAllByUser_IdOrderByOrderDateDesc(Long userId);
+
+    boolean existsByCode(String code);
+
+    /** Bỏ liên kết tới địa chỉ sắp xoá — đơn đã chụp lại người nhận / địa chỉ lúc đặt nên không mất thông tin. */
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("update Order o set o.address = null where o.address.id = :addressId")
+    int detachAddress(@Param("addressId") Long addressId);
+
+    boolean existsByHandledBy_Id(Long userId);
+
+    boolean existsByUser_Id(Long userId);
+
+    boolean existsByCustomer_Id(Long customerId);
+
+    boolean existsByCustomer_IdAndStore_Id(Long customerId, Long storeId);
+
+    List<Order> findAllByStore_IdOrderByOrderDateDesc(Long storeId);
+
+    List<Order> findAllByStore_IdAndUser_Id(Long storeId, Long userId);
+
+    long countByStore_IdAndStatus(Long storeId, OrderStatus status);
+
     long countByStatus(OrderStatus status);
 
+    /** Doanh thu đơn hoàn thành, ghi nhận theo ngày hoàn thành (đơn cũ chưa có thì theo ngày đặt). */
     @Query("""
         SELECT COALESCE(SUM(o.finalAmount),0)
         FROM Order o
-        WHERE o.orderDate >= :start
-        AND o.orderDate < :end
-        AND o.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+        WHERE coalesce(o.completedAt, o.orderDate) >= :start
+          AND coalesce(o.completedAt, o.orderDate) < :end
+          AND o.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+          AND (:storeId IS NULL OR o.store.id = :storeId)
     """)
-    Double revenueBetween(LocalDateTime start, LocalDateTime end);
+    Double revenueBetween(@Param("start") LocalDateTime start,
+                          @Param("end") LocalDateTime end,
+                          @Param("storeId") Long storeId);
 
     @Query("""
         select
@@ -29,60 +63,172 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             coalesce(sum(o.discountAmount), 0),
             coalesce(sum(o.finalAmount), 0)
         from Order o
-        where o.orderDate >= :from
-          and o.orderDate < :to
+        where coalesce(o.completedAt, o.orderDate) >= :from
+          and coalesce(o.completedAt, o.orderDate) < :to
           and o.status in :statuses
+          and (:storeId is null or o.store.id = :storeId)
     """)
-    Object[] revenueSummary(@Param("from") LocalDateTime from,
-                            @Param("to") LocalDateTime to,
-                            @Param("statuses") List<Integer> statuses);
+    List<Object[]> revenueSummary(@Param("from") LocalDateTime from,
+                                  @Param("to") LocalDateTime to,
+                                  @Param("statuses") Collection<OrderStatus> statuses,
+                                  @Param("storeId") Long storeId);
 
     // Group theo DAY: period = yyyy-mm-dd
     @Query("""
         select
-            function('date', o.orderDate),
+            function('date', coalesce(o.completedAt, o.orderDate)),
             count(o.id),
             coalesce(sum(o.finalAmount), 0)
         from Order o
-        where o.orderDate between :from and :to
+        where coalesce(o.completedAt, o.orderDate) >= :from
+          and coalesce(o.completedAt, o.orderDate) < :to
           and o.status in :statuses
-        group by function('date', o.orderDate)
-        order by function('date', o.orderDate)
+          and (:storeId is null or o.store.id = :storeId)
+        group by function('date', coalesce(o.completedAt, o.orderDate))
+        order by function('date', coalesce(o.completedAt, o.orderDate))
     """)
     List<Object[]> revenueByDay(@Param("from") LocalDateTime from,
                                 @Param("to") LocalDateTime to,
-                                @Param("statuses") List<Integer> statuses);
+                                @Param("statuses") Collection<OrderStatus> statuses,
+                                @Param("storeId") Long storeId);
 
-    // Group theo MONTH: period = yyyy-mm (tách year+month để group ổn định)
+    // Group theo WEEK (tuần ISO, thứ Hai đầu tuần): yearweek = yyyyww
     @Query("""
         select
-            function('year', o.orderDate),
-            function('month', o.orderDate),
+            function('yearweek', coalesce(o.completedAt, o.orderDate), 3),
             count(o.id),
             coalesce(sum(o.finalAmount), 0)
         from Order o
-        where o.orderDate between :from and :to
+        where coalesce(o.completedAt, o.orderDate) >= :from
+          and coalesce(o.completedAt, o.orderDate) < :to
           and o.status in :statuses
-        group by function('year', o.orderDate), function('month', o.orderDate)
-        order by function('year', o.orderDate), function('month', o.orderDate)
+          and (:storeId is null or o.store.id = :storeId)
+        group by function('yearweek', coalesce(o.completedAt, o.orderDate), 3)
+        order by function('yearweek', coalesce(o.completedAt, o.orderDate), 3)
+    """)
+    List<Object[]> revenueByWeek(@Param("from") LocalDateTime from,
+                                 @Param("to") LocalDateTime to,
+                                 @Param("statuses") Collection<OrderStatus> statuses,
+                                 @Param("storeId") Long storeId);
+
+    // Group theo MONTH: tách year + month để group ổn định
+    @Query("""
+        select
+            function('year', coalesce(o.completedAt, o.orderDate)),
+            function('month', coalesce(o.completedAt, o.orderDate)),
+            count(o.id),
+            coalesce(sum(o.finalAmount), 0)
+        from Order o
+        where coalesce(o.completedAt, o.orderDate) >= :from
+          and coalesce(o.completedAt, o.orderDate) < :to
+          and o.status in :statuses
+          and (:storeId is null or o.store.id = :storeId)
+        group by function('year', coalesce(o.completedAt, o.orderDate)), function('month', coalesce(o.completedAt, o.orderDate))
+        order by function('year', coalesce(o.completedAt, o.orderDate)), function('month', coalesce(o.completedAt, o.orderDate))
     """)
     List<Object[]> revenueByMonth(@Param("from") LocalDateTime from,
                                   @Param("to") LocalDateTime to,
-                                  @Param("statuses") List<Integer> statuses);
+                                  @Param("statuses") Collection<OrderStatus> statuses,
+                                  @Param("storeId") Long storeId);
 
-    // Group theo YEAR: period = yyyy
+    // Group theo YEAR
     @Query("""
         select
-            function('year', o.orderDate),
+            function('year', coalesce(o.completedAt, o.orderDate)),
             count(o.id),
             coalesce(sum(o.finalAmount), 0)
         from Order o
-        where o.orderDate between :from and :to
+        where coalesce(o.completedAt, o.orderDate) >= :from
+          and coalesce(o.completedAt, o.orderDate) < :to
           and o.status in :statuses
-        group by function('year', o.orderDate)
-        order by function('year', o.orderDate)
+          and (:storeId is null or o.store.id = :storeId)
+        group by function('year', coalesce(o.completedAt, o.orderDate))
+        order by function('year', coalesce(o.completedAt, o.orderDate))
     """)
     List<Object[]> revenueByYear(@Param("from") LocalDateTime from,
                                  @Param("to") LocalDateTime to,
-                                 @Param("statuses") List<Integer> statuses);
+                                 @Param("statuses") Collection<OrderStatus> statuses,
+                                 @Param("storeId") Long storeId);
+
+    /** Khách mua nhiều nhất: id khách, tên, số điện thoại, số đơn, tổng tiền. */
+    @Query("""
+        select
+            c.id,
+            coalesce(c.fullName, u.fullName, u.username),
+            coalesce(c.phone, u.phone),
+            count(o.id),
+            coalesce(sum(o.finalAmount), 0)
+        from Order o
+        join o.customer c
+        left join c.user u
+        where coalesce(o.completedAt, o.orderDate) >= :from
+          and coalesce(o.completedAt, o.orderDate) < :to
+          and o.status in :statuses
+          and (:storeId is null or o.store.id = :storeId)
+        group by c.id, coalesce(c.fullName, u.fullName, u.username), coalesce(c.phone, u.phone)
+        order by coalesce(sum(o.finalAmount), 0) desc
+    """)
+    List<Object[]> topCustomers(@Param("from") LocalDateTime from,
+                                @Param("to") LocalDateTime to,
+                                @Param("statuses") Collection<OrderStatus> statuses,
+                                @Param("storeId") Long storeId,
+                                org.springframework.data.domain.Pageable pageable);
+
+    /** Hiệu suất nhân viên lập đơn tại quầy: id, tên, vai trò, số đơn, tổng tiền. */
+    @Query("""
+        select
+            h.id,
+            coalesce(h.fullName, h.username),
+            h.role,
+            count(o.id),
+            coalesce(sum(o.finalAmount), 0)
+        from Order o
+        join o.handledBy h
+        where coalesce(o.completedAt, o.orderDate) >= :from
+          and coalesce(o.completedAt, o.orderDate) < :to
+          and o.status in :statuses
+          and (:storeId is null or o.store.id = :storeId)
+        group by h.id, coalesce(h.fullName, h.username), h.role
+        order by coalesce(sum(o.finalAmount), 0) desc
+    """)
+    List<Object[]> staffPerformance(@Param("from") LocalDateTime from,
+                                    @Param("to") LocalDateTime to,
+                                    @Param("statuses") Collection<OrderStatus> statuses,
+                                    @Param("storeId") Long storeId);
+
+    @Query("""
+        select count(o.id)
+        from Order o
+        where o.orderDate >= :from
+          and o.orderDate < :to
+          and (:status is null or o.status = :status)
+          and (:storeId is null or o.store.id = :storeId)
+    """)
+    long countInRange(@Param("from") LocalDateTime from,
+                      @Param("to") LocalDateTime to,
+                      @Param("status") OrderStatus status,
+                      @Param("storeId") Long storeId);
+
+    /**
+     * Doanh thu theo cách trả tiền và người lập đơn: phương thức (COD / VNPAY), id nhân sự lập đơn tại quầy (null = khách
+     * tự đặt online), số đơn, tổng tiền. Gộp thành "online / tại quầy" ở tầng dịch vụ.
+     */
+    @Query("""
+        select
+            o.paymentMethod,
+            h.id,
+            count(o.id),
+            coalesce(sum(o.finalAmount), 0)
+        from Order o
+        left join o.handledBy h
+        where coalesce(o.completedAt, o.orderDate) >= :from
+          and coalesce(o.completedAt, o.orderDate) < :to
+          and o.status in :statuses
+          and (:storeId is null or o.store.id = :storeId)
+        group by o.paymentMethod, h.id
+    """)
+    List<Object[]> revenueByChannel(@Param("from") LocalDateTime from,
+                                    @Param("to") LocalDateTime to,
+                                    @Param("statuses") Collection<OrderStatus> statuses,
+                                    @Param("storeId") Long storeId);
 }

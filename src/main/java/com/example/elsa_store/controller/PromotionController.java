@@ -2,7 +2,9 @@
 package com.example.elsa_store.controller;
 
 import com.example.elsa_store.dto.request.PromotionRequest;
+import com.example.elsa_store.dto.response.ProductResponse;
 import com.example.elsa_store.dto.response.PromotionResponse;
+import com.example.elsa_store.service.PromotionProductService;
 import com.example.elsa_store.service.PromotionService;
 import jakarta.validation.Valid;
 import com.example.elsa_store.dto.common.ApiResponse;
@@ -15,9 +17,11 @@ import java.util.List;
 public class PromotionController {
 
     private final PromotionService promotionService;
+    private final PromotionProductService promotionProductService;
 
-    public PromotionController(PromotionService promotionService) {
+    public PromotionController(PromotionService promotionService, PromotionProductService promotionProductService) {
         this.promotionService = promotionService;
+        this.promotionProductService = promotionProductService;
     }
 
     @PostMapping
@@ -46,4 +50,19 @@ public class PromotionController {
     public ApiResponse<List<PromotionResponse>> getAll() {
         return ApiResponse.ok(promotionService.getAll());
     }
+
+    /** Thay danh sách sản phẩm được áp khuyến mãi; danh sách rỗng = áp cho cả đơn. Chủ / quản lý. */
+    @PutMapping("/{id}/products")
+    public ApiResponse<List<ProductResponse>> setProducts(
+            @PathVariable Long id, @RequestBody PromotionProductsRequest req) {
+        return ApiResponse.ok(promotionProductService.setProducts(id, req.productIds()));
+    }
+
+    /** Mã giảm giá đang chạy của một cửa hàng — khách xem ở bước thanh toán. */
+    @GetMapping("/coupons")
+    public ApiResponse<List<PromotionResponse>> coupons(@RequestParam Long storeId) {
+        return ApiResponse.ok(promotionService.activeCoupons(storeId));
+    }
+
+    public record PromotionProductsRequest(List<Long> productIds) {}
 }

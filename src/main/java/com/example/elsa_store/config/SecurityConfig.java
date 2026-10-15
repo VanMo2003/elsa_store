@@ -9,8 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -28,10 +26,41 @@ public class SecurityConfig {
     @Value("${jwt.signer-key}")
     private String SIGNER_KEY;
 
-    // "/app-links/*": trang chuyển link trong email sang deep link elsastore:// của app (không cần đăng nhập).
-    private final String[] PUBLIC_ENDPOINT_GET = {"/user/checkExistUser/{}", "/storage/{}", "/app-links/*"};
+    // Khách chưa đăng nhập vẫn xem được cửa hàng: danh mục, sản phẩm, biến thể, thông tin cửa hàng đã duyệt.
+    // "/app-links/*": trang chuyển link trong email sang deep link elsastore:// của app.
+    private final String[] PUBLIC_ENDPOINT_GET = {
+        "/app-links/*",
+        "/categories",
+        "/categories/{id:\\d+}",
+        "/products",
+        "/products/{id:\\d+}",
+        // Đánh giá sản phẩm: ai cũng đọc được; "/me" trả "chưa đăng nhập" cho khách vãng lai.
+        "/products/{id:\\d+}/reviews",
+        "/products/{id:\\d+}/reviews/summary",
+        "/products/{id:\\d+}/reviews/me",
+        "/product-variants",
+        "/product-variants/{id:\\d+}",
+        "/stores",
+        "/stores/{id:\\d+}",
+        // Cho app biết có hiện nút AI hay không (máy chủ chưa có khoá AI thì ẩn).
+        "/ai/status",
+        // Kết quả thanh toán VNPay (trình duyệt quay về và IPN máy chủ → máy chủ): xác thực bằng chữ ký VNPay.
+        "/payment/vn-pay-callback",
+        "/payment/vnpay-ipn"
+    };
+    // "/users": khách tự đăng ký; "/store-registrations": đăng ký mở cửa hàng (chờ ADMIN duyệt);
+    // "/ai/ask": trợ lý mua sắm Elsa, khách chưa đăng nhập vẫn hỏi được (giới hạn lượt theo IP).
     private final String[] PUBLIC_ENDPOINT_POST = {
-        "/users", "/auth/login", "/auth/introspect", "/auth/refreshToken", "/storage/upload"
+        "/users",
+        "/store-registrations",
+        "/auth/login",
+        "/auth/introspect",
+        "/auth/refreshToken",
+        "/auth/password/forgot",
+        "/auth/password/verify",
+        "/auth/password/reset",
+        "/products/search",
+        "/ai/ask"
     };
 
     private final CustomJwtDecoder customJwtDecoder;
@@ -48,6 +77,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT_POST)
+                .permitAll()
+                // Socket chat tự xác thực lần nâng cấp bằng ?token= (ChatHandshakeInterceptor).
+                .requestMatchers("/ws/chat")
                 .permitAll()
                 .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINT_GET)
                 .permitAll()
@@ -79,10 +111,5 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(secretKeySpec)
                 .macAlgorithm(MacAlgorithm.HS512)
                 .build();
-    }
-
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(10);
     }
 }

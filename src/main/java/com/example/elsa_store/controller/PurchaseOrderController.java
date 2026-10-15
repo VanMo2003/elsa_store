@@ -1,58 +1,64 @@
-
 package com.example.elsa_store.controller;
 
-import com.example.elsa_store.entity.PurchaseOrder;
-import com.example.elsa_store.exception.ResourceNotFoundException;
-import com.example.elsa_store.repository.PurchaseOrderRepository;
-import jakarta.validation.Valid;
 import com.example.elsa_store.dto.common.ApiResponse;
+import com.example.elsa_store.dto.request.PurchaseOrderRequest;
+import com.example.elsa_store.dto.response.PurchaseOrderResponse;
+import com.example.elsa_store.service.PurchaseOrderService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Phiếu nhập hàng của từng cửa hàng: chỉ chủ và quản lý thao tác; ADMIN chỉ xem. Phiếu nháp sửa / huỷ / xoá được;
+ * {@code POST /{id}/receive} cộng hàng vào kho và khoá phiếu.
+ */
 @RestController
 @RequestMapping("/purchase-orders")
 public class PurchaseOrderController {
 
-    private final PurchaseOrderRepository purchaseOrderRepository;
+    private final PurchaseOrderService purchaseOrderService;
 
-    public PurchaseOrderController(PurchaseOrderRepository purchaseOrderRepository) {
-        this.purchaseOrderRepository = purchaseOrderRepository;
+    public PurchaseOrderController(PurchaseOrderService purchaseOrderService) {
+        this.purchaseOrderService = purchaseOrderService;
     }
 
+    /** {@code status}: 0 nháp, 1 đã nhập kho, 2 đã huỷ; bỏ trống = tất cả. */
     @GetMapping
-    public ApiResponse<List<PurchaseOrder>> getAll() {
-        return ApiResponse.ok(purchaseOrderRepository.findAll());
+    public ApiResponse<List<PurchaseOrderResponse>> getAll(@RequestParam(required = false) Integer status,
+                                                           @RequestParam(required = false) Long storeId) {
+        return ApiResponse.ok(purchaseOrderService.list(status, storeId));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<PurchaseOrder> getById(@PathVariable Long id) {
-        PurchaseOrder item = purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder not found"));
-        return ApiResponse.ok(item);
+    public ApiResponse<PurchaseOrderResponse> getById(@PathVariable Long id) {
+        return ApiResponse.ok(purchaseOrderService.get(id));
     }
 
     @PostMapping
-    public ApiResponse<PurchaseOrder> create(@Valid @RequestBody PurchaseOrder body) {
-        body.setId(null);
-        return ApiResponse.ok(purchaseOrderRepository.save(body));
+    public ApiResponse<PurchaseOrderResponse> create(@Valid @RequestBody PurchaseOrderRequest body) {
+        return ApiResponse.ok(purchaseOrderService.create(body));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<PurchaseOrder> update(@PathVariable Long id,
-                                           @Valid @RequestBody PurchaseOrder body) {
-        PurchaseOrder existing = purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder not found"));
-        body.setId(existing.getId());
-        return ApiResponse.ok(purchaseOrderRepository.save(body));
+    public ApiResponse<PurchaseOrderResponse> update(@PathVariable Long id,
+                                                     @Valid @RequestBody PurchaseOrderRequest body) {
+        return ApiResponse.ok(purchaseOrderService.update(id, body));
+    }
+
+    @PostMapping("/{id}/receive")
+    public ApiResponse<PurchaseOrderResponse> receive(@PathVariable Long id) {
+        return ApiResponse.ok(purchaseOrderService.receive(id));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ApiResponse<PurchaseOrderResponse> cancel(@PathVariable Long id) {
+        return ApiResponse.ok(purchaseOrderService.cancel(id));
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
-        if (!purchaseOrderRepository.existsById(id)) {
-            throw new ResourceNotFoundException("PurchaseOrder not found");
-        }
-        purchaseOrderRepository.deleteById(id);
+        purchaseOrderService.delete(id);
         return ApiResponse.ok(null);
     }
 }

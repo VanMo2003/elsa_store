@@ -2,6 +2,7 @@ package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.constant.NotificationType;
 import com.example.elsa_store.event.OrderMailEvent;
+import com.example.elsa_store.event.StoreReviewedEvent;
 import jakarta.mail.BodyPart;
 import jakarta.mail.Multipart;
 import jakarta.mail.Part;
@@ -86,15 +87,56 @@ class MailServiceImplTest {
         when(sender.createMimeMessage()).thenAnswer(call -> new MimeMessage((Session) null));
         MailServiceImpl service = new MailServiceImpl(provider(sender), "shop@example.com", "", PUBLIC_URL);
 
-        for (NotificationType type : NotificationType.values()) {
-            if (type == NotificationType.NEW_ORDER) {
-                continue;
-            }
+        List<NotificationType> customerFacing = List.of(
+                NotificationType.ORDER_PLACED,
+                NotificationType.ORDER_CONFIRMED,
+                NotificationType.ORDER_CANCELLED,
+                NotificationType.ORDER_COMPLETED,
+                NotificationType.PAYMENT_SUCCESS,
+                NotificationType.PAYMENT_FAILED);
+        for (NotificationType type : customerFacing) {
             service.sendOrderMail(event(type));
         }
 
-        verify(sender, org.mockito.Mockito.times(NotificationType.values().length - 1))
-                .send(any(MimeMessage.class));
+        verify(sender, org.mockito.Mockito.times(customerFacing.size())).send(any(MimeMessage.class));
+    }
+
+    @Test
+    void internalNotificationTypesAreNeverSentAsOrderMail() {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        MailServiceImpl service = new MailServiceImpl(provider(sender), "shop@example.com", "", PUBLIC_URL);
+
+        for (NotificationType type : List.of(
+                NotificationType.STORE_REGISTERED, NotificationType.STORE_APPROVED, NotificationType.STORE_REJECTED)) {
+            service.sendOrderMail(event(type));
+        }
+
+        verify(sender, never()).send(any(MimeMessage.class));
+    }
+
+    @Test
+    void storeReviewMailCarriesTheDecisionAndTheRejectionReason() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenAnswer(call -> new MimeMessage((Session) null));
+        MailServiceImpl service = new MailServiceImpl(provider(sender), "shop@example.com", "", PUBLIC_URL);
+
+        service.sendStoreReview(new StoreReviewedEvent(
+                false, "chu@example.com", "Lê Văn Chủ", "chuchuchu", "Cửa hàng <Giày>", "Thiếu giấy phép kinh doanh"));
+        service.sendStoreReview(new StoreReviewedEvent(
+                true, "chu@example.com", "Lê Văn Chủ", "chuchuchu", "Cửa hàng Giày", null));
+
+        ArgumentCaptor<MimeMessage> sent = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender, org.mockito.Mockito.times(2)).send(sent.capture());
+        MimeMessage rejected = sent.getAllValues().get(0);
+        assertEquals("[Elsa Store] Hồ sơ cửa hàng chưa được duyệt", rejected.getSubject());
+        String rejectedBody = textOf(rejected);
+        assertTrue(rejectedBody.contains("Thiếu giấy phép kinh doanh"), "phải nêu lý do từ chối");
+        assertTrue(rejectedBody.contains("Cửa hàng &lt;Giày&gt;"), "tên cửa hàng phải được escape HTML");
+        assertTrue(rejectedBody.contains("/app-links/store-status"));
+
+        MimeMessage approved = sent.getAllValues().get(1);
+        assertEquals("[Elsa Store] Cửa hàng của bạn đã được duyệt", approved.getSubject());
+        assertTrue(!textOf(approved).contains("Lý do từ chối"));
     }
 
     @Test

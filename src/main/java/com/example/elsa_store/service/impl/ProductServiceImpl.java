@@ -1,21 +1,26 @@
 
 package com.example.elsa_store.service.impl;
 
+import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.request.ProductRequest;
 import com.example.elsa_store.dto.request.ProductSearchRequest;
+import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.ProductDetailResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
-import com.example.elsa_store.dto.response.ProductVariantResponse;
 import com.example.elsa_store.entity.Category;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductImage;
+import com.example.elsa_store.entity.Store;
+import com.example.elsa_store.entity.User;
 import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.mapper.ProductMapper;
-import com.example.elsa_store.mapper.ProductVariantMapper;
 import com.example.elsa_store.repository.CategoryRepository;
 import com.example.elsa_store.repository.ProductImageRepository;
 import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
+import com.example.elsa_store.repository.WishlistItemRepository;
+import com.example.elsa_store.security.AccessGuard;
+import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.service.ProductService;
 import com.example.elsa_store.specification.ProductSpecification;
@@ -29,6 +34,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Duyệt sản phẩm là công khai (chỉ hàng đang bán của cửa hàng đã duyệt). Tạo và sửa: chủ, quản lý, nhân viên của
+ * cửa hàng đó. Xoá: chỉ chủ và quản lý. ADMIN chỉ xem.
+ */
 @Service
 @Transactional
 public class ProductServiceImpl implements ProductService {
@@ -38,29 +47,39 @@ public class ProductServiceImpl implements ProductService {
     private final FileStorageService fileStorageService;
     private final ProductImageRepository productImageRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final AccessGuard accessGuard;
+    private final CatalogPresenter catalog;
+    private final WishlistItemRepository wishlistRepository;
 
     public ProductServiceImpl(ProductRepository productRepository,
-                              CategoryRepository categoryRepository, FileStorageService fileStorageService, ProductImageRepository productImageRepository, ProductVariantRepository productVariantRepository) {
+                              CategoryRepository categoryRepository,
+                              FileStorageService fileStorageService,
+                              ProductImageRepository productImageRepository,
+                              ProductVariantRepository productVariantRepository,
+                              AccessGuard accessGuard,
+                              CatalogPresenter catalog,
+                              WishlistItemRepository wishlistRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.fileStorageService = fileStorageService;
         this.productImageRepository = productImageRepository;
         this.productVariantRepository = productVariantRepository;
+        this.accessGuard = accessGuard;
+        this.catalog = catalog;
+        this.wishlistRepository = wishlistRepository;
     }
 
     @Override
     public ProductResponse create(ProductRequest request, List<MultipartFile> files) {
-        Category category = null;
-        if (request.getCategoryId() != null) {
-            category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
-        }
+        Store store = accessGuard.requireStoreMember();
+        Category category = findCategory(request.getCategoryId());
         Product product = ProductMapper.toEntity(request, category);
+        product.setStore(store);
         product = productRepository.save(product);
 
         if (files != null && !files.isEmpty()) {
             List<String> urls = files.stream()
-                    .map(fileStorageService::uploadHotelImage)
+                    .map(fileStorageService::storeProductImage)
                     .toList();
 
             Product findProduct = product;
@@ -84,49 +103,41 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse update(Long id, ProductRequest request) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        Category category = null;
-        if (request.getCategoryId() != null) {
-            category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
-        }
-        ProductMapper.updateEntity(product, request, category);
+        Product product = find(id);
+        accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
+        ProductMapper.updateEntity(product, request, findCategory(request.getCategoryId()));
         return ProductMapper.toResponse(product);
     }
 
     @Override
     public void delete(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product not found");
-        }
-        productRepository.deleteById(id);
+        Product product = find(id);
+        accessGuard.authorize(product.getStore(), Access.MANAGER_WRITE);
+        // Khách lưu yêu thích không được chặn việc xoá sản phẩm (đơn hàng đã có thì vẫn chặn như trước).
+        wishlistRepository.deleteAllByProductId(product.getId());
+        productRepository.delete(product);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductDetailResponse getById(Long id) {
-        List<ProductVariantResponse> productVariants = productVariantRepository.findAllByProduct_Id(id).stream().map(
-                ProductVariantMapper::toResponse
-        ).toList();
-        List<String> productImages = productImageRepository.findAllByProduct_Id(id).stream().map(ProductImage::getImageUrl).toList();
-
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-
-        ProductDetailResponse productDetailResponse = ProductMapper.toDetailResponse(product);
-        productDetailResponse.setProductVariants(productVariants);
-        productDetailResponse.setImages(productImages);
-
-        return productDetailResponse;
+        Product product = find(id);
+        if (!isPublic(product) && !canSeeHidden(product)) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        List<String> productImages = productImageRepository.findAllByProduct_Id(id).stream()
+                .map(ProductImage::getImageUrl)
+                .toList();
+        return catalog.detail(product, productVariantRepository.findAllByProduct_Id(id), productImages);
     }
 
     @Override
     public List<String> uploadImages(Long productId, List<MultipartFile> files) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id=" + productId));
+        accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
 
-        List<String> urls = files.stream().map(fileStorageService::uploadHotelImage).toList();
+        List<String> urls = files.stream().map(fileStorageService::storeProductImage).toList();
 
         List<ProductImage> images = urls.stream().map(url ->
                 ProductImage.builder()
@@ -143,40 +154,91 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductResponse> getAll() {
-        return productRepository.findAll().stream()
-                .map(ProductMapper::toResponse)
-                .toList();
-    }
-
-    @Override
-    public List<ProductResponse> getAllByCategory(Long categoryId) {
-        return productRepository.findAllByCategory_Id(categoryId).stream()
-                .map(ProductMapper::toResponse)
-                .toList();
+        return catalog.products(productRepository.findPublic(null, null));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductResponse> search(ProductSearchRequest request) {
+    public List<ProductResponse> getAllByCategory(Long categoryId) {
+        return catalog.products(productRepository.findPublic(categoryId, null));
+    }
 
-        Sort sort = Sort.unsorted();
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getAllByStore(Long storeId) {
+        return catalog.products(productRepository.findPublic(null, storeId));
+    }
 
-        if (request.getSortBy() != null) {
-            sort = Sort.by(
-                    request.getSortDir() != null && request.getSortDir().equalsIgnoreCase("desc")
-                            ? Sort.Direction.DESC
-                            : Sort.Direction.ASC,
-                    request.getSortBy()
-            );
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getMine() {
+        Store store = accessGuard.requireStoreMember();
+        return catalog.products(productRepository.findAllByStore_Id(store.getId()));
+    }
+
+    static final int MAX_SEARCH_PAGE_SIZE = 50;
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> search(ProductSearchRequest request) {
+        int page = request.getPage() == null ? 0 : Math.max(0, request.getPage());
+        int size = request.getSizePage() == null ? 20 : Math.min(Math.max(1, request.getSizePage()), MAX_SEARCH_PAGE_SIZE);
+        Pageable pageable = PageRequest.of(page, size, searchSort(request.getSortBy(), request.getSortDir()));
+        Page<Product> result = productRepository.findAll(ProductSpecification.search(request), pageable);
+        return PageResponse.<ProductResponse>builder()
+                .content(catalog.products(result.getContent()))
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .build();
+    }
+
+    /**
+     * Chỉ sắp xếp theo các trường cho phép — tên trường lạ từ người gọi trước đây làm lỗi 500. Mặc định: mới nhất trước.
+     */
+    static Sort searchSort(String sortBy, String sortDir) {
+        String key = sortBy == null ? "" : sortBy.trim().toLowerCase(java.util.Locale.ROOT);
+        boolean desc = sortDir != null && sortDir.equalsIgnoreCase("desc");
+        Sort.Direction direction = desc ? Sort.Direction.DESC : Sort.Direction.ASC;
+        return switch (key) {
+            case "price", "baseprice" -> Sort.by(direction, "basePrice").and(Sort.by(Sort.Direction.DESC, "id"));
+            case "name" -> Sort.by(direction, "name").and(Sort.by(Sort.Direction.DESC, "id"));
+            case "oldest" -> Sort.by(Sort.Direction.ASC, "id");
+            default -> Sort.by(Sort.Direction.DESC, "id");
+        };
+    }
+
+    private Product find(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+    }
+
+    private Category findCategory(Long categoryId) {
+        if (categoryId == null) {
+            return null;
         }
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+    }
 
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSizePage(), sort);
+    /** Đang bán và (nếu có) cửa hàng đã được duyệt. */
+    static boolean isPublic(Product product) {
+        boolean active = product.getStatus() == null || product.getStatus() == 1;
+        boolean storeOpen = product.getStore() == null || product.getStore().isApproved();
+        return active && storeOpen;
+    }
 
-        Page<Product> page = productRepository.findAll(
-                ProductSpecification.search(request),
-                pageable
-        );
-
-        return page.map(ProductMapper::toResponse);
+    /** ADMIN, hoặc người của chính cửa hàng đó, xem được cả sản phẩm đang ẩn. */
+    private boolean canSeeHidden(Product product) {
+        User current = accessGuard.currentUserOrEmpty().orElse(null);
+        if (current == null) {
+            return false;
+        }
+        if (current.getRole() == Role.ADMIN) {
+            return true;
+        }
+        Store mine = accessGuard.storeOf(current);
+        return mine != null && product.getStore() != null && mine.getId().equals(product.getStore().getId());
     }
 }

@@ -2,6 +2,8 @@ package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.constant.NotificationType;
 import com.example.elsa_store.event.OrderMailEvent;
+import com.example.elsa_store.event.PasswordResetRequestedEvent;
+import com.example.elsa_store.event.StoreReviewedEvent;
 import com.example.elsa_store.service.MailService;
 import com.example.elsa_store.utils.AppLinks;
 import com.example.elsa_store.utils.NotificationMessages;
@@ -134,6 +136,118 @@ public class MailServiceImpl implements MailService {
         }
     }
 
+    private static final String REASON_TEMPLATE =
+            """
+            <tr><td style="padding:16px 32px 0">
+            <div style="background:#FBE4E2;border-radius:10px;padding:14px 16px;font-size:14px;line-height:21px;color:#212121">
+                <div style="font-weight:bold;color:#C62828;margin-bottom:4px">Lý do từ chối</div>
+                %s
+            </div>
+            </td></tr>
+            """;
+
+    @Override
+    public void sendStoreReview(StoreReviewedEvent review) {
+        if (review.email() == null || review.email().isBlank()) {
+            return;
+        }
+        String subject = review.approved()
+                ? "[Elsa Store] Cửa hàng của bạn đã được duyệt"
+                : "[Elsa Store] Hồ sơ cửa hàng chưa được duyệt";
+        JavaMailSender sender = mailSender.getIfAvailable();
+        if (sender == null || username.isBlank()) {
+            log.info("Mail is not configured (MAIL_USERNAME) - skipped \"{}\" to {}", subject, review.email());
+            return;
+        }
+
+        String link = publicUrl + "/app-links/" + AppLinks.STORE_STATUS;
+        String name = review.ownerName() == null || review.ownerName().isBlank()
+                ? review.ownerUsername()
+                : review.ownerName();
+        String headline = review.approved() ? "Cửa hàng đã được duyệt" : "Hồ sơ chưa được duyệt";
+        String message = review.approved()
+                ? "Cửa hàng " + review.storeName() + " đã được duyệt. Đăng nhập bằng tài khoản "
+                        + review.ownerUsername() + " để thêm sản phẩm, quản lý và nhân viên."
+                : "Hồ sơ cửa hàng " + review.storeName()
+                        + " chưa được duyệt. Bạn có thể cập nhật thông tin và gửi lại ngay trong ứng dụng.";
+        String reason = review.approved() ? "" : REASON_TEMPLATE.formatted(escape(review.reason()));
+        try {
+            MimeMessage mime = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mime, true, "UTF-8");
+            helper.setFrom(new InternetAddress(from.isBlank() ? username : from, BRAND, "UTF-8"));
+            helper.setTo(review.email());
+            helper.setSubject(subject);
+            String plain = "Chào " + name + ",\n\n" + message
+                    + (review.approved() ? "" : "\nLý do: " + review.reason()) + "\n\nMở ứng dụng: " + link + "\n";
+            String html = TEMPLATE.formatted(escape(headline), escape(name), escape(message), reason, link, link);
+            helper.setText(plain, html);
+            sender.send(mime);
+            log.info("Sent \"{}\" to {}", subject, review.email());
+        } catch (MessagingException | MailException | UnsupportedEncodingException e) {
+            log.error("Cannot send \"{}\" to {}", subject, review.email(), e);
+        }
+    }
+
+    private static final String RESET_TEMPLATE =
+            """
+            <!doctype html>
+            <html lang="vi">
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+            <body style="margin:0;padding:0;background:#F5F5F5;font-family:Arial,Helvetica,sans-serif;color:#212121">
+            <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="background:#F5F5F5;padding:24px 12px">
+                <tr><td align="center">
+                <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%%;max-width:560px;background:#FFFFFF;border-radius:16px;overflow:hidden">
+                    <tr><td style="background:#E64A19;padding:24px 32px;color:#FFFFFF">
+                    <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#FFD9CC">Elsa Store &middot; Fashion</div>
+                    <div style="font-size:22px;line-height:30px;font-weight:bold;margin-top:6px">Mã khôi phục mật khẩu</div>
+                    </td></tr>
+                    <tr><td style="padding:28px 32px 8px;font-size:15px;line-height:23px">
+                    <p style="margin:0 0 12px">Chào %s,</p>
+                    <p style="margin:0">Bạn (hoặc ai đó) vừa yêu cầu đặt lại mật khẩu cho tài khoản <b>%s</b>. Nhập mã dưới đây trong ứng dụng Elsa Store:</p>
+                    </td></tr>
+                    <tr><td align="center" style="padding:20px 32px">
+                    <div style="display:inline-block;background:#FFF3EE;border-radius:12px;padding:16px 28px;font-size:34px;letter-spacing:10px;font-weight:bold;color:#E64A19">%s</div>
+                    </td></tr>
+                    <tr><td style="padding:0 32px 28px;font-size:13px;line-height:20px;color:#616161">
+                    Mã có hiệu lực trong %d phút và chỉ dùng được một lần. Không chia sẻ mã cho bất kỳ ai, kể cả nhân viên Elsa Store.<br>
+                    Nếu bạn không yêu cầu, hãy bỏ qua email này — mật khẩu của bạn vẫn giữ nguyên.
+                    </td></tr>
+                </table>
+                </td></tr>
+            </table>
+            </body>
+            </html>
+            """;
+
+    @Override
+    public void sendPasswordReset(PasswordResetRequestedEvent event) {
+        String subject = "[Elsa Store] Mã khôi phục mật khẩu: " + event.code();
+        JavaMailSender sender = mailSender.getIfAvailable();
+        if (sender == null || username.isBlank()) {
+            // Chỉ xảy ra khi phát triển (chưa có SMTP): ghi mã ra log để còn thử được luồng quên mật khẩu.
+            log.warn("Mail is not configured (MAIL_USERNAME) - password reset code for {} is {} (dev only)",
+                    event.username(), event.code());
+            return;
+        }
+        try {
+            MimeMessage mime = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mime, true, "UTF-8");
+            helper.setFrom(new InternetAddress(from.isBlank() ? username : from, BRAND, "UTF-8"));
+            helper.setTo(event.email());
+            helper.setSubject(subject);
+            String plain = "Chào " + event.name() + ",\n\nMã khôi phục mật khẩu cho tài khoản " + event.username() + " là: "
+                    + event.code() + "\nMã có hiệu lực trong " + event.validMinutes()
+                    + " phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.\n";
+            String html = RESET_TEMPLATE.formatted(
+                    escape(event.name()), escape(event.username()), event.code(), event.validMinutes());
+            helper.setText(plain, html);
+            sender.send(mime);
+            log.info("Sent password reset code to {}", event.email());
+        } catch (MessagingException | MailException | UnsupportedEncodingException e) {
+            log.error("Cannot send password reset code to {}", event.email(), e);
+        }
+    }
+
     private static Copy copy(OrderMailEvent event) {
         String code = event.orderCode();
         NotificationType type = event.type();
@@ -169,8 +283,8 @@ public class MailServiceImpl implements MailService {
                         "[Elsa Store] Thanh toán chưa thành công - " + code,
                         "Thanh toán chưa thành công",
                         "Thanh toán cho đơn " + code + " chưa thành công. Bạn có thể mở ứng dụng để thử thanh toán lại.");
-            // NEW_ORDER chỉ gửi cho nhân viên qua thông báo trong app, không gửi email.
-            case NEW_ORDER -> null;
+            // Thông báo nội bộ (đơn mới cho cửa hàng, hồ sơ cửa hàng cho ADMIN) chỉ hiện trong app, không gửi email đơn hàng.
+            case NEW_ORDER, STORE_REGISTERED, STORE_APPROVED, STORE_REJECTED -> null;
         };
     }
 

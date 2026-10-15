@@ -48,6 +48,12 @@ app:
   public-url: ${APP_PUBLIC_URL:http://localhost:8080/elsa-store/api}
   mail:
     from: ${MAIL_FROM:}
+  orders:
+    # Đơn VNPay chưa trả sau chừng này phút (tính từ lúc đặt / lần mở link gần nhất) thì tự huỷ, hàng về kho. 0 = tắt;
+    # tối thiểu 20 phút vì link VNPay sống 15 phút.
+    unpaid-online-cancel-minutes: ${ORDER_UNPAID_CANCEL_MINUTES:30}
+    # Đơn đang giao quá chừng này ngày mà khách chưa bấm "đã nhận hàng" thì tự hoàn thành. 0 = tắt.
+    auto-complete-days: ${ORDER_AUTO_COMPLETE_DAYS:7}
 
 firebase:
   # File JSON service account của Firebase (Project settings > Service accounts). Để trống thì chỉ có

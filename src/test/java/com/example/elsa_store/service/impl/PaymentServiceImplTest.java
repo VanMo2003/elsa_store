@@ -233,6 +233,19 @@ class PaymentServiceImplTest {
     }
 
     @Test
+    void moneyArrivingForACancelledOrderKeepsItCancelledAndAsksTheStoreToRefund() {
+        String txnRef = createLinkParams().get("vnp_TxnRef");
+        // Đơn bị tự huỷ vì quá hạn trong lúc khách vẫn trả xong trên VNPay.
+        order.setStatus(OrderStatus.DA_HUY);
+
+        VnPayResultResponse result = service.handleVnPayReturn(vnpayReturn(txnRef, 125_000_000L, "00"));
+        assertTrue(result.isPaid());
+        assertEquals(OrderStatus.DA_HUY, order.getStatus());
+        assertEquals(PaymentStatus.DA_THANH_TOAN, order.getPaymentStatus());
+        verify(notifications).paidAfterCancel(order);
+    }
+
+    @Test
     void cancelledAtVnPayMarksThePaymentFailedWithAReadableReason() {
         String txnRef = createLinkParams().get("vnp_TxnRef");
         VnPayResultResponse result = service.handleVnPayReturn(vnpayReturn(txnRef, 125_000_000L, "24"));

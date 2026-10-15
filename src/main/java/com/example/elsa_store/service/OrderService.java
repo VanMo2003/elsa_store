@@ -30,4 +30,10 @@ public interface OrderService {
     OrderResponse updateStatus(Long orderId, OrderStatus status, String reason);
 
     OrderResponse updatePaymentStatus(Long orderId, PaymentStatus paymentStatus);
+
+    /**
+     * Hệ thống tự đổi trạng thái (không có người dùng): chỉ đổi khi đơn vẫn đang ở {@code expected} và bước đổi hợp lệ
+     * (huỷ thì chưa thanh toán, hoàn thành thì đã trả hoặc COD). Trả {@code true} khi đã đổi.
+     */
+    boolean autoTransition(Long orderId, OrderStatus expected, OrderStatus target, String note);
 }

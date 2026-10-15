@@ -185,6 +185,11 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   ghi một mốc vào `order_status_history`; API một đơn (`GET /orders/{id}`, đổi trạng thái) trả `timeline`: trạng thái,
   lúc nào, ai làm (`byRole` = `CUSTOMER` / `STORE` / `SYSTEM`; khách không thấy tên nhân viên), ghi chú. Đơn đặt trước
   khi có bảng này được dựng lại từ ngày đặt / ngày hoàn thành.
+- **Tự xử lý đơn bị bỏ quên** (`OrderAutomation`, mỗi 5 phút): đơn VNPay chưa trả sau 30 phút (tính từ lúc đặt và lần
+  mở link thanh toán gần nhất; link VNPay sống 15 phút) bị huỷ với lý do "Quá hạn thanh toán VNPay", hàng về kho; đơn
+  đang giao quá 7 ngày mà khách chưa bấm đã nhận thì tự hoàn thành (COD coi như đã thu). Mốc trên dòng thời gian ghi
+  `byRole = SYSTEM`. Nếu tiền VNPay vẫn về cho một đơn đã huỷ, đơn giữ trạng thái huỷ, ghi "đã thanh toán" và cửa hàng
+  nhận thông báo "Cần hoàn tiền cho khách".
 - **VNPay** (sandbox mặc định): `GET /payment/vn-pay?orderId=` tạo link với số tiền lấy từ đơn trong DB (đơn dưới 5.000đ
   hoặc đã huỷ / đã trả bị từ chối). `GET /payment/vn-pay-callback` (trình duyệt / app quay về) và `GET /payment/vnpay-ipn`
   (VNPay gọi máy chủ) đều công khai và **xác thực chữ ký HMAC-SHA512** cùng số tiền; xử lý lặp lại không đổi gì thêm
@@ -375,6 +380,8 @@ dùng cho `docker compose`).
 | `MAIL_FROM` | trống (dùng `MAIL_USERNAME`) | Địa chỉ người gửi |
 | `MAIL_SMTP_AUTH` / `MAIL_SMTP_STARTTLS` | `true` / `true` | Tắt khi thử với SMTP giả trên máy |
 | `APP_PUBLIC_URL` | `http://localhost:8080/elsa-store/api` | Địa chỉ API công khai cho link trong email |
+| `ORDER_UNPAID_CANCEL_MINUTES` | `30` | Tự huỷ đơn VNPay chưa trả sau chừng này phút (tối thiểu 20); `0` = tắt |
+| `ORDER_AUTO_COMPLETE_DAYS` | `7` | Tự hoàn thành đơn đang giao sau chừng này ngày; `0` = tắt |
 | `FIREBASE_CREDENTIALS` | trống | Đường dẫn file JSON service account Firebase; trống thì tắt push |
 | `GEMINI_API_KEY` | trống | Khoá Google AI Studio; có khoá thì bật trợ lý AI (provider tự chọn là `gemini`) |
 | `ANTHROPIC_API_KEY` | trống | Dùng Claude thay Gemini (provider `anthropic`) |

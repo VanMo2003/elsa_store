@@ -63,6 +63,14 @@ public final class NotificationMessages {
                 customerName + " đã huỷ đơn " + order.getCode() + (reason == null ? "." : ". Lý do: " + reason));
     }
 
+    /** Cho cửa hàng: tiền về cho đơn đã huỷ. */
+    public static Message paidAfterCancel(Order order) {
+        return new Message(
+                "Cần hoàn tiền cho khách",
+                "Đơn " + order.getCode() + " đã huỷ nhưng VNPay báo khách đã thanh toán "
+                        + money(order.getFinalAmount()) + ". Hãy hoàn tiền cho khách.");
+    }
+
     /** Cho cửa hàng: khách bấm "Đã nhận được hàng". */
     public static Message receivedByCustomer(Order order, String customerName) {
         return new Message(

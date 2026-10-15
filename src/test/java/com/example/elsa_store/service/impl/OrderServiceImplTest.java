@@ -397,6 +397,43 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void systemCancelsAnUnpaidOnlineOrderOnlyIfNothingChangedMeanwhile() {
+        Order order = placed(OrderStatus.CHUA_XAC_NHAN, PaymentStatus.CHO_THANH_TOAN);
+        when(orders.findByIdForUpdate(900L)).thenReturn(Optional.of(order));
+
+        assertTrue(service.autoTransition(900L, OrderStatus.CHUA_XAC_NHAN, OrderStatus.DA_HUY, "Quá hạn thanh toán VNPay"));
+        assertEquals(OrderStatus.DA_HUY, order.getStatus());
+        assertEquals("Quá hạn thanh toán VNPay", order.getCancelReason());
+        verify(stock).releaseOrder(order, "Huỷ đơn", null);
+        verify(timeline).record(order, OrderStatus.DA_HUY, null, "Quá hạn thanh toán VNPay");
+        verify(notifications).statusChanged(order, OrderStatus.CHUA_XAC_NHAN, null);
+
+        // Lần chạy sau: đơn đã đổi rồi thì không làm gì.
+        assertFalse(service.autoTransition(900L, OrderStatus.CHUA_XAC_NHAN, OrderStatus.DA_HUY, "x"));
+        // Vừa trả xong thì không huỷ.
+        Order paid = placed(OrderStatus.CHUA_XAC_NHAN, PaymentStatus.DA_THANH_TOAN);
+        when(orders.findByIdForUpdate(900L)).thenReturn(Optional.of(paid));
+        assertFalse(service.autoTransition(900L, OrderStatus.CHUA_XAC_NHAN, OrderStatus.DA_HUY, "x"));
+        assertEquals(OrderStatus.CHUA_XAC_NHAN, paid.getStatus());
+        verify(stock, times(1)).releaseOrder(any(), any(), any());
+    }
+
+    @Test
+    void systemCompletesALongDeliveryAndRecordsCashOnDeliveryAsPaid() {
+        Order order = placed(OrderStatus.DANG_GIAO, PaymentStatus.CHUA_THANH_TOAN);
+        when(orders.findByIdForUpdate(900L)).thenReturn(Optional.of(order));
+        assertTrue(service.autoTransition(900L, OrderStatus.DANG_GIAO, OrderStatus.HOAN_THANH, "Tự hoàn thành"));
+        assertEquals(OrderStatus.HOAN_THANH, order.getStatus());
+        assertEquals(PaymentStatus.DA_THANH_TOAN, order.getPaymentStatus());
+        assertNotNull(order.getCompletedAt());
+
+        // Bước không hợp lệ (chờ xác nhận -> hoàn thành) thì từ chối.
+        Order fresh = placed(OrderStatus.CHUA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
+        when(orders.findByIdForUpdate(900L)).thenReturn(Optional.of(fresh));
+        assertFalse(service.autoTransition(900L, OrderStatus.CHUA_XAC_NHAN, OrderStatus.HOAN_THANH, "x"));
+    }
+
+    @Test
     void quoteReportsStockProblemsWithoutReserving() {
         when(stock.levels(any())).thenReturn(Map.of(200L, 1));
         OrderQuoteResponse quote = service.quote(customerOrder());

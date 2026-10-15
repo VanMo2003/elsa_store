@@ -84,6 +84,18 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
     }
 
     @Override
+    public void paidAfterCancel(Order order) {
+        if (order.getStore() != null) {
+            notificationService.notifyStore(
+                    order.getStore(),
+                    NotificationType.PAYMENT_SUCCESS,
+                    NotificationMessages.paidAfterCancel(order),
+                    AppLinks.orders(),
+                    order.getId());
+        }
+    }
+
+    @Override
     public void paymentChanged(Order order, PaymentStatus previous) {
         PaymentStatus status = order.getPaymentStatus();
         if (status == null || status == previous) {

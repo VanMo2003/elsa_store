@@ -2,19 +2,53 @@ package com.example.elsa_store.repository;
 
 import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.entity.Order;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Mọi truy vấn báo cáo nhận {@code storeId}: có giá trị thì chỉ tính cửa hàng đó, null thì tính toàn hệ thống
  * (chỉ ADMIN được gọi với null). Khoảng thời gian là nửa mở {@code [from, to)}.
  */
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    /** Khoá dòng đơn khi hệ thống tự đổi trạng thái, để không chồng lên một thao tác khác cùng lúc. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.id = :id")
+    Optional<Order> findByIdForUpdate(@Param("id") Long id);
+
+    /**
+     * Đơn VNPay chưa trả, chưa xác nhận, đặt trước {@code cutoff} và không có lần mở link thanh toán nào từ {@code cutoff}
+     * — link VNPay hết hạn sau 15 phút nên khách không còn trả được nữa.
+     */
+    @Query("""
+        select o.id from Order o
+        where o.status = com.example.elsa_store.constant.OrderStatus.CHUA_XAC_NHAN
+          and o.paymentMethod = 'VNPAY'
+          and (o.paymentStatus is null or o.paymentStatus <> com.example.elsa_store.constant.PaymentStatus.DA_THANH_TOAN)
+          and o.orderDate < :cutoff
+          and not exists (select p.id from Payment p where p.order = o and p.createdAt >= :cutoff)
+        order by o.id
+    """)
+    List<Long> findUnpaidOnlineOrderIds(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
+
+    /** Đơn đang giao từ trước {@code cutoff} (theo mốc DANG_GIAO gần nhất trong dòng thời gian). */
+    @Query("""
+        select o.id from Order o
+        where o.status = com.example.elsa_store.constant.OrderStatus.DANG_GIAO
+          and (select max(h.createdAt) from OrderStatusHistory h
+               where h.order = o and h.status = com.example.elsa_store.constant.OrderStatus.DANG_GIAO) < :cutoff
+        order by o.id
+    """)
+    List<Long> findLongShippingOrderIds(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
 
     List<Order> findAllByUser_Id(Long userId);
 

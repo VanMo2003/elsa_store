@@ -21,6 +21,9 @@ public interface OrderNotificationService {
      */
     void statusChanged(Order order, OrderStatus previous, User actor);
 
+    /** Báo cửa hàng: tiền VNPay về cho một đơn đã huỷ — cần hoàn tiền cho khách. */
+    void paidAfterCancel(Order order);
+
     /** Chỉ báo khi thanh toán thật sự đổi sang thành công hoặc thất bại. */
     void paymentChanged(Order order, PaymentStatus previous);
 }

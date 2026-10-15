@@ -485,6 +485,37 @@ public class OrderServiceImpl implements OrderService {
         return toResponse(order, viewer(current), true);
     }
 
+    @Override
+    public boolean autoTransition(Long orderId, OrderStatus expected, OrderStatus target, String note) {
+        Order order = orderRepository.findByIdForUpdate(orderId).orElse(null);
+        if (order == null || order.getStatus() != expected
+                || !NEXT.getOrDefault(expected, Set.of()).contains(target)) {
+            return false;
+        }
+        PaymentStatus payment = order.getPaymentStatus();
+        if (target == OrderStatus.DA_HUY && payment == PaymentStatus.DA_THANH_TOAN) {
+            return false;
+        }
+        if (target == OrderStatus.HOAN_THANH && !completable(payment)) {
+            return false;
+        }
+        order.setStatus(target);
+        if (target == OrderStatus.DA_HUY) {
+            order.setCancelReason(note);
+            stockService.releaseOrder(order, "Huỷ đơn", null);
+        }
+        if (target == OrderStatus.HOAN_THANH) {
+            order.setCompletedAt(LocalDateTime.now());
+            if (payment == PaymentStatus.CHUA_THANH_TOAN) {
+                order.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
+            }
+        }
+        order = orderRepository.save(order);
+        timeline.record(order, target, null, note);
+        orderNotificationService.statusChanged(order, expected, null);
+        return true;
+    }
+
     /** Hoàn thành được khi đã trả, hoặc trả khi nhận hàng (COD) chưa thu; VNPay đang chờ / lỗi thì chưa. */
     private static boolean completable(PaymentStatus payment) {
         return payment == null || payment == PaymentStatus.DA_THANH_TOAN || payment == PaymentStatus.CHUA_THANH_TOAN;

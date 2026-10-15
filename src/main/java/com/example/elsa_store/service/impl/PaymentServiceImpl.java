@@ -273,10 +273,16 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentStatus previous = order.getPaymentStatus();
         boolean autoConfirmed = false;
+        boolean refundNeeded = false;
         if (success) {
             payment.setStatus(PaymentStatus.DA_THANH_TOAN);
             payment.setPaidAt(LocalDateTime.now());
             order.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
+            if (order.getStatus() == OrderStatus.DA_HUY) {
+                // Đơn đã huỷ (ví dụ tự huỷ vì quá hạn) mà tiền vẫn về: giữ đơn huỷ, ghi nhận đã nhận tiền để cửa hàng hoàn.
+                log.error("VNPay reports a payment for cancelled order {} ({}) - refund needed", order.getCode(), txnRef);
+                refundNeeded = true;
+            }
             // Trả trước thì cửa hàng không cần gọi xác nhận nữa.
             if (order.getStatus() == OrderStatus.CHUA_XAC_NHAN) {
                 order.setStatus(OrderStatus.DA_XAC_NHAN);
@@ -292,6 +298,9 @@ public class PaymentServiceImpl implements PaymentService {
         orderRepository.save(order);
         if (autoConfirmed) {
             timeline.record(order, OrderStatus.DA_XAC_NHAN, null, "Đã thanh toán qua VNPay");
+        }
+        if (refundNeeded) {
+            orderNotificationService.paidAfterCancel(order);
         }
         // Chỉ báo khi trạng thái thanh toán thật sự đổi, để VNPay gọi lại nhiều lần không gửi trùng thông báo / email.
         orderNotificationService.paymentChanged(order, previous);

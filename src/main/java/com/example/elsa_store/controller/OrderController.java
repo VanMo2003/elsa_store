@@ -6,12 +6,14 @@ import com.example.elsa_store.constant.PaymentStatus;
 import com.example.elsa_store.dto.request.OrderRequest;
 import com.example.elsa_store.dto.response.OrderQuoteResponse;
 import com.example.elsa_store.dto.response.OrderResponse;
+import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.service.OrderService;
 import jakarta.validation.Valid;
 import com.example.elsa_store.dto.common.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/orders")
@@ -69,6 +71,26 @@ public class OrderController {
             @RequestParam PaymentStatus paymentStatus
     ) {
         return ApiResponse.ok(orderService.updatePaymentStatus(orderId, paymentStatus));
+    }
+
+    /**
+     * Danh sách có phân trang cho màn Đơn hàng: {@code status} (tên trạng thái), {@code keyword} (mã đơn, tên / SĐT người
+     * nhận hoặc khách), {@code storeId} (chỉ ADMIN). Phạm vi theo người xem như {@code GET /orders}.
+     */
+    @GetMapping("/page")
+    public ApiResponse<PageResponse<OrderResponse>> page(
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long storeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(orderService.search(status, keyword, storeId, page, size));
+    }
+
+    /** Số đơn theo từng trạng thái (và {@code ALL}) để hiện trên các bộ lọc. */
+    @GetMapping("/counts")
+    public ApiResponse<Map<String, Long>> counts(@RequestParam(required = false) Long storeId) {
+        return ApiResponse.ok(orderService.countByStatus(storeId));
     }
 
     @GetMapping

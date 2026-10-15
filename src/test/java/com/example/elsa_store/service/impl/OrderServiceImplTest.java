@@ -16,6 +16,9 @@ import com.example.elsa_store.service.OrderNotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -434,6 +437,37 @@ class OrderServiceImplTest {
         Order fresh = placed(OrderStatus.CHUA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
         when(orders.findByIdForUpdate(900L)).thenReturn(Optional.of(fresh));
         assertFalse(service.autoTransition(900L, OrderStatus.CHUA_XAC_NHAN, OrderStatus.HOAN_THANH, "x"));
+    }
+
+    @Test
+    void pagedListIsScopedToWhoIsLookingAndSearchesSafely() {
+        when(orders.search(any(), any(), any(), any(), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        service.search(null, "  ORD-12 ", null, 0, 500);
+        verify(orders).search(isNull(), eq(7L), isNull(), eq("%ord-12%"),
+                eq(PageRequest.of(0, OrderServiceImpl.MAX_PAGE_SIZE)));
+
+        when(accessGuard.currentUser()).thenReturn(staff);
+        service.search(OrderStatus.DANG_GIAO, "   ", 99L, -3, 20);
+        // Người của cửa hàng luôn bị giới hạn ở cửa hàng của mình, storeId gửi lên bị bỏ qua.
+        verify(orders).search(eq(1L), isNull(), eq(OrderStatus.DANG_GIAO), isNull(),
+                eq(PageRequest.of(0, 20)));
+
+        assertEquals("%50%", OrderServiceImpl.likePattern("50%_\\"));
+        assertNull(OrderServiceImpl.likePattern("%_"));
+    }
+
+    @Test
+    void countsCoverEveryStatusPlusTheTotal() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        when(orders.countByStatus(1L, null)).thenReturn(List.of(
+                new Object[] {OrderStatus.CHUA_XAC_NHAN, 3L}, new Object[] {OrderStatus.HOAN_THANH, 5L}));
+        Map<String, Long> counts = service.countByStatus(null);
+        assertEquals(3L, counts.get("CHUA_XAC_NHAN"));
+        assertEquals(0L, counts.get("DANG_GIAO"));
+        assertEquals(8L, counts.get("ALL"));
+        assertEquals(OrderStatus.values().length + 1, counts.size());
     }
 
     @Test

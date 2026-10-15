@@ -3,6 +3,7 @@ package com.example.elsa_store.repository;
 import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.entity.Order;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -19,6 +20,49 @@ import java.util.Optional;
  * (chỉ ADMIN được gọi với null). Khoảng thời gian là nửa mở {@code [from, to)}.
  */
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    /**
+     * Danh sách đơn có phân trang: lọc theo cửa hàng / người mua (null = không lọc), trạng thái và từ khoá
+     * ({@code %…%}, chữ thường) trên mã đơn, tên / SĐT người nhận và tên / SĐT khách. Mới đặt trước.
+     */
+    @Query(value = """
+        select o from Order o left join o.customer c
+        where (:storeId is null or o.store.id = :storeId)
+          and (:userId is null or o.user.id = :userId)
+          and (:status is null or o.status = :status)
+          and (:keyword is null
+               or lower(o.code) like :keyword
+               or lower(o.receiverName) like :keyword
+               or o.receiverPhone like :keyword
+               or lower(c.fullName) like :keyword
+               or c.phone like :keyword)
+        order by o.orderDate desc, o.id desc
+    """, countQuery = """
+        select count(o) from Order o left join o.customer c
+        where (:storeId is null or o.store.id = :storeId)
+          and (:userId is null or o.user.id = :userId)
+          and (:status is null or o.status = :status)
+          and (:keyword is null
+               or lower(o.code) like :keyword
+               or lower(o.receiverName) like :keyword
+               or o.receiverPhone like :keyword
+               or lower(c.fullName) like :keyword
+               or c.phone like :keyword)
+    """)
+    Page<Order> search(@Param("storeId") Long storeId,
+                       @Param("userId") Long userId,
+                       @Param("status") OrderStatus status,
+                       @Param("keyword") String keyword,
+                       Pageable pageable);
+
+    /** Số đơn theo từng trạng thái trong phạm vi (null = không lọc). */
+    @Query("""
+        select o.status, count(o) from Order o
+        where (:storeId is null or o.store.id = :storeId)
+          and (:userId is null or o.user.id = :userId)
+        group by o.status
+    """)
+    List<Object[]> countByStatus(@Param("storeId") Long storeId, @Param("userId") Long userId);
 
     /** Khoá dòng đơn khi hệ thống tự đổi trạng thái, để không chồng lên một thao tác khác cùng lúc. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)

@@ -5,8 +5,10 @@ import com.example.elsa_store.constant.PaymentStatus;
 import com.example.elsa_store.dto.request.OrderRequest;
 import com.example.elsa_store.dto.response.OrderQuoteResponse;
 import com.example.elsa_store.dto.response.OrderResponse;
+import com.example.elsa_store.dto.response.PageResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface OrderService {
     OrderResponse create(OrderRequest request);
@@ -17,6 +19,15 @@ public interface OrderService {
     OrderResponse getById(Long id);
 
     List<OrderResponse> getAll();
+
+    /**
+     * Danh sách có phân trang theo người xem: khách thấy đơn của mình, người của cửa hàng thấy đơn của cửa hàng, ADMIN
+     * thấy mọi đơn (hoặc một cửa hàng qua {@code storeId}). {@code keyword} tìm trong mã đơn, tên / SĐT người nhận và khách.
+     */
+    PageResponse<OrderResponse> search(OrderStatus status, String keyword, Long storeId, int page, int size);
+
+    /** Số đơn theo trạng thái trong cùng phạm vi với {@link #search}, kèm {@code ALL} = tổng. */
+    Map<String, Long> countByStatus(Long storeId);
 
     List<OrderResponse> getAllByUser(Long userId);
 

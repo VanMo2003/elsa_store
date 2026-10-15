@@ -6,6 +6,7 @@ import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.request.OrderRequest;
 import com.example.elsa_store.dto.response.OrderQuoteResponse;
 import com.example.elsa_store.dto.response.OrderResponse;
+import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.entity.*;
 import com.example.elsa_store.exception.AppException;
 import com.example.elsa_store.exception.ErrorCode;
@@ -15,6 +16,8 @@ import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.OrderNotificationService;
 import com.example.elsa_store.service.OrderService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -391,6 +394,59 @@ public class OrderServiceImpl implements OrderService {
         };
         Viewer viewer = viewer(current);
         return orders.stream().map(o -> toResponse(o, viewer)).toList();
+    }
+
+    static final int MAX_PAGE_SIZE = 50;
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<OrderResponse> search(OrderStatus status, String keyword, Long storeId, int page, int size) {
+        User current = accessGuard.currentUser();
+        Scope scope = scope(current, storeId);
+        Page<Order> result = orderRepository.search(scope.storeId(), scope.userId(), status, likePattern(keyword),
+                PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), MAX_PAGE_SIZE)));
+        Viewer viewer = viewer(current);
+        return PageResponse.from(result.map(o -> toResponse(o, viewer)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> countByStatus(Long storeId) {
+        Scope scope = scope(accessGuard.currentUser(), storeId);
+        Map<String, Long> counts = new LinkedHashMap<>();
+        for (OrderStatus status : OrderStatus.values()) {
+            counts.put(status.name(), 0L);
+        }
+        long total = 0;
+        for (Object[] row : orderRepository.countByStatus(scope.storeId(), scope.userId())) {
+            if (row[0] instanceof OrderStatus status && row[1] instanceof Number count) {
+                counts.put(status.name(), count.longValue());
+                total += count.longValue();
+            }
+        }
+        counts.put("ALL", total);
+        return counts;
+    }
+
+    /** Phạm vi đơn người xem được thấy: một cửa hàng và/hoặc một người mua; ADMIN không truyền gì = toàn hệ thống. */
+    record Scope(Long storeId, Long userId) {}
+
+    private Scope scope(User current, Long storeId) {
+        return switch (current.getRole()) {
+            case ADMIN -> new Scope(storeId, null);
+            case USER -> new Scope(null, current.getId());
+            default -> new Scope(accessGuard.requireStoreMember().getId(), null);
+        };
+    }
+
+    /** "  ORD-12 " -> "%ord-12%"; bỏ các ký tự đại diện của LIKE (%, _, \) mà người dùng gõ vào. */
+    static String likePattern(String keyword) {
+        String text = trimToNull(keyword);
+        if (text == null) {
+            return null;
+        }
+        String escaped = text.toLowerCase(Locale.ROOT).replace("\\", "").replace("%", "").replace("_", "");
+        return escaped.isEmpty() ? null : "%" + escaped + "%";
     }
 
     @Override

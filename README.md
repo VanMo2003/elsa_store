@@ -164,6 +164,11 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   phẩm được lưu **trong cùng một giao dịch** — không thể có khuyến mãi "giảm giá giày" lưu xong mà gắn sản phẩm lỗi rồi
   thành giảm cả cửa hàng. `productIds` bỏ trống = giữ nguyên, `[]` = gỡ hết (thành giảm cả đơn nếu không có mã). API cũ
   `PUT /promotions/{id}/products` vẫn dùng được.
+- **Danh sách đơn có phân trang:** `GET /orders/page?status&keyword&storeId&page&size` (mới đặt trước, tối đa 50 / trang,
+  không kèm `timeline`); `keyword` tìm trong mã đơn, tên / SĐT người nhận và khách (không phân biệt hoa thường, dấu).
+  `GET /orders/counts` trả số đơn từng trạng thái kèm `ALL`. Phạm vi như `GET /orders`: khách thấy đơn của mình, người
+  của cửa hàng chỉ thấy cửa hàng mình (`storeId` bị bỏ qua), ADMIN xem mọi đơn hoặc một cửa hàng. `GET /orders` (trả
+  hết một lần) vẫn giữ cho bản app cũ.
 - **Phí giao hàng** theo cửa hàng: chủ / quản lý đặt bằng `PUT /stores/me/shipping` `{shippingFee, freeShippingThreshold}`
   (làm tròn đồng; phí trống / 0 = giao miễn phí và bỏ luôn mức miễn phí). Đơn khách đặt có tiền hàng sau giảm từ
   `freeShippingThreshold` được miễn phí giao; đơn tại quầy không tính phí. Báo giá trả `shippingFee`,

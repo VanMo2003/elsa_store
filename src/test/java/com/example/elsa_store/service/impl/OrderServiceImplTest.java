@@ -486,6 +486,20 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void pausedStoresTakeNoOnlineOrdersButStillSellAtTheCounter() {
+        store.setPaused(true);
+        store.setPauseNote("Nghỉ Tết đến 05/02");
+        AppException quote = assertThrows(AppException.class, () -> service.quote(customerOrder()));
+        assertEquals("Cửa hàng đang tạm nghỉ, chưa nhận đơn mới: Nghỉ Tết đến 05/02", quote.getMessage());
+        assertThrows(AppException.class, () -> service.create(customerOrder()));
+        verify(orders, never()).save(any());
+
+        when(accessGuard.currentUser()).thenReturn(staff);
+        OrderRequest counter = OrderRequest.builder().items(new ArrayList<>(List.of(item(100L, 1)))).build();
+        assertEquals(OrderStatus.CHUA_XAC_NHAN, service.create(counter).getStatus());
+    }
+
+    @Test
     void countsCoverEveryStatusPlusTheTotal() {
         when(accessGuard.currentUser()).thenReturn(staff);
         when(orders.countByStatus(1L, null)).thenReturn(List.of(

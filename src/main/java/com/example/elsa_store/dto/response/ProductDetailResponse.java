@@ -25,6 +25,9 @@ public class ProductDetailResponse {
     private Double shippingFee;
     /** Mức tiền hàng được miễn phí giao; null = không có. */
     private Double freeShippingThreshold;
+    /** Cửa hàng đang tạm nghỉ bán (khách không đặt được) và lời nhắn. */
+    private Boolean storePaused;
+    private String storePauseNote;
     private Integer status;
     private List<String> images;
     private List<ProductVariantResponse> productVariants;

@@ -34,6 +34,9 @@ public class StoreResponse {
     Double shippingFee;
     /** Mức tiền hàng được miễn phí giao; trống = không có. */
     Double freeShippingThreshold;
+    /** Đang tạm nghỉ bán và lời nhắn cho khách. */
+    Boolean paused;
+    String pauseNote;
     /** Trang cửa hàng công khai: điểm đánh giá trung bình (một chữ số thập phân) trên mọi sản phẩm, trống khi chưa có. */
     Double ratingAverage;
     Long ratingCount;

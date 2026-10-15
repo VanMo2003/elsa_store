@@ -81,6 +81,9 @@ step(F2, "Khuyến mãi giảm 10% cho sản phẩm (gắn sản phẩm cùng l�
 step(F2, "Mã giảm giá 50.000đ cho đơn từ 500.000đ", "POST", "/promotions", token="ownerToken",
      body={"name": "Mã 50K", "type": 1, "value": 50000, "status": 1, "couponCode": "GIAM{{runSuffix}}",
            "minOrderValue": 500000})
+step(F2, "Bật tạm nghỉ bán (khách không đặt được đơn)", "PUT", "/stores/me/pause", token="ownerToken",
+     body={"paused": True, "note": "Nghỉ lễ đến thứ Hai"})
+step(F2, "Tắt tạm nghỉ bán", "PUT", "/stores/me/pause", token="ownerToken", body={"paused": False})
 step(F2, "Phí giao 30.000đ, miễn phí cho đơn từ 2.000.000đ", "PUT", "/stores/me/shipping", token="ownerToken",
      body={"shippingFee": 30000, "freeShippingThreshold": 2000000},
      note="Phí 0 = giao miễn phí. Đơn tại quầy không tính phí giao.")

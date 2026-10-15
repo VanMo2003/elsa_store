@@ -75,6 +75,18 @@ public class Store extends BaseEntity {
     @Column(name = "free_shipping_threshold")
     private Double freeShippingThreshold;
 
+    /** Tạm nghỉ bán (nghỉ lễ…): khách vẫn xem sản phẩm nhưng không đặt được đơn; bán tại quầy vẫn được. */
+    @Column(name = "paused")
+    private Boolean paused;
+
+    /** Lời nhắn cho khách khi tạm nghỉ, ví dụ "Nghỉ Tết đến 05/02". */
+    @Column(name = "pause_note", length = 255)
+    private String pauseNote;
+
+    public boolean isPaused() {
+        return Boolean.TRUE.equals(paused);
+    }
+
     public boolean isApproved() {
         return approvalStatus == null || approvalStatus == ApprovalStatus.APPROVED;
     }

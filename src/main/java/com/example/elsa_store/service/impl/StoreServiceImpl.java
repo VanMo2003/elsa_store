@@ -1,6 +1,7 @@
 package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.dto.request.ShippingSettingsRequest;
+import com.example.elsa_store.dto.request.StorePauseRequest;
 import com.example.elsa_store.dto.request.StoreUpdateRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.StoreResponse;
@@ -93,6 +94,16 @@ public class StoreServiceImpl implements StoreService {
         if (req.getAddress() != null && !req.getAddress().isBlank()) {
             store.setAddress(req.getAddress().trim());
         }
+        return StoreMapper.toResponse(storeRepository.save(store));
+    }
+
+    @Override
+    public StoreResponse updatePause(StorePauseRequest req) {
+        Store store = accessGuard.requireStoreManager();
+        boolean paused = Boolean.TRUE.equals(req.getPaused());
+        store.setPaused(paused ? Boolean.TRUE : null);
+        String note = req.getNote() == null || req.getNote().isBlank() ? null : req.getNote().trim();
+        store.setPauseNote(paused ? note : null);
         return StoreMapper.toResponse(storeRepository.save(store));
     }
 

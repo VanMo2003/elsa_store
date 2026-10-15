@@ -166,6 +166,9 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   phẩm được lưu **trong cùng một giao dịch** — không thể có khuyến mãi "giảm giá giày" lưu xong mà gắn sản phẩm lỗi rồi
   thành giảm cả cửa hàng. `productIds` bỏ trống = giữ nguyên, `[]` = gỡ hết (thành giảm cả đơn nếu không có mã). API cũ
   `PUT /promotions/{id}/products` vẫn dùng được.
+- **Tạm nghỉ bán:** `PUT /stores/me/pause` `{paused, note?}` (chủ / quản lý). Khi bật, báo giá và đặt đơn của khách bị
+  từ chối kèm lời nhắn ("Cửa hàng đang tạm nghỉ, chưa nhận đơn mới: Nghỉ Tết đến 05/02"); khách vẫn xem sản phẩm, đơn tại
+  quầy vẫn bán được. Trang cửa hàng công khai và chi tiết sản phẩm trả `paused` / `storePaused` và lời nhắn.
 - **Danh sách đơn có phân trang:** `GET /orders/page?status&keyword&storeId&page&size` (mới đặt trước, tối đa 50 / trang,
   không kèm `timeline`); `keyword` tìm trong mã đơn, tên / SĐT người nhận và khách (không phân biệt hoa thường, dấu).
   `GET /orders/counts` trả số đơn từng trạng thái kèm `ALL`. Phạm vi như `GET /orders`: khách thấy đơn của mình, người
@@ -400,8 +403,8 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 68 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
-chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, phí giao hàng → khách báo giá,
+`postman/elsa_store.postman_collection.json` — 70 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi
 mật khẩu. File được sinh từ `postman/build_collection.py` (sửa danh sách request ở đó rồi sinh lại; `--run <baseUrl>`

@@ -24,6 +24,8 @@ public class StoreMapper {
                 .ownerUsername(s.getOwner() != null ? s.getOwner().getUsername() : null)
                 .shippingFee(shippingFee(s))
                 .freeShippingThreshold(s.getFreeShippingThreshold())
+                .paused(s.isPaused())
+                .pauseNote(s.isPaused() ? s.getPauseNote() : null)
                 .build();
     }
 
@@ -40,6 +42,8 @@ public class StoreMapper {
                 .approvalStatus(s.getApprovalStatus())
                 .shippingFee(shippingFee(s))
                 .freeShippingThreshold(shippingFee(s) > 0 ? s.getFreeShippingThreshold() : null)
+                .paused(s.isPaused())
+                .pauseNote(s.isPaused() ? s.getPauseNote() : null)
                 .build();
     }
 

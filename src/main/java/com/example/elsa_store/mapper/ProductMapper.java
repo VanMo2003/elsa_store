@@ -63,6 +63,8 @@ public class ProductMapper {
             StoreResponse store = StoreMapper.toPublicResponse(product.getStore());
             res.setShippingFee(store.getShippingFee());
             res.setFreeShippingThreshold(store.getFreeShippingThreshold());
+            res.setStorePaused(store.getPaused());
+            res.setStorePauseNote(store.getPauseNote());
         }
         res.setStatus(product.getStatus());
         return res;

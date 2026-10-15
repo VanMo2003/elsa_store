@@ -2,6 +2,7 @@ package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.constant.ApprovalStatus;
 import com.example.elsa_store.dto.request.ShippingSettingsRequest;
+import com.example.elsa_store.dto.request.StorePauseRequest;
 import com.example.elsa_store.dto.response.StoreResponse;
 import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.exception.ResourceNotFoundException;
@@ -80,5 +81,22 @@ class StoreServiceImplTest {
         assertEquals(0.0, free.getShippingFee());
         assertNull(free.getFreeShippingThreshold());
         assertNull(mine.getShippingFee());
+    }
+
+    @Test
+    void pauseKeepsTheNoteOnlyWhilePaused() {
+        Store mine = Store.builder().name("Elsa").build();
+        mine.setId(3L);
+        when(accessGuard.requireStoreManager()).thenReturn(mine);
+        when(stores.save(any(Store.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        StoreResponse paused = service.updatePause(new StorePauseRequest(true, "  Nghỉ Tết  "));
+        assertEquals(true, paused.getPaused());
+        assertEquals("Nghỉ Tết", paused.getPauseNote());
+
+        StoreResponse open = service.updatePause(new StorePauseRequest(false, "bỏ qua"));
+        assertEquals(false, open.getPaused());
+        assertNull(open.getPauseNote());
+        assertNull(mine.getPaused());
     }
 }

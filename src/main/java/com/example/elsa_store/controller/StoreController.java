@@ -2,6 +2,7 @@ package com.example.elsa_store.controller;
 
 import com.example.elsa_store.dto.common.ApiResponse;
 import com.example.elsa_store.dto.request.ShippingSettingsRequest;
+import com.example.elsa_store.dto.request.StorePauseRequest;
 import com.example.elsa_store.dto.request.StoreUpdateRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.StoreResponse;
@@ -33,6 +34,12 @@ public class StoreController {
     @PutMapping("/me")
     public ApiResponse<StoreResponse> updateMine(@Valid @RequestBody StoreUpdateRequest req) {
         return ApiResponse.ok(storeService.updateMine(req));
+    }
+
+    /** Tạm nghỉ bán: khách không đặt được đơn mới (chủ / quản lý). */
+    @PutMapping("/me/pause")
+    public ApiResponse<StoreResponse> updatePause(@Valid @RequestBody StorePauseRequest req) {
+        return ApiResponse.ok(storeService.updatePause(req));
     }
 
     /** Phí giao hàng và mức miễn phí giao (chủ / quản lý). */

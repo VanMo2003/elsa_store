@@ -136,6 +136,7 @@ public class OrderServiceImpl implements OrderService {
             if (!store.isApproved()) {
                 throw new AppException(ErrorCode.BAD_REQUEST, "Store is not open");
             }
+            rejectIfPaused(store);
             buyer = current;
             customer = accountFactory.ensureCustomerProfile(current);
         }
@@ -202,6 +203,9 @@ public class OrderServiceImpl implements OrderService {
         Store store = storeOf(wanted.keySet());
         if (counterSale && !accessGuard.requireStoreMember().getId().equals(store.getId())) {
             throw new AppException(ErrorCode.UN_AUTHORIZED, "Products belong to another store");
+        }
+        if (!counterSale) {
+            rejectIfPaused(store);
         }
 
         PricingService.Quote quote = pricingService.quote(store, lines(wanted), request.getCouponCode());
@@ -291,6 +295,15 @@ public class OrderServiceImpl implements OrderService {
             result.put(variant, entry.getValue());
         }
         return result;
+    }
+
+    /** Cửa hàng tạm nghỉ không nhận đơn online; lời báo kèm lời nhắn của cửa hàng. */
+    static void rejectIfPaused(Store store) {
+        if (store != null && store.isPaused()) {
+            String note = store.getPauseNote();
+            throw new AppException(ErrorCode.BAD_REQUEST,
+                    "Cửa hàng đang tạm nghỉ, chưa nhận đơn mới" + (note == null ? "" : ": " + note));
+        }
     }
 
     private static Store storeOf(Collection<ProductVariant> variants) {

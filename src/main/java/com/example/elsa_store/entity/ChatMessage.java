@@ -57,6 +57,23 @@ public class ChatMessage extends BaseEntity {
     @Column(name = "product_ids", length = 100)
     private String productIds;
 
+    /** Ảnh gửi kèm (đường dẫn /uploads/chat/..., cách nhau bởi xuống dòng); tối đa {@link #MAX_IMAGES}. */
+    @Column(name = "image_urls", length = 1000)
+    private String imageUrls;
+
+    public static final int MAX_IMAGES = 4;
+
+    public List<String> imageList() {
+        if (imageUrls == null || imageUrls.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(imageUrls.split("\n")).map(String::strip).filter(s -> !s.isEmpty()).toList();
+    }
+
+    public static String joinImages(List<String> urls) {
+        return urls == null || urls.isEmpty() ? null : String.join("\n", urls);
+    }
+
     public List<Long> productIdList() {
         if (productIds == null || productIds.isBlank()) {
             return List.of();

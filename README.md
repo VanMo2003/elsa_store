@@ -106,6 +106,7 @@ tham gia chat. Mọi kiểm tra quyền đi qua `AccessGuard`, tin nhắn chỉ 
 | `GET /conversations/unread-count` | Mọi người dùng chat | Số tin chưa đọc `{unread}` |
 | `GET /conversations/{id}`, `GET /conversations/{id}/messages?beforeId=&size=` | Hai phía | Chi tiết, lịch sử (cuộn ngược theo `beforeId`) |
 | `POST /conversations/{id}/messages` `{content, productIds?, askAi?}` | Hai phía | Gửi tin (≤ 2000 ký tự, ≤ 3 sản phẩm) |
+| `POST /conversations/{id}/images` (multipart: `files` 1–4 ảnh, `content` chú thích tuỳ chọn) | Hai phía | Gửi ảnh thành một tin (`images` trong tin nhắn; ảnh lưu `/uploads/chat/`, kiểm tra theo nội dung tệp); tin chỉ có ảnh hiện "[Ảnh]" ở danh sách và "Đã gửi ảnh" ở push |
 | `PUT /conversations/{id}/read` | Hai phía | Đánh dấu đã đọc |
 
 **Thời gian thực:** `ws://<host>/elsa-store/api/ws/chat?token=<accessToken>` (WebSocket thuần, không STOMP; trình duyệt

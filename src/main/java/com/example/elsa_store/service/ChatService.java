@@ -6,6 +6,7 @@ import com.example.elsa_store.dto.response.ChatMessageResponse;
 import com.example.elsa_store.dto.response.ChatUnreadResponse;
 import com.example.elsa_store.dto.response.ConversationResponse;
 import com.example.elsa_store.dto.response.PageResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,6 +27,9 @@ public interface ChatService {
     List<ChatMessageResponse> getMessages(Long conversationId, Long beforeId, int size);
 
     ChatMessageResponse send(Long conversationId, ChatMessageRequest req);
+
+    /** Gửi 1–4 ảnh (kèm chú thích tuỳ chọn) thành một tin nhắn. */
+    ChatMessageResponse sendImages(Long conversationId, List<MultipartFile> files, String caption);
 
     ConversationResponse markRead(Long conversationId);
 

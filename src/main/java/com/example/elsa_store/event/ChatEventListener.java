@@ -86,7 +86,11 @@ public class ChatEventListener {
         String content = event.message().getContent();
         boolean hasProducts = event.message().getProducts() != null
                 && !event.message().getProducts().isEmpty();
-        return content == null || content.isBlank() ? (hasProducts ? "Đã gửi sản phẩm" : "Tin nhắn mới") : content;
+        boolean hasImages = event.message().getImages() != null && !event.message().getImages().isEmpty();
+        if (content != null && !content.isBlank()) {
+            return content;
+        }
+        return hasImages ? "Đã gửi ảnh" : hasProducts ? "Đã gửi sản phẩm" : "Tin nhắn mới";
     }
 
     private String payload(ChatUpdatedEvent event, ConversationResponse view) {

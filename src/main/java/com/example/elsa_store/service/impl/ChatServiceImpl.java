@@ -23,6 +23,7 @@ import com.example.elsa_store.repository.ConversationRepository;
 import com.example.elsa_store.repository.StoreRepository;
 import com.example.elsa_store.repository.UserRepository;
 import com.example.elsa_store.security.AccessGuard;
+import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.ChatService;
 import com.example.elsa_store.utils.NotificationMessages;
@@ -36,6 +37,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -66,6 +68,7 @@ public class ChatServiceImpl implements ChatService {
     private final AccessGuard accessGuard;
     private final ApplicationEventPublisher eventPublisher;
     private final TransactionTemplate transaction;
+    private final FileStorageService fileStorageService;
 
     @Override
     public ConversationResponse open(ConversationCreateRequest req) {
@@ -148,17 +151,48 @@ public class ChatServiceImpl implements ChatService {
             throw new AppException(ErrorCode.BAD_REQUEST, e.getMessage());
         }
 
-        ChatMessage message = chatMessageRepository.save(ChatMessage.builder()
+        boolean askAssistant = side == ChatSide.CUSTOMER && Boolean.TRUE.equals(req.getAskAi());
+        return post(conversation, caller, side, ChatMessage.builder()
+                .content(content)
+                .productIds(ChatMessage.joinProductIds(productIds)), content, askAssistant);
+    }
+
+    @Override
+    @Transactional
+    public ChatMessageResponse sendImages(Long conversationId, List<MultipartFile> files, String caption) {
+        User caller = accessGuard.currentUser();
+        Conversation conversation = findForUpdate(conversationId);
+        ChatSide side = sideOf(caller, conversation);
+        if (files == null || files.isEmpty()) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "files: must not be empty");
+        }
+        if (files.size() > ChatMessage.MAX_IMAGES) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "A message can have at most " + ChatMessage.MAX_IMAGES + " images");
+        }
+        String content = caption == null ? "" : caption.strip();
+        if (content.length() > 2000) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "content: size must be at most 2000");
+        }
+        List<String> urls = files.stream().map(fileStorageService::storeChatImage).toList();
+        // Tin chỉ có ảnh: danh sách trò chuyện và thông báo hiện "[Ảnh]".
+        String preview = content.isEmpty() ? "[Ảnh]" : content;
+        return post(conversation, caller, side, ChatMessage.builder()
+                .content(content)
+                .imageUrls(ChatMessage.joinImages(urls)), preview, false);
+    }
+
+    /** Lưu tin của {@code caller}, cập nhật số chưa đọc của hai phía và phát sự kiện realtime / push. */
+    private ChatMessageResponse post(Conversation conversation, User caller, ChatSide side,
+                                     ChatMessage.ChatMessageBuilder draft, String preview, boolean askAssistant) {
+        ChatMessage message = chatMessageRepository.save(draft
                 .conversation(conversation)
                 .senderSide(side)
                 .senderUserId(caller.getId())
                 .senderName(ChatMapper.displayName(caller))
                 .senderRole(caller.getRole())
-                .content(content)
-                .productIds(ChatMessage.joinProductIds(productIds))
                 .build());
 
-        touch(conversation, side, message, content);
+        touch(conversation, side, message, preview);
         // Viết tin nghĩa là đã đọc cuộc trò chuyện; phía bên kia có thêm một tin chưa đọc.
         if (side == ChatSide.CUSTOMER) {
             conversation.setCustomerUnread(0);
@@ -173,7 +207,6 @@ public class ChatServiceImpl implements ChatService {
         conversationRepository.save(conversation);
 
         ChatMessageResponse response = toResponse(message);
-        boolean askAssistant = side == ChatSide.CUSTOMER && Boolean.TRUE.equals(req.getAskAi());
         eventPublisher.publishEvent(
                 event(ChatUpdatedEvent.Type.MESSAGE, conversation, response, caller.getId(), askAssistant));
         return response;

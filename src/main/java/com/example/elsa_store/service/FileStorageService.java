@@ -14,4 +14,7 @@ public interface FileStorageService {
 
     /** Như {@link #storeProductImage} nhưng lưu vào {@code /uploads/reviews/} (ảnh khách đính kèm đánh giá). */
     String storeReviewImage(MultipartFile file);
+
+    /** Như {@link #storeProductImage} nhưng lưu vào {@code /uploads/chat/} (ảnh gửi trong tin nhắn). */
+    String storeChatImage(MultipartFile file);
 }

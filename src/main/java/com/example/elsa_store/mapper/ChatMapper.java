@@ -31,6 +31,7 @@ public final class ChatMapper {
                 .content(message.getContent())
                 .aiGenerated(message.getAiGenerated())
                 .products(attached.isEmpty() ? null : attached)
+                .images(message.imageList().isEmpty() ? null : message.imageList())
                 .createdAt(message.getCreatedAt())
                 .build();
     }

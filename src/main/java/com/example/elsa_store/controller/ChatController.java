@@ -10,7 +10,9 @@ import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -66,6 +68,14 @@ public class ChatController {
     @PostMapping("/{id}/messages")
     public ApiResponse<ChatMessageResponse> send(@PathVariable Long id, @Valid @RequestBody ChatMessageRequest req) {
         return ApiResponse.ok(chatService.send(id, req));
+    }
+
+    /** Gửi ảnh: multipart, phần {@code files} (1–4 ảnh) và {@code content} (chú thích, không bắt buộc). */
+    @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ChatMessageResponse> sendImages(@PathVariable Long id,
+                                                       @RequestPart("files") List<MultipartFile> files,
+                                                       @RequestPart(value = "content", required = false) String content) {
+        return ApiResponse.ok(chatService.sendImages(id, files, content));
     }
 
     @PutMapping("/{id}/read")

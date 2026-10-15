@@ -24,5 +24,7 @@ public class ChatMessageResponse {
     /** Trợ lý AI viết thay cửa hàng. */
     private Boolean aiGenerated;
     private List<ChatProductResponse> products;
+    /** Ảnh gửi kèm tin; null khi không có. */
+    private List<String> images;
     private LocalDateTime createdAt;
 }

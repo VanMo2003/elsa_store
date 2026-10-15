@@ -14,6 +14,7 @@ import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.repository.InventoryRepository;
 import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.OrderRepository;
+import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
 import com.example.elsa_store.repository.ReturnRequestRepository;
 import com.example.elsa_store.repository.StoreRepository;
@@ -49,6 +50,7 @@ public class ReportServiceImpl implements ReportService {
     private final AccessGuard accessGuard;
     private final ExcelReportService excelReportService;
     private final ReturnRequestRepository returnRequestRepository;
+    private final ProductReviewRepository reviewRepository;
 
     // ------------------------------------------------------------------ phạm vi và tham số
 
@@ -395,6 +397,7 @@ public class ReportServiceImpl implements ReportService {
                 .pendingReturns(scope == null
                         ? null
                         : returnRequestRepository.countByStore_IdAndStatus(scope, ReturnStatus.CHO_DUYET))
+                .unrepliedReviews(scope == null ? null : reviewRepository.countByProduct_Store_IdAndStoreReplyIsNull(scope))
                 .completedOrders(countStatus(scope, OrderStatus.HOAN_THANH))
                 .todayOrders(orderRepository.countInRange(startOfToday, startOfTomorrow, null, scope))
                 .lowStockVariants(lowStock)

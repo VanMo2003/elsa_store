@@ -287,7 +287,7 @@ Mã yêu cầu `TH-yyMMdd-XXXX`.
 
 Mỗi bước báo cho bên kia (`RETURN_REQUESTED` cho cửa hàng, `RETURN_UPDATED` cho khách, mở `elsastore://returns`). Báo
 cáo tổng hợp có `refundTotal`, `refundCount` (theo ngày hoàn tiền) và `netAfterRefunds` = doanh thu thực thu − tiền hoàn;
-tổng quan có `pendingReturns`. Lợi nhuận gộp chưa trừ hàng trả.
+tổng quan có `pendingReturns` và `unrepliedReviews` (đánh giá chưa trả lời). Lợi nhuận gộp chưa trừ hàng trả.
 
 ## Doanh thu, kho và nhập hàng
 

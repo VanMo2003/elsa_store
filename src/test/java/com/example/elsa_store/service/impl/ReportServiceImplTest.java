@@ -35,8 +35,9 @@ class ReportServiceImplTest {
     private final AccessGuard accessGuard = mock(AccessGuard.class);
     private final ExcelReportService excel = mock(ExcelReportService.class);
     private final ReturnRequestRepository returns = mock(ReturnRequestRepository.class);
+    private final ProductReviewRepository reviews = mock(ProductReviewRepository.class);
     private final ReportServiceImpl service =
-            new ReportServiceImpl(orders, orderItems, inventories, variants, stores, accessGuard, excel, returns);
+            new ReportServiceImpl(orders, orderItems, inventories, variants, stores, accessGuard, excel, returns, reviews);
 
     private static final LocalDate FROM = LocalDate.of(2026, 10, 1);
     private static final LocalDate TO = LocalDate.of(2026, 10, 14);
@@ -162,6 +163,7 @@ class ReportServiceImplTest {
         when(orderItems.costSummary(any(), any(), any(), eq(1L))).thenReturn(rows(new Object[] {5_000_000.0, 2L}));
         when(orders.countByStore_IdAndStatus(1L, OrderStatus.CHUA_XAC_NHAN)).thenReturn(3L);
         when(orders.countByStore_IdAndStatus(1L, OrderStatus.DA_XAC_NHAN)).thenReturn(2L);
+        when(reviews.countByProduct_Store_IdAndStoreReplyIsNull(1L)).thenReturn(6L);
         when(variants.stockOverview(1L)).thenReturn(rows(new Object[] {20L, 5L, 1L, 4L, 100L, 1.0, 0L, 2.0}));
         when(orders.revenueByDay(any(), any(), any(), eq(1L)))
                 .thenReturn(rows(new Object[] {Date.valueOf(today.minusDays(2)), 2L, 700_000.0}));
@@ -176,6 +178,7 @@ class ReportServiceImplTest {
         assertEquals(2L, res.getMonthUncostedQuantity());
         assertEquals(3L, res.getProcessingOrders());
         assertEquals(2L, res.getConfirmedOrders());
+        assertEquals(6L, res.getUnrepliedReviews());
         assertEquals(4L, res.getLowStockVariants());
         assertEquals(1L, res.getOutOfStockVariants());
         assertEquals(7, res.getLast7Days().size());

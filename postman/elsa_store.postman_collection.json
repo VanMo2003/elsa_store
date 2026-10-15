@@ -1429,6 +1429,44 @@
           }
         },
         {
+          "name": "Sản phẩm tương tự (công khai)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/related?size=8",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "related"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "8"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
           "name": "Thêm địa chỉ giao hàng",
           "event": [
             {

@@ -35,5 +35,8 @@ public interface ProductService {
 
     /** Công khai: sản phẩm đang bán của một cửa hàng đã duyệt. */
     List<ProductResponse> getAllByStore(Long storeId);
+
+    /** Công khai: sản phẩm tương tự — cùng danh mục trước, thiếu thì lấy thêm hàng cùng cửa hàng; không gồm chính nó. */
+    List<ProductResponse> related(Long productId, int size);
     PageResponse<ProductResponse> search(ProductSearchRequest request);
 }

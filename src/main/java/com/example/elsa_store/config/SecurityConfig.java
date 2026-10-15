@@ -34,6 +34,7 @@ public class SecurityConfig {
         "/categories/{id:\\d+}",
         "/products",
         "/products/{id:\\d+}",
+        "/products/{id:\\d+}/related",
         // Đánh giá sản phẩm: ai cũng đọc được; "/me" trả "chưa đăng nhập" cho khách vãng lai.
         "/products/{id:\\d+}/reviews",
         "/products/{id:\\d+}/reviews/summary",

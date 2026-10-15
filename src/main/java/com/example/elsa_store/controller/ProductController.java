@@ -84,6 +84,12 @@ public class ProductController {
         return ApiResponse.ok(productService.uploadImages(id, files));
     }
 
+    /** Sản phẩm tương tự (công khai) cho trang chi tiết. */
+    @GetMapping("/{id:\\d+}/related")
+    public ApiResponse<List<ProductResponse>> related(@PathVariable Long id, @RequestParam(defaultValue = "8") int size) {
+        return ApiResponse.ok(productService.related(id, size));
+    }
+
     /** Bộ ảnh của sản phẩm kèm id (để gỡ / chọn ảnh đại diện); người của cửa hàng và ADMIN. */
     @GetMapping("/{id}/images")
     public ApiResponse<List<ProductImageResponse>> images(@PathVariable Long id) {

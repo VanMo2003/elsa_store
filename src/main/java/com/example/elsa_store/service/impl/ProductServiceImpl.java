@@ -35,7 +35,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Duyệt sản phẩm là công khai (chỉ hàng đang bán của cửa hàng đã duyệt). Tạo và sửa: chủ, quản lý, nhân viên của
@@ -231,6 +233,30 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public List<ProductResponse> getAllByStore(Long storeId) {
         return catalog.products(productRepository.findPublic(null, storeId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponse> related(Long productId, int size) {
+        Product product = find(productId);
+        if (!isPublic(product)) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        int limit = Math.min(Math.max(size, 1), 20);
+        // Lấy dư một dòng vì chính sản phẩm này có thể nằm trong kết quả.
+        Pageable firstPage = PageRequest.of(0, limit + 1);
+        Map<Long, Product> picked = new LinkedHashMap<>();
+        if (product.getCategory() != null) {
+            productRepository.findPublic(product.getCategory().getId(), null, firstPage)
+                    .forEach(p -> picked.putIfAbsent(p.getId(), p));
+        }
+        picked.remove(product.getId());
+        if (picked.size() < limit && product.getStore() != null) {
+            productRepository.findPublic(null, product.getStore().getId(), PageRequest.of(0, limit + 1))
+                    .forEach(p -> picked.putIfAbsent(p.getId(), p));
+            picked.remove(product.getId());
+        }
+        return catalog.products(picked.values().stream().limit(limit).toList());
     }
 
     @Override

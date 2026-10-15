@@ -398,6 +398,8 @@ Bảng `notifications`, `device_tokens`, `conversations`, `chat_messages`, `stoc
 
 - Test đơn vị: `./mvnw test -Dtest='!ElsaStoreApplicationTests'` (không cần MySQL); `ElsaStoreApplicationTests` dựng cả
   ứng dụng nên cần CSDL.
+- CI (`.github/workflows/ci.yml`, GitHub Actions): mỗi lần push lên `main` / `develop` hoặc mở pull request thì chạy
+  các test đơn vị trên, sau đó build thử Docker image và kiểm tra `docker-compose.yml`.
 - Format code tự động chạy qua Spotless (Palantir Java Format) ở phase `compile` của Maven — chạy
   `./mvnw compile` sẽ format lại **toàn bộ** file Java, không chỉ file vừa sửa. Muốn compile mà không
   format lại: thêm `-Dspotless.apply.skip=true`.

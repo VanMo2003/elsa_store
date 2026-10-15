@@ -153,9 +153,13 @@ public final class NotificationMessages {
     }
 
     public static Message orderCompleted(Order order) {
+        Integer coins = order.getCoinsEarned();
+        String reward = coins == null || coins <= 0
+                ? ""
+                : " Bạn nhận được " + NumberFormat.getIntegerInstance(VI).format(coins) + " xu cho lần mua sau.";
         return new Message(
                 "Đơn hàng đã hoàn thành",
-                "Đơn " + order.getCode() + " đã hoàn thành. Cảm ơn bạn đã mua sắm tại Elsa Store.");
+                "Đơn " + order.getCode() + " đã hoàn thành. Cảm ơn bạn đã mua sắm tại Elsa Store." + reward);
     }
 
     public static Message paymentSuccess(Order order) {

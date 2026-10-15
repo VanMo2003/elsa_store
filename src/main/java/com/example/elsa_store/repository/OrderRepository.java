@@ -147,7 +147,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             coalesce(sum(o.totalAmount), 0),
             coalesce(sum(o.discountAmount), 0),
             coalesce(sum(o.finalAmount), 0),
-            coalesce(sum(o.shippingFee), 0)
+            coalesce(sum(o.shippingFee), 0),
+            coalesce(sum(o.coinsUsed), 0)
         from Order o
         where coalesce(o.completedAt, o.orderDate) >= :from
           and coalesce(o.completedAt, o.orderDate) < :to

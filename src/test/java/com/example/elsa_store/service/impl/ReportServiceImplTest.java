@@ -70,7 +70,7 @@ class ReportServiceImplTest {
         LocalDateTime end = TO.plusDays(1).atStartOfDay();
         LocalDateTime previousStart = LocalDate.of(2026, 9, 17).atStartOfDay();
         when(orders.revenueSummary(eq(start), eq(end), any(), eq(1L)))
-                .thenReturn(rows(new Object[] {10L, 12_000_000.0, 2_200_000.0, 10_000_000.0, 200_000.0}));
+                .thenReturn(rows(new Object[] {10L, 12_000_000.0, 2_200_000.0, 10_000_000.0, 200_000.0, 150_000L}));
         when(orderItems.costSummary(eq(start), eq(end), any(), eq(1L)))
                 .thenReturn(rows(new Object[] {6_000_000.0, 3L}));
         when(orders.revenueSummary(eq(previousStart), eq(start), any(), eq(1L)))
@@ -83,6 +83,7 @@ class ReportServiceImplTest {
         assertEquals(10_000_000, res.getNetRevenue());
         // Gộp − giảm + phí giao = thực thu.
         assertEquals(200_000, res.getShippingTotal());
+        assertEquals(150_000, res.getCoinsTotal(), "phần giảm do xu tách riêng");
         assertEquals(6_000_000, res.getCostOfGoods());
         assertEquals(4_000_000, res.getGrossProfit());
         assertEquals(40.0, res.getProfitMargin());

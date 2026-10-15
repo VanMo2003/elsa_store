@@ -295,7 +295,8 @@ kèm số dư sau và đơn liên quan); số dư = tổng sổ.
 - Ghi sổ luôn khoá dòng tài khoản rồi đọc số dư bằng truy vấn khoá (`FOR UPDATE`): đã thử 4 đơn dùng xu cùng lúc với ví
   10.000 xu → 1 đơn thành công, 3 đơn bị từ chối "Không đủ xu", kho của các đơn bị từ chối không bị trừ. (Đọc thường của
   InnoDB dùng ảnh chụp đầu giao dịch nên cả 4 đơn từng trừ được — lỗi đã sửa.)
-- Xu là khoản giảm của đơn nên doanh thu cửa hàng (theo `finalAmount`) đã trừ phần xu.
+- Xu là khoản giảm của đơn nên doanh thu cửa hàng (theo `finalAmount`) đã trừ phần xu; báo cáo tóm tắt có `coinsTotal`
+  (phần giảm do xu, đã nằm trong `discountTotal`). Thông báo "Đơn hàng đã hoàn thành" ghi số xu khách nhận được.
 - `GET /coins/me?page&size` — số dư, quy tắc (`earnPercent`, `maxRedeemPercent`), lịch sử mới nhất trước.
 
 ## Đổi / trả hàng

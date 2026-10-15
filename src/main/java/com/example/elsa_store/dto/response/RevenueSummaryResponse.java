@@ -20,6 +20,8 @@ public class RevenueSummaryResponse {
     private Double netRevenue;     // sum(finalAmount)
     /** Phí giao hàng khách đã trả (nằm trong doanh thu thực thu): gộp − giảm + phí giao = thực thu. */
     private Double shippingTotal;  // sum(shippingFee)
+    /** Phần giảm do khách dùng xu thưởng (đã nằm trong {@code discountTotal}, 1 xu = 1đ). */
+    private Double coinsTotal;     // sum(coinsUsed)
 
     private Double averageOrderValue; // netRevenue / ordersCount
     /** Tiền hoàn cho khách trả hàng trong kỳ (theo ngày hoàn) và số yêu cầu đã hoàn. */

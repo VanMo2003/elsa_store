@@ -138,6 +138,8 @@ public class ReportServiceImpl implements ReportService {
         double discount = number(row[2]).doubleValue();
         double net = number(row[3]).doubleValue();
         double shipping = number(row[4]).doubleValue();
+        // Xu khách dùng (1 xu = 1đ) đã nằm trong discountTotal; tách riêng để cửa hàng biết phần giảm do xu.
+        double coins = row.length > 5 ? number(row[5]).doubleValue() : 0;
         Cost cost = cost(start(from), endExclusive(to), status, scope);
         double profit = net - cost.amount();
         List<Object[]> refundRows = returnRequestRepository.refundSummary(start(from), endExclusive(to), scope);
@@ -151,6 +153,7 @@ public class ReportServiceImpl implements ReportService {
                 .discountTotal(discount)
                 .netRevenue(net)
                 .shippingTotal(shipping)
+                .coinsTotal(coins)
                 .averageOrderValue(ordersCount == 0 ? 0.0 : net / ordersCount)
                 .refundTotal(refundTotal)
                 .refundCount(number(refund[1]).longValue())

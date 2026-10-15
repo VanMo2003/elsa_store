@@ -213,6 +213,21 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   (VNPay gọi máy chủ) đều công khai và **xác thực chữ ký HMAC-SHA512** cùng số tiền; xử lý lặp lại không đổi gì thêm
   (IPN trả mã `02` khi đã xác nhận). Trình duyệt mở callback nhận trang kết quả có nút mở app.
 
+## Ảnh sản phẩm
+
+Sản phẩm có **bộ ảnh** (tối đa 10) và một **ảnh đại diện** (`products.image_url`, hiện ở danh sách, giỏ, đơn, chat).
+App tạo sản phẩm bằng JSON rồi tải ảnh sau; tạo bằng multipart kèm `files` vẫn được.
+
+| API | Ý nghĩa |
+|---|---|
+| `POST /products/{id}/images` (multipart, phần `files`, nhiều ảnh) | Thêm ảnh; sản phẩm chưa có ảnh đại diện thì lấy ảnh đầu. Quá 10 ảnh → 400 |
+| `GET /products/{id}/images` | Bộ ảnh kèm `id`, `url`, `cover` (người của cửa hàng, ADMIN) |
+| `PUT /products/{id}/images/{imageId}/cover` | Đặt làm ảnh đại diện |
+| `DELETE /products/{id}/images/{imageId}` | Gỡ ảnh; gỡ ảnh đại diện thì ảnh còn lại đầu tiên thay vào. File giữ lại trên đĩa vì tin nhắn chat cũ còn trỏ tới |
+| `POST /product-variants/{id}/images` | Đổi ảnh của phân loại (ảnh vừa tải thành ảnh của phân loại) |
+
+Chủ, quản lý, nhân viên của cửa hàng được thêm / gỡ / đổi ảnh; ảnh được kiểm tra theo nội dung tệp (xem Bảo mật).
+
 ## Đánh giá sản phẩm và yêu thích
 
 **Đánh giá** (`product_reviews`): chỉ tài khoản khách (`USER`) có **đơn hoàn thành chứa sản phẩm** mới viết được, mỗi
@@ -403,7 +418,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 70 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 71 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

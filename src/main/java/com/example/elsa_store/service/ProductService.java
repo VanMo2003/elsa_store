@@ -4,6 +4,7 @@ package com.example.elsa_store.service;
 import com.example.elsa_store.dto.request.ProductRequest;
 import com.example.elsa_store.dto.request.ProductSearchRequest;
 import com.example.elsa_store.dto.response.ProductDetailResponse;
+import com.example.elsa_store.dto.response.ProductImageResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,7 +16,17 @@ public interface ProductService {
     ProductResponse update(Long id, ProductRequest request);
     void delete(Long id);
     ProductDetailResponse getById(Long id);
-    List<String> uploadImages(Long roomId, List<MultipartFile> files);
+    /** Thêm ảnh vào bộ ảnh; sản phẩm chưa có ảnh đại diện thì lấy ảnh đầu tiên. Tối đa {@code MAX_IMAGES} ảnh. */
+    List<String> uploadImages(Long productId, List<MultipartFile> files);
+
+    /** Bộ ảnh của sản phẩm (màn quản lý). */
+    List<ProductImageResponse> images(Long productId);
+
+    /** Gỡ một ảnh; nếu đó là ảnh đại diện thì ảnh còn lại đầu tiên thay vào. */
+    List<ProductImageResponse> deleteImage(Long productId, Long imageId);
+
+    /** Đặt một ảnh trong bộ ảnh làm ảnh đại diện. */
+    List<ProductImageResponse> setCover(Long productId, Long imageId);
     List<ProductResponse> getAll();
     List<ProductResponse> getAllByCategory(Long categoryId);
 

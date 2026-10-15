@@ -59,6 +59,8 @@ step(F2, "Tạo phân loại (biến thể)", "POST", "/product-variants", token
      body=("form", {"productId": "{{productId}}", "color": "Đen", "size": "42", "price": 1000000,
                     "sku": "SKU-{{runSuffix}}", "status": 1}),
      saves=[("variantId", "j.data.id", lambda j: j["data"]["id"])])
+step(F2, "Bộ ảnh sản phẩm (tải ảnh: POST /products/{id}/images, multipart 'files')", "GET",
+     "/products/{{productId}}/images", token="staffToken")
 step(F2, "Kiểm kê: bắt đầu theo dõi kho + giá vốn", "PUT", "/inventories/variants/{{variantId}}", token="ownerToken",
      body={"quantity": 5, "minQuantity": 2, "costPrice": 600000, "note": "Kiểm kê đầu kỳ"})
 step(F2, "Tạo nhà cung cấp", "POST", "/suppliers", token="ownerToken",

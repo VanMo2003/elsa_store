@@ -8,6 +8,8 @@ import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductImage;
 import com.example.elsa_store.entity.ProductVariant;
 import com.example.elsa_store.entity.ProductVariantImage;
+import com.example.elsa_store.exception.AppException;
+import com.example.elsa_store.exception.ErrorCode;
 import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.mapper.ProductVariantMapper;
 import com.example.elsa_store.repository.ProductRepository;
@@ -127,6 +129,9 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ProductVariant productVariant = productVariantRepository.findById(productVariantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product VariantId not found with id=" + productVariantId));
         accessGuard.authorize(productVariant.getProduct().getStore(), Access.STAFF_WRITE);
+        if (files == null || files.isEmpty()) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "files: must not be empty");
+        }
 
         List<String> urls = files.stream().map(fileStorageService::storeProductImage).toList();
 
@@ -138,7 +143,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ).toList();
 
         productVariantImageRepository.saveAll(images);
-
+        // Ảnh vừa tải là ảnh hiện tại của phân loại (app dùng API này cho nút "Đổi ảnh").
+        productVariant.setImageUrl(urls.getFirst());
         return urls;
     }
 

@@ -4,6 +4,7 @@ package com.example.elsa_store.controller;
 import com.example.elsa_store.dto.request.ProductRequest;
 import com.example.elsa_store.dto.request.ProductSearchRequest;
 import com.example.elsa_store.dto.response.ProductDetailResponse;
+import com.example.elsa_store.dto.response.ProductImageResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
 import com.example.elsa_store.service.ProductService;
 import jakarta.validation.Valid;
@@ -81,6 +82,22 @@ public class ProductController {
             @RequestPart("files") List<MultipartFile> files
     ) {
         return ApiResponse.ok(productService.uploadImages(id, files));
+    }
+
+    /** Bộ ảnh của sản phẩm kèm id (để gỡ / chọn ảnh đại diện); người của cửa hàng và ADMIN. */
+    @GetMapping("/{id}/images")
+    public ApiResponse<List<ProductImageResponse>> images(@PathVariable Long id) {
+        return ApiResponse.ok(productService.images(id));
+    }
+
+    @DeleteMapping("/{id}/images/{imageId}")
+    public ApiResponse<List<ProductImageResponse>> deleteImage(@PathVariable Long id, @PathVariable Long imageId) {
+        return ApiResponse.ok(productService.deleteImage(id, imageId));
+    }
+
+    @PutMapping("/{id}/images/{imageId}/cover")
+    public ApiResponse<List<ProductImageResponse>> setCover(@PathVariable Long id, @PathVariable Long imageId) {
+        return ApiResponse.ok(productService.setCover(id, imageId));
     }
 
     @PostMapping("/search")

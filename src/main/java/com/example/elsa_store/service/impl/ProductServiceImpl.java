@@ -6,12 +6,15 @@ import com.example.elsa_store.dto.request.ProductRequest;
 import com.example.elsa_store.dto.request.ProductSearchRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.ProductDetailResponse;
+import com.example.elsa_store.dto.response.ProductImageResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
 import com.example.elsa_store.entity.Category;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductImage;
 import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.entity.User;
+import com.example.elsa_store.exception.AppException;
+import com.example.elsa_store.exception.ErrorCode;
 import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.mapper.ProductMapper;
 import com.example.elsa_store.repository.CategoryRepository;
@@ -41,6 +44,9 @@ import java.util.List;
 @Service
 @Transactional
 public class ProductServiceImpl implements ProductService {
+
+    /** Số ảnh tối đa trong bộ ảnh của một sản phẩm. */
+    static final int MAX_IMAGES = 10;
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -136,6 +142,12 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id=" + productId));
         accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
+        if (files == null || files.isEmpty()) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "files: must not be empty");
+        }
+        if (productImageRepository.countByProduct_Id(productId) + files.size() > MAX_IMAGES) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "A product can have at most " + MAX_IMAGES + " images");
+        }
 
         List<String> urls = files.stream().map(fileStorageService::storeProductImage).toList();
 
@@ -147,8 +159,60 @@ public class ProductServiceImpl implements ProductService {
         ).toList();
 
         productImageRepository.saveAll(images);
-
+        if (product.getImageUrl() == null || product.getImageUrl().isBlank()) {
+            product.setImageUrl(urls.getFirst());
+        }
         return urls;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductImageResponse> images(Long productId) {
+        Product product = find(productId);
+        accessGuard.authorize(product.getStore(), Access.READ);
+        return imageList(product);
+    }
+
+    /**
+     * Chỉ gỡ khỏi bộ ảnh, không xoá file: tin nhắn chat đã gửi kèm thẻ sản phẩm vẫn giữ đường dẫn ảnh cũ.
+     */
+    @Override
+    public List<ProductImageResponse> deleteImage(Long productId, Long imageId) {
+        Product product = find(productId);
+        accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
+        ProductImage image = findImage(productId, imageId);
+        productImageRepository.delete(image);
+        productImageRepository.flush();
+        if (image.getImageUrl().equals(product.getImageUrl())) {
+            product.setImageUrl(productImageRepository.findAllByProduct_IdOrderByIdAsc(productId).stream()
+                    .map(ProductImage::getImageUrl)
+                    .findFirst()
+                    .orElse(null));
+        }
+        return imageList(product);
+    }
+
+    @Override
+    public List<ProductImageResponse> setCover(Long productId, Long imageId) {
+        Product product = find(productId);
+        accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
+        product.setImageUrl(findImage(productId, imageId).getImageUrl());
+        return imageList(product);
+    }
+
+    private ProductImage findImage(Long productId, Long imageId) {
+        return productImageRepository.findByIdAndProduct_Id(imageId, productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found"));
+    }
+
+    private List<ProductImageResponse> imageList(Product product) {
+        return productImageRepository.findAllByProduct_IdOrderByIdAsc(product.getId()).stream()
+                .map(image -> ProductImageResponse.builder()
+                        .id(image.getId())
+                        .url(image.getImageUrl())
+                        .cover(image.getImageUrl().equals(product.getImageUrl()))
+                        .build())
+                .toList();
     }
 
     @Override

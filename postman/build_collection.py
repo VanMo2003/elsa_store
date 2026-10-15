@@ -110,6 +110,9 @@ step(F3, "Nhân viên giao cho đơn vị vận chuyển", "PUT", "/orders/{{ord
 step(F3, "Khách bấm Đã nhận được hàng (hoàn thành, ghi nhận doanh thu)", "PUT", "/orders/{{orderId}}/status",
      token="customerToken", query={"status": "HOAN_THANH"})
 step(F3, "Chi tiết đơn kèm dòng thời gian", "GET", "/orders/{{orderId}}", token="customerToken")
+step(F3, "Cửa hàng: danh sách đơn phân trang, tìm theo SĐT", "GET", "/orders/page", token="staffToken",
+     query={"keyword": "0900000099", "page": "0", "size": "20"})
+step(F3, "Cửa hàng: số đơn theo trạng thái", "GET", "/orders/counts", token="staffToken")
 step(F3, "Đơn thứ hai: khách đặt rồi tự huỷ kèm lý do", "POST", "/orders", token="customerToken",
      body={"addressId": "{{addressId}}", "items": [{"productVariantId": "{{variantId}}", "quantity": 1}]},
      saves=[("cancelOrderId", "j.data.id", lambda j: j["data"]["id"])])

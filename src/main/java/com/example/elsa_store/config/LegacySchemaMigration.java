@@ -46,8 +46,39 @@ public class LegacySchemaMigration implements InitializingBean {
         try {
             enumColumnToVarchar("orders", "status", "varchar(30) null");
             enumColumnToVarchar("notifications", "type", "varchar(40) not null");
+            for (String[] column : ENUM_TEXT_COLUMNS) {
+                dropEnumValueChecks(column[0], column[1]);
+            }
         } catch (Exception e) {
             log.error("Cannot convert orders.status / notifications.type to varchar - new statuses will not save", e);
+        }
+    }
+
+    /** Cột enum lưu dạng chuỗi ({@code @JdbcTypeCode(VARCHAR)}) mà ứng dụng sẽ còn thêm giá trị mới. */
+    private static final List<String[]> ENUM_TEXT_COLUMNS = List.of(
+            new String[] {"orders", "status"},
+            new String[] {"notifications", "type"},
+            new String[] {"order_status_history", "status"},
+            new String[] {"return_requests", "status"});
+
+    /**
+     * Trên CSDL mới, Hibernate tạo kèm {@code check (status in ('A','B'…))} với đúng các giá trị lúc tạo bảng; giá trị thêm
+     * sau đó (loại thông báo, trạng thái mới) bị MySQL từ chối (lỗi 3819). Bước này chạy mỗi lần khởi động, trước
+     * Hibernate, nên bản nâng cấp nào thêm giá trị mới cũng lưu được.
+     */
+    private void dropEnumValueChecks(String table, String column) {
+        List<String> names = jdbc.queryForList(
+                """
+                select tc.constraint_name from information_schema.table_constraints tc
+                join information_schema.check_constraints cc
+                  on cc.constraint_schema = tc.constraint_schema and cc.constraint_name = tc.constraint_name
+                where tc.table_schema = database() and tc.table_name = ? and tc.constraint_type = 'CHECK'
+                  and cc.check_clause like ? and lower(cc.check_clause) like '% in (%'
+                """,
+                String.class, table, "%`" + column + "`%");
+        for (String name : names) {
+            log.warn("Dropping enum value check {}.{} ({})", table, name, column);
+            jdbc.execute("alter table `" + table + "` drop check `" + name.replace("`", "``") + "`");
         }
     }
 

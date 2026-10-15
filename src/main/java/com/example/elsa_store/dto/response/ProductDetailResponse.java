@@ -3,6 +3,7 @@ package com.example.elsa_store.dto.response;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -35,6 +36,8 @@ public class ProductDetailResponse {
     private Double salePrice;
     private Integer discountPercent;
     private String promotionName;
+    /** Lúc khuyến mãi đang áp dụng kết thúc (00:00 ngày sau ngày cuối); null = không giới hạn hoặc không giảm. */
+    private LocalDateTime promotionEndsAt;
     /** false = mọi biến thể đều hết hàng; null = chưa theo dõi kho. */
     private Boolean inStock;
 

@@ -60,6 +60,7 @@ public class CatalogPresenter {
                         res.setSalePrice(price.salePrice());
                         res.setDiscountPercent(price.percentOff());
                         res.setPromotionName(price.promotionName());
+                        res.setPromotionEndsAt(price.promotionEndsAt());
                     }
                     res.setInStock(stock.get(product.getId()));
                     double[] rating = ratings.get(product.getId());
@@ -84,6 +85,7 @@ public class CatalogPresenter {
             res.setSalePrice(price.salePrice());
             res.setDiscountPercent(price.percentOff());
             res.setPromotionName(price.promotionName());
+            res.setPromotionEndsAt(price.promotionEndsAt());
         }
         res.setProductVariants(variants(variants, promos));
         res.setImages(images);
@@ -119,6 +121,7 @@ public class CatalogPresenter {
         if (price.discounted()) {
             res.setSalePrice(price.salePrice());
             res.setPromotionName(price.promotionName());
+            res.setPromotionEndsAt(price.promotionEndsAt());
         }
         res.setStock(stock.get(v.getId()));
         return res;

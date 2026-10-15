@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.text.NumberFormat;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -84,6 +85,13 @@ public class PricingService {
 
         public String promotionName() {
             return promotion == null ? null : promotion.getName();
+        }
+
+        /** Ngày kết thúc tính trọn ngày: khuyến mãi hết hiệu lực lúc 00:00 ngày hôm sau. */
+        public LocalDateTime promotionEndsAt() {
+            return !discounted() || promotion.getEndDate() == null
+                    ? null
+                    : promotion.getEndDate().plusDays(1).atStartOfDay();
         }
     }
 

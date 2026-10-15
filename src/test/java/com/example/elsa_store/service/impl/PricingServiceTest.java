@@ -104,6 +104,17 @@ class PricingServiceTest {
         PricingService.Discounted none = PricingService.best(100_000.0, List.of());
         assertFalse(none.discounted());
         assertNull(none.percentOff());
+        assertNull(none.promotionEndsAt());
+    }
+
+    @Test
+    void promotionEndsAtMidnightAfterItsLastDay() {
+        Promotion limited = promo(5, PricingService.TYPE_PERCENTAGE, 10);
+        limited.setEndDate(java.time.LocalDate.of(2026, 10, 20));
+        assertEquals(java.time.LocalDateTime.of(2026, 10, 21, 0, 0),
+                PricingService.best(100_000.0, List.of(limited)).promotionEndsAt());
+        assertNull(PricingService.best(100_000.0, List.of(promo(6, PricingService.TYPE_PERCENTAGE, 10))).promotionEndsAt(),
+                "không có ngày kết thúc thì không đếm ngược");
     }
 
     @Test

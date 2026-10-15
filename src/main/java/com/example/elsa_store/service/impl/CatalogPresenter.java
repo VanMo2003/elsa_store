@@ -10,6 +10,7 @@ import com.example.elsa_store.entity.Promotion;
 import com.example.elsa_store.mapper.ProductMapper;
 import com.example.elsa_store.mapper.ProductVariantMapper;
 import com.example.elsa_store.repository.InventoryRepository;
+import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
 import org.springframework.stereotype.Component;
@@ -30,18 +31,30 @@ public class CatalogPresenter {
     private final InventoryRepository inventoryRepository;
     private final ProductVariantRepository productVariantRepository;
     private final ProductReviewRepository reviewRepository;
+    private final OrderItemRepository orderItemRepository;
 
     public CatalogPresenter(
             PricingService pricingService,
             StockService stockService,
             InventoryRepository inventoryRepository,
             ProductVariantRepository productVariantRepository,
-            ProductReviewRepository reviewRepository) {
+            ProductReviewRepository reviewRepository,
+            OrderItemRepository orderItemRepository) {
         this.pricingService = pricingService;
         this.stockService = stockService;
         this.inventoryRepository = inventoryRepository;
         this.productVariantRepository = productVariantRepository;
         this.reviewRepository = reviewRepository;
+        this.orderItemRepository = orderItemRepository;
+    }
+
+    /** Số món đã bán của nhiều sản phẩm — một truy vấn; sản phẩm chưa bán được món nào không có trong map. */
+    private Map<Long, Long> sold(List<Long> productIds) {
+        Map<Long, Long> result = new HashMap<>();
+        for (Object[] row : orderItemRepository.soldByProduct(productIds)) {
+            result.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+        }
+        return result;
     }
 
     public List<ProductResponse> products(List<Product> products) {
@@ -52,6 +65,7 @@ public class CatalogPresenter {
         Map<Long, List<Promotion>> promos = pricingService.productPromotions(ids);
         Map<Long, Boolean> stock = inStock(ids);
         Map<Long, double[]> ratings = ProductReviewServiceImpl.stats(reviewRepository, ids);
+        Map<Long, Long> sold = sold(ids);
         return products.stream()
                 .map(product -> {
                     ProductResponse res = ProductMapper.toResponse(product);
@@ -68,6 +82,7 @@ public class CatalogPresenter {
                         res.setRatingAverage(rating[0]);
                         res.setRatingCount((long) rating[1]);
                     }
+                    res.setSoldCount(sold.getOrDefault(product.getId(), 0L));
                     return res;
                 })
                 .toList();
@@ -95,6 +110,7 @@ public class CatalogPresenter {
             res.setRatingAverage(rating[0]);
             res.setRatingCount((long) rating[1]);
         }
+        res.setSoldCount(sold(List.of(product.getId())).getOrDefault(product.getId(), 0L));
         return res;
     }
 

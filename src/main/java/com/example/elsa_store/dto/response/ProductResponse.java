@@ -37,4 +37,6 @@ public class ProductResponse {
     private Double ratingAverage;
 
     private Long ratingCount;
+    /** Số món đã bán (đơn hoàn thành). */
+    private Long soldCount;
 }

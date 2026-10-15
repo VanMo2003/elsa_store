@@ -105,6 +105,15 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     """)
     List<Long> bestSellingProductIds(@Param("since") LocalDateTime since, Pageable pageable);
 
+    /** Số món đã bán (đơn hoàn thành) của từng sản phẩm: các dòng {productId, tổng số món}. */
+    @Query("""
+        select i.productVariant.product.id, sum(i.quantity) from OrderItem i
+        where i.order.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+          and i.productVariant.product.id in :productIds
+        group by i.productVariant.product.id
+    """)
+    List<Object[]> soldByProduct(@Param("productIds") Collection<Long> productIds);
+
     /** Tổng số món đã giao xong của một cửa hàng ("đã bán"). */
     @Query("""
         select coalesce(sum(i.quantity), 0) from OrderItem i

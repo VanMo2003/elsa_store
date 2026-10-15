@@ -253,7 +253,8 @@ cửa hàng; `DELETE /stores/me/image` gỡ. Chủ và quản lý; ảnh hiện 
 **Đánh giá** (`product_reviews`): chỉ tài khoản khách (`USER`) có **đơn hoàn thành chứa sản phẩm** mới viết được, mỗi
 khách một đánh giá cho mỗi sản phẩm (viết lại = sửa, đánh dấu "đã sửa"). Đánh giá ghi kèm phân loại và mã đơn đã mua.
 Tên người viết được che (`khach001` → `k******1`). Danh sách / tìm kiếm / chi tiết sản phẩm trả thêm `ratingAverage`,
-`ratingCount` (tính gộp một truy vấn cho cả trang).
+`ratingCount` và `soldCount` (số món của đơn hoàn thành; đơn tại quầy chờ xác nhận chưa tính) — tính gộp một truy vấn
+cho cả trang.
 
 | Endpoint | Ai | Việc |
 |---|---|---|

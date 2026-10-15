@@ -164,6 +164,8 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
 - Khuyến mãi `type` 1 = giảm tiền, 2 = giảm phần trăm (≤ 100); chỉ khuyến mãi `status = 1` và còn hạn được áp. Khuyến
   mãi **không mã** gắn sản phẩm → hạ đơn giá từng sản phẩm; khuyến mãi không mã, không gắn sản phẩm → giảm cả đơn khi đạt
   `minOrderValue`; **mã giảm giá** thay cho khoản giảm cả đơn tự động (không cộng dồn). Tiền làm tròn đồng.
+- `GET /promotions/coupons?storeId=` (**công khai**): mã giảm giá đang chạy của cửa hàng kèm `productIds` (rỗng = mọi
+  sản phẩm) — app hiện ở trang sản phẩm và bước thanh toán.
 - Sản phẩm / phân loại đang được giảm có `salePrice`, `promotionName` và `promotionEndsAt` — lúc khuyến mãi hết hiệu
   lực: `endDate` tính trọn ngày nên là 00:00 ngày hôm sau (`null` khi không đặt ngày kết thúc). App dùng để đếm ngược.
 - Tạo / sửa khuyến mãi (`POST`, `PUT /promotions`, chủ / quản lý) gửi luôn `productIds` để khuyến mãi và danh sách sản

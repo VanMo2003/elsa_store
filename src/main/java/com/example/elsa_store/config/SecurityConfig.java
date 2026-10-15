@@ -43,6 +43,8 @@ public class SecurityConfig {
         "/product-variants/{id:\\d+}",
         "/stores",
         "/stores/{id:\\d+}",
+        // Mã giảm giá đang chạy của cửa hàng: hiện ở trang sản phẩm cho cả khách chưa đăng nhập.
+        "/promotions/coupons",
         // Cho app biết có hiện nút AI hay không (máy chủ chưa có khoá AI thì ẩn).
         "/ai/status",
         // Kết quả thanh toán VNPay (trình duyệt quay về và IPN máy chủ → máy chủ): xác thực bằng chữ ký VNPay.

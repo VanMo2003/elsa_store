@@ -10,8 +10,15 @@ import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.service.OrderService;
 import jakarta.validation.Valid;
 import com.example.elsa_store.dto.common.ApiResponse;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -85,6 +92,24 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ApiResponse.ok(orderService.search(status, keyword, storeId, page, size));
+    }
+
+    /** Tải danh sách đơn ra Excel theo bộ lọc (chủ / quản lý, ADMIN); {@code from}, {@code to} là ngày đặt. */
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long storeId) {
+        byte[] file = orderService.exportExcel(status, keyword, from, to, storeId);
+        String name = "don-hang" + (from == null ? "" : "-" + from) + (to == null ? "" : "_" + to) + ".xlsx";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(name, StandardCharsets.UTF_8).build().toString())
+                .body(file);
     }
 
     /** Số đơn theo từng trạng thái (và {@code ALL}) để hiện trên các bộ lọc. */

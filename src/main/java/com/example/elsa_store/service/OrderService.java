@@ -7,6 +7,7 @@ import com.example.elsa_store.dto.response.OrderQuoteResponse;
 import com.example.elsa_store.dto.response.OrderResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,12 @@ public interface OrderService {
      * thấy mọi đơn (hoặc một cửa hàng qua {@code storeId}). {@code keyword} tìm trong mã đơn, tên / SĐT người nhận và khách.
      */
     PageResponse<OrderResponse> search(OrderStatus status, String keyword, Long storeId, int page, int size);
+
+    /**
+     * Tệp Excel các đơn khớp bộ lọc (ngày đặt trong {@code [from, to]}, null = không giới hạn), tối đa
+     * {@code MAX_EXPORT_ROWS} đơn mới nhất. Chỉ chủ / quản lý (cửa hàng mình) và ADMIN.
+     */
+    byte[] exportExcel(OrderStatus status, String keyword, LocalDate from, LocalDate to, Long storeId);
 
     /** Số đơn theo trạng thái trong cùng phạm vi với {@link #search}, kèm {@code ALL} = tổng. */
     Map<String, Long> countByStatus(Long storeId);

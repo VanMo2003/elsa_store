@@ -22,6 +22,8 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,9 +55,10 @@ class OrderServiceImplTest {
             promotions, promotionLinks, Clock.fixed(Instant.parse("2026-10-14T03:00:00Z"), ZoneId.of("UTC")));
     private final OrderTimeline timeline = mock(OrderTimeline.class);
     private final StockAlerts stockAlerts = mock(StockAlerts.class);
+    private final OrderExcelExporter excel = mock(OrderExcelExporter.class);
     private final OrderServiceImpl service = new OrderServiceImpl(
             orders, customers, addresses, variants, carts, notifications, accessGuard, accounts, pricing, stock, timeline,
-            stockAlerts);
+            stockAlerts, excel);
 
     private User buyer;
     private User staff;
@@ -441,21 +444,45 @@ class OrderServiceImplTest {
 
     @Test
     void pagedListIsScopedToWhoIsLookingAndSearchesSafely() {
-        when(orders.search(any(), any(), any(), any(), any(Pageable.class)))
+        when(orders.search(any(), any(), any(), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         service.search(null, "  ORD-12 ", null, 0, 500);
-        verify(orders).search(isNull(), eq(7L), isNull(), eq("%ord-12%"),
+        verify(orders).search(isNull(), eq(7L), isNull(), eq("%ord-12%"), isNull(), isNull(),
                 eq(PageRequest.of(0, OrderServiceImpl.MAX_PAGE_SIZE)));
 
         when(accessGuard.currentUser()).thenReturn(staff);
         service.search(OrderStatus.DANG_GIAO, "   ", 99L, -3, 20);
         // Người của cửa hàng luôn bị giới hạn ở cửa hàng của mình, storeId gửi lên bị bỏ qua.
-        verify(orders).search(eq(1L), isNull(), eq(OrderStatus.DANG_GIAO), isNull(),
+        verify(orders).search(eq(1L), isNull(), eq(OrderStatus.DANG_GIAO), isNull(), isNull(), isNull(),
                 eq(PageRequest.of(0, 20)));
 
         assertEquals("%50%", OrderServiceImpl.likePattern("50%_\\"));
         assertNull(OrderServiceImpl.likePattern("%_"));
+    }
+
+    @Test
+    void excelExportIsForManagersAndUsesWholeDays() {
+        when(orders.search(any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(Page.empty());
+        when(excel.export(any())).thenReturn(new byte[] {1, 2});
+
+        when(accessGuard.currentUser()).thenReturn(staff);
+        when(accessGuard.requireStoreManager()).thenReturn(store);
+        assertEquals(2, service.exportExcel(null, "giay", LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 15), 99L).length);
+        verify(accessGuard).requireStoreManager();
+        verify(orders).search(eq(1L), isNull(), isNull(), eq("%giay%"),
+                eq(LocalDateTime.of(2026, 10, 1, 0, 0)), eq(LocalDateTime.of(2026, 10, 16, 0, 0)),
+                eq(PageRequest.of(0, OrderServiceImpl.MAX_EXPORT_ROWS)));
+
+        AppException backwards = assertThrows(AppException.class, () -> service.exportExcel(
+                null, null, LocalDate.of(2026, 10, 15), LocalDate.of(2026, 10, 1), null));
+        assertEquals(ErrorCode.BAD_REQUEST, backwards.getErrorCode());
+
+        // Khách không tải được danh sách đơn.
+        when(accessGuard.currentUser()).thenReturn(buyer);
+        AppException customer = assertThrows(AppException.class, () -> service.exportExcel(null, null, null, null, null));
+        assertEquals(ErrorCode.UN_AUTHORIZED, customer.getErrorCode());
     }
 
     @Test

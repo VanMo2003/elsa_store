@@ -22,7 +22,8 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     /**
-     * Danh sách đơn có phân trang: lọc theo cửa hàng / người mua (null = không lọc), trạng thái và từ khoá
+     * Danh sách đơn có phân trang: lọc theo cửa hàng / người mua (null = không lọc), trạng thái, ngày đặt {@code [from, to)}
+     * và từ khoá
      * ({@code %…%}, chữ thường) trên mã đơn, tên / SĐT người nhận và tên / SĐT khách. Mới đặt trước.
      */
     @Query(value = """
@@ -30,6 +31,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         where (:storeId is null or o.store.id = :storeId)
           and (:userId is null or o.user.id = :userId)
           and (:status is null or o.status = :status)
+          and (:from is null or o.orderDate >= :from)
+          and (:to is null or o.orderDate < :to)
           and (:keyword is null
                or lower(o.code) like :keyword
                or lower(o.receiverName) like :keyword
@@ -42,6 +45,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         where (:storeId is null or o.store.id = :storeId)
           and (:userId is null or o.user.id = :userId)
           and (:status is null or o.status = :status)
+          and (:from is null or o.orderDate >= :from)
+          and (:to is null or o.orderDate < :to)
           and (:keyword is null
                or lower(o.code) like :keyword
                or lower(o.receiverName) like :keyword
@@ -53,6 +58,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                        @Param("userId") Long userId,
                        @Param("status") OrderStatus status,
                        @Param("keyword") String keyword,
+                       @Param("from") LocalDateTime from,
+                       @Param("to") LocalDateTime to,
                        Pageable pageable);
 
     /** Số đơn theo từng trạng thái trong phạm vi (null = không lọc). */

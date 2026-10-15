@@ -169,6 +169,11 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   `GET /orders/counts` trả số đơn từng trạng thái kèm `ALL`. Phạm vi như `GET /orders`: khách thấy đơn của mình, người
   của cửa hàng chỉ thấy cửa hàng mình (`storeId` bị bỏ qua), ADMIN xem mọi đơn hoặc một cửa hàng. `GET /orders` (trả
   hết một lần) vẫn giữ cho bản app cũ.
+- **Xuất danh sách đơn ra Excel:** `GET /orders/export?status&keyword&from&to&storeId` (cùng bộ lọc, `from` / `to` là
+  ngày đặt) trả tệp gồm sheet "Đơn hàng" (trạng thái, thanh toán, kênh bán, khách, người nhận, tiền hàng / giảm / phí
+  giao / khách trả, người lập, lý do huỷ, dòng tổng không tính đơn huỷ) và sheet "Chi tiết" (từng món, SKU, đơn giá).
+  Tối đa 5.000 đơn mới nhất. Chỉ chủ / quản lý (cửa hàng mình) và ADMIN — tệp có SĐT, địa chỉ khách nên nhân viên không
+  tải được.
 - **Phí giao hàng** theo cửa hàng: chủ / quản lý đặt bằng `PUT /stores/me/shipping` `{shippingFee, freeShippingThreshold}`
   (làm tròn đồng; phí trống / 0 = giao miễn phí và bỏ luôn mức miễn phí). Đơn khách đặt có tiền hàng sau giảm từ
   `freeShippingThreshold` được miễn phí giao; đơn tại quầy không tính phí. Báo giá trả `shippingFee`,

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -70,6 +71,7 @@ public class OrderServiceImpl implements OrderService {
     private final StockService stockService;
     private final OrderTimeline timeline;
     private final StockAlerts stockAlerts;
+    private final OrderExcelExporter excelExporter;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -83,7 +85,8 @@ public class OrderServiceImpl implements OrderService {
             PricingService pricingService,
             StockService stockService,
             OrderTimeline timeline,
-            StockAlerts stockAlerts) {
+            StockAlerts stockAlerts,
+            OrderExcelExporter excelExporter) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.addressRepository = addressRepository;
@@ -96,6 +99,7 @@ public class OrderServiceImpl implements OrderService {
         this.stockService = stockService;
         this.timeline = timeline;
         this.stockAlerts = stockAlerts;
+        this.excelExporter = excelExporter;
     }
 
     // ------------------------------------------------------------------ đặt đơn
@@ -404,9 +408,35 @@ public class OrderServiceImpl implements OrderService {
         User current = accessGuard.currentUser();
         Scope scope = scope(current, storeId);
         Page<Order> result = orderRepository.search(scope.storeId(), scope.userId(), status, likePattern(keyword),
-                PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), MAX_PAGE_SIZE)));
+                null, null, PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), MAX_PAGE_SIZE)));
         Viewer viewer = viewer(current);
         return PageResponse.from(result.map(o -> toResponse(o, viewer)));
+    }
+
+    static final int MAX_EXPORT_ROWS = 5000;
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportExcel(OrderStatus status, String keyword, LocalDate from, LocalDate to, Long storeId) {
+        User current = accessGuard.currentUser();
+        Long scopeStore;
+        if (current.getRole() == Role.ADMIN) {
+            scopeStore = storeId;
+        } else if (current.getRole().isStoreRole()) {
+            // Có SĐT, địa chỉ của khách: chỉ chủ và quản lý được tải về.
+            scopeStore = accessGuard.requireStoreManager().getId();
+        } else {
+            throw new AppException(ErrorCode.UN_AUTHORIZED);
+        }
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "from: must not be after to");
+        }
+        List<Order> orders = orderRepository.search(scopeStore, null, status, likePattern(keyword),
+                        from == null ? null : from.atStartOfDay(),
+                        to == null ? null : to.plusDays(1).atStartOfDay(),
+                        PageRequest.of(0, MAX_EXPORT_ROWS))
+                .getContent();
+        return excelExporter.export(orders);
     }
 
     @Override

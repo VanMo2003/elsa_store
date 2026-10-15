@@ -61,6 +61,7 @@ public class ReturnServiceImpl implements ReturnService {
     private final NotificationService notificationService;
     private final ReturnPolicy policy;
     private final Clock clock;
+    private CoinWallet coinWallet;
 
     @Autowired
     public ReturnServiceImpl(
@@ -260,8 +261,17 @@ public class ReturnServiceImpl implements ReturnService {
                     "Khách trả hàng " + r.getCode(), manager);
         }
         r = returnRepository.save(r);
+        if (coinWallet != null) {
+            coinWallet.revokeForRefund(r.getOrder(), amount);
+        }
         notifyCustomer(r, NotificationMessages.returnRefunded(r));
         return toResponse(r, manager);
+    }
+
+    /** Thu lại xu đã nhận khi hoàn tiền trả hàng (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
+    @Autowired
+    void setCoinWallet(CoinWallet coinWallet) {
+        this.coinWallet = coinWallet;
     }
 
     // ------------------------------------------------------------------ đọc

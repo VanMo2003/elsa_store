@@ -279,6 +279,25 @@ khuyến mãi / còn hàng / điểm đánh giá như danh sách sản phẩm), 
 `POST /wishlist/{productId}` (bấm lại không lỗi, tối đa 200 sản phẩm) và `DELETE /wishlist/{productId}` — hai lệnh này
 trả lại mảng id mới. Sản phẩm bị ẩn tự biến khỏi danh sách; xoá sản phẩm / tài khoản thì dòng yêu thích được dọn theo.
 
+## Xu thưởng
+
+Chỉ tài khoản khách (`USER`) có ví xu. Sổ `coin_transactions` ghi mọi biến động (`EARN`, `REDEEM`, `REFUND`, `REVOKE`,
+kèm số dư sau và đơn liên quan); số dư = tổng sổ.
+
+- **Nhận:** khi đơn chuyển sang hoàn thành (khách bấm đã nhận, cửa hàng hoàn thành, tự hoàn thành sau 7 ngày, kể cả đơn
+  tại quầy gắn tài khoản khách) được `COINS_EARN_PERCENT`% (mặc định 1%) tiền hàng thực trả — không tính phí giao, đã
+  trừ mọi khoản giảm. Mỗi đơn cộng một lần (`orders.coins_earned`).
+- **Dùng:** báo giá / đặt đơn gửi `useCoins: true` → dùng tối đa `COINS_MAX_REDEEM_PERCENT`% (mặc định 50%) tiền hàng,
+  1 xu = 1đ; xu tính vào `discountAmount`, ghi trong `discountNote`, lưu `orders.coins_used`. Báo giá trả `coinBalance`,
+  `coinsUsable`, `coinsUsed`, `coinsReward`.
+- **Huỷ / xoá đơn** chưa hoàn thành → hoàn lại xu đã dùng (một lần). **Trả hàng được hoàn tiền** → thu lại xu đã nhận
+  theo tỉ lệ tiền hoàn (cộng dồn không vượt số đã nhận; ví đã tiêu thì chỉ thu phần còn lại, không âm).
+- Ghi sổ luôn khoá dòng tài khoản rồi đọc số dư bằng truy vấn khoá (`FOR UPDATE`): đã thử 4 đơn dùng xu cùng lúc với ví
+  10.000 xu → 1 đơn thành công, 3 đơn bị từ chối "Không đủ xu", kho của các đơn bị từ chối không bị trừ. (Đọc thường của
+  InnoDB dùng ảnh chụp đầu giao dịch nên cả 4 đơn từng trừ được — lỗi đã sửa.)
+- Xu là khoản giảm của đơn nên doanh thu cửa hàng (theo `finalAmount`) đã trừ phần xu.
+- `GET /coins/me?page&size` — số dư, quy tắc (`earnPercent`, `maxRedeemPercent`), lịch sử mới nhất trước.
+
 ## Đổi / trả hàng
 
 Khách gửi yêu cầu trả hàng cho đơn **đã hoàn thành** trong 7 ngày (`ORDER_RETURN_WINDOW_DAYS`) kể từ lúc hoàn thành; đơn
@@ -442,7 +461,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 74 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 76 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi
@@ -473,6 +492,8 @@ dùng cho `docker compose`).
 | `ORDER_UNPAID_CANCEL_MINUTES` | `30` | Tự huỷ đơn VNPay chưa trả sau chừng này phút (tối thiểu 20); `0` = tắt |
 | `ORDER_AUTO_COMPLETE_DAYS` | `7` | Tự hoàn thành đơn đang giao sau chừng này ngày; `0` = tắt |
 | `ORDER_RETURN_WINDOW_DAYS` | `7` | Khách gửi yêu cầu trả hàng trong chừng này ngày sau khi đơn hoàn thành; `0` = tắt |
+| `COINS_EARN_PERCENT` | `1` | % tiền hàng thực trả đổi thành xu khi đơn hoàn thành |
+| `COINS_MAX_REDEEM_PERCENT` | `50` | % tiền hàng tối đa trả bằng xu trong một đơn (1 xu = 1đ) |
 | `FIREBASE_CREDENTIALS` | trống | Đường dẫn file JSON service account Firebase; trống thì tắt push |
 | `GEMINI_API_KEY` | trống | Khoá Google AI Studio; có khoá thì bật trợ lý AI (provider tự chọn là `gemini`) |
 | `ANTHROPIC_API_KEY` | trống | Dùng Claude thay Gemini (provider `anthropic`) |

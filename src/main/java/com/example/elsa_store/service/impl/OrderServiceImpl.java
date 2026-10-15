@@ -16,6 +16,7 @@ import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.OrderNotificationService;
 import com.example.elsa_store.service.OrderService;
+import com.example.elsa_store.utils.NotificationMessages;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -73,6 +74,7 @@ public class OrderServiceImpl implements OrderService {
     private final StockAlerts stockAlerts;
     private final OrderExcelExporter excelExporter;
     private final ReturnPolicy returnPolicy;
+    private final CoinWallet coinWallet;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -88,7 +90,8 @@ public class OrderServiceImpl implements OrderService {
             OrderTimeline timeline,
             StockAlerts stockAlerts,
             OrderExcelExporter excelExporter,
-            ReturnPolicy returnPolicy) {
+            ReturnPolicy returnPolicy,
+            CoinWallet coinWallet) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.addressRepository = addressRepository;
@@ -103,6 +106,7 @@ public class OrderServiceImpl implements OrderService {
         this.stockAlerts = stockAlerts;
         this.excelExporter = excelExporter;
         this.returnPolicy = returnPolicy;
+        this.coinWallet = coinWallet;
     }
 
     // ------------------------------------------------------------------ đặt đơn
@@ -175,14 +179,17 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentStatus(online ? PaymentStatus.CHO_THANH_TOAN : PaymentStatus.CHUA_THANH_TOAN);
         order.setItems(items);
         double shipping = counterSale ? 0 : PricingService.shippingFee(store, quote.total());
+        int coins = !counterSale && Boolean.TRUE.equals(request.getUseCoins()) ? coinWallet.usable(buyer, quote.total()) : 0;
         order.setTotalAmount(quote.originalSubtotal());
-        order.setDiscountAmount(quote.totalDiscount());
+        order.setDiscountAmount(PricingService.money(quote.totalDiscount() + coins));
         order.setShippingFee(counterSale ? null : shipping);
-        order.setFinalAmount(PricingService.money(quote.total() + shipping));
+        order.setFinalAmount(PricingService.money(quote.total() - coins + shipping));
         order.setCouponCode(quote.couponCode());
-        order.setDiscountNote(quote.discountNote());
+        order.setDiscountNote(withCoins(quote.discountNote(), coins));
+        order.setCoinsUsed(coins > 0 ? coins : null);
 
         order = orderRepository.save(order);
+        coinWallet.redeem(buyer, order, coins);
         timeline.record(order, OrderStatus.CHUA_XAC_NHAN, current, null);
         stockService.recordSale(order, current);
         stockAlerts.afterSale(order);
@@ -240,7 +247,14 @@ public class OrderServiceImpl implements OrderService {
         Double missing = chargesShipping && threshold != null && shipping > 0
                 ? PricingService.money(threshold - quote.total())
                 : null;
+        User coinOwner = counterSale ? null : current;
+        int coinsUsable = coinWallet.usable(coinOwner, quote.total());
+        int coinsUsed = Boolean.TRUE.equals(request.getUseCoins()) ? coinsUsable : 0;
         return OrderQuoteResponse.builder()
+                .coinBalance(coinWallet.balance(coinOwner))
+                .coinsUsable(coinsUsable)
+                .coinsUsed(coinsUsed)
+                .coinsReward(CoinWallet.eligible(coinOwner) ? coinWallet.rewardFor(quote.total() - coinsUsed) : 0)
                 .storeId(store.getId())
                 .storeName(store.getName())
                 .items(lines)
@@ -250,12 +264,12 @@ public class OrderServiceImpl implements OrderService {
                 .orderDiscount(quote.orderDiscount())
                 .couponCode(quote.couponCode())
                 .orderPromotionName(quote.orderPromotionName())
-                .totalDiscount(quote.totalDiscount())
+                .totalDiscount(PricingService.money(quote.totalDiscount() + coinsUsed))
                 .shippingFee(shipping)
                 .freeShippingThreshold(chargesShipping ? threshold : null)
                 .amountToFreeShipping(missing)
-                .total(PricingService.money(quote.total() + shipping))
-                .discountNote(quote.discountNote())
+                .total(PricingService.money(quote.total() - coinsUsed + shipping))
+                .discountNote(withCoins(quote.discountNote(), coinsUsed))
                 .stockProblem(stockProblem)
                 .build();
     }
@@ -514,6 +528,16 @@ public class OrderServiceImpl implements OrderService {
         return orders.stream().map(o -> toResponse(o, viewer)).toList();
     }
 
+    /** Ghi chú giảm giá kèm phần xu, cắt cho vừa cột 255 ký tự. */
+    static String withCoins(String discountNote, int coins) {
+        if (coins <= 0) {
+            return discountNote;
+        }
+        String part = "Dùng " + coins + " xu -" + NotificationMessages.money((double) coins);
+        String note = discountNote == null || discountNote.isBlank() ? part : discountNote + "; " + part;
+        return note.length() <= 255 ? note : note.substring(0, 255);
+    }
+
     // ------------------------------------------------------------------ đổi trạng thái
 
     @Override
@@ -523,7 +547,9 @@ public class OrderServiceImpl implements OrderService {
         // Đơn chưa giao xong mà bị xoá: hàng chưa rời kho.
         if (order.getStatus() != OrderStatus.HOAN_THANH && order.getStatus() != OrderStatus.DA_HUY) {
             stockService.releaseOrder(order, "Xoá đơn", accessGuard.currentUser());
+            coinWallet.refundRedeemed(order);
         }
+        coinWallet.detach(order);
         timeline.deleteFor(order);
         orderRepository.delete(order);
     }
@@ -577,9 +603,11 @@ public class OrderServiceImpl implements OrderService {
         if (status == OrderStatus.DA_HUY) {
             order.setCancelReason(note);
             stockService.releaseOrder(order, "Huỷ đơn", current);
+            coinWallet.refundRedeemed(order);
         }
         if (status == OrderStatus.HOAN_THANH) {
             order.setCompletedAt(LocalDateTime.now());
+            coinWallet.earn(order);
         }
         if (status == OrderStatus.HOAN_THANH && paymentStatus == PaymentStatus.CHUA_THANH_TOAN) {
             // Đơn trả khi nhận hàng (COD) đã giao xong nghĩa là đã thu tiền.
@@ -609,9 +637,11 @@ public class OrderServiceImpl implements OrderService {
         if (target == OrderStatus.DA_HUY) {
             order.setCancelReason(note);
             stockService.releaseOrder(order, "Huỷ đơn", null);
+            coinWallet.refundRedeemed(order);
         }
         if (target == OrderStatus.HOAN_THANH) {
             order.setCompletedAt(LocalDateTime.now());
+            coinWallet.earn(order);
             if (payment == PaymentStatus.CHUA_THANH_TOAN) {
                 order.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
             }
@@ -748,6 +778,11 @@ public class OrderServiceImpl implements OrderService {
         res.setPaymentMethod(order.getPaymentMethod());
         res.setCouponCode(order.getCouponCode());
         res.setDiscountNote(order.getDiscountNote());
+        res.setCoinsUsed(order.getCoinsUsed());
+        res.setCoinsEarned(order.getCoinsEarned());
+        if (order.getStatus() != OrderStatus.DA_HUY && order.getStatus() != OrderStatus.HOAN_THANH) {
+            res.setCoinsReward(coinWallet.expectedReward(order));
+        }
         res.setReceiverName(order.getReceiverName());
         res.setReceiverPhone(order.getReceiverPhone());
         res.setShippingAddress(order.getShippingAddress());

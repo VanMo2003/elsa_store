@@ -36,8 +36,16 @@ public class OrderQuoteResponse {
     Double freeShippingThreshold;
     /** Còn thiếu bao nhiêu tiền hàng để được miễn phí giao; null khi đã miễn phí hoặc cửa hàng không có mức này. */
     Double amountToFreeShipping;
-    /** Khách phải trả: tiền hàng sau giảm + phí giao. */
+    /** Khách phải trả: tiền hàng sau giảm (kể cả xu) + phí giao. */
     double total;
+    /** Số dư xu của khách (0 với đơn tại quầy / tài khoản không phải khách). */
+    int coinBalance;
+    /** Số xu tối đa dùng được cho đơn này. */
+    int coinsUsable;
+    /** Số xu đang dùng (khi yêu cầu có {@code useCoins}); 1 xu = 1đ đã trừ vào {@code total}. */
+    int coinsUsed;
+    /** Xu sẽ nhận khi đơn hoàn thành. */
+    int coinsReward;
     String discountNote;
     /** Có dòng vượt tồn kho — app khoá nút đặt hàng. */
     boolean stockProblem;

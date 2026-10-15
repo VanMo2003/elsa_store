@@ -59,7 +59,8 @@ public class LegacySchemaMigration implements InitializingBean {
             new String[] {"orders", "status"},
             new String[] {"notifications", "type"},
             new String[] {"order_status_history", "status"},
-            new String[] {"return_requests", "status"});
+            new String[] {"return_requests", "status"},
+            new String[] {"coin_transactions", "type"});
 
     /**
      * Trên CSDL mới, Hibernate tạo kèm {@code check (status in ('A','B'…))} với đúng các giá trị lúc tạo bảng; giá trị thêm

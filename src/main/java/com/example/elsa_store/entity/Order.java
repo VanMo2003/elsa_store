@@ -106,6 +106,14 @@ public class Order extends BaseEntity {
     @Column(name = "coupon_code", length = 50)
     private String couponCode;
 
+    /** Xu khách dùng để giảm giá đơn (1 xu = 1đ, đã tính vào {@code discountAmount}); null = không dùng. */
+    @Column(name = "coins_used")
+    private Integer coinsUsed;
+
+    /** Xu khách nhận khi đơn hoàn thành; null = chưa cộng (đơn chưa xong hoặc không phải tài khoản khách). */
+    @Column(name = "coins_earned")
+    private Integer coinsEarned;
+
     /** Mô tả các khoản giảm, ví dụ "Giảm giá sản phẩm 50.000đ; Mã SALE10 -20.000đ". */
     @Column(name = "discount_note", length = 255)
     private String discountNote;

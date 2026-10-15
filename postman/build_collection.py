@@ -106,6 +106,9 @@ step(F3, "Thêm địa chỉ giao hàng", "POST", "/addresses", token="customerT
      saves=[("addressId", "j.data.id", lambda j: j["data"]["id"])])
 step(F3, "Báo giá trước khi đặt (kèm mã giảm giá, phí giao)", "POST", "/orders/quote", token="customerToken",
      body={"items": [{"productVariantId": "{{variantId}}", "quantity": 1}], "couponCode": "GIAM{{runSuffix}}"})
+step(F3, "Ví xu thưởng của khách (số dư, quy tắc, lịch sử)", "GET", "/coins/me", token="customerToken")
+step(F3, "Báo giá có dùng xu (useCoins; ví trống thì dùng 0 xu)", "POST", "/orders/quote", token="customerToken",
+     body={"items": [{"productVariantId": "{{variantId}}", "quantity": 1}], "useCoins": True})
 step(F3, "Đặt hàng COD", "POST", "/orders", token="customerToken",
      body={"addressId": "{{addressId}}", "couponCode": "GIAM{{runSuffix}}", "note": "Giao giờ hành chính",
            "items": [{"productVariantId": "{{variantId}}", "quantity": 1}]},

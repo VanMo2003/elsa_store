@@ -45,6 +45,9 @@ public class OrderRequest {
     /** Đặt từ giỏ hàng: các món đã đặt được bỏ khỏi giỏ. */
     private Boolean fromCart;
 
+    /** Khách dùng xu thưởng để giảm giá (tối đa theo quy tắc ví xu); đơn tại quầy bỏ qua. */
+    private Boolean useCoins;
+
     @NotNull
     @Valid
     private List<OrderItemRequest> items;

@@ -49,6 +49,12 @@ public class OrderResponse {
     private LocalDateTime returnDeadline;
     /** Lý do huỷ (khi đơn đã huỷ và người huỷ có nhập). */
     private String cancelReason;
+    /** Xu đã dùng cho đơn (null = không dùng). */
+    private Integer coinsUsed;
+    /** Xu đã nhận khi đơn hoàn thành. */
+    private Integer coinsEarned;
+    /** Xu sẽ nhận khi hoàn thành (đơn đang xử lý của tài khoản khách). */
+    private Integer coinsReward;
     /**
      * Dòng thời gian, cũ nhất trước — chỉ có ở API xem / đổi một đơn (danh sách để trống cho nhẹ). Đơn cũ chưa có lịch
      * sử được dựng lại từ ngày đặt và ngày hoàn thành.

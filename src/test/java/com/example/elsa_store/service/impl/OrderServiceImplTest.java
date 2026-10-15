@@ -1,6 +1,7 @@
 package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.constant.ApprovalStatus;
+import com.example.elsa_store.constant.CoinTransactionType;
 import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.constant.PaymentStatus;
 import com.example.elsa_store.constant.Role;
@@ -35,6 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -56,9 +58,12 @@ class OrderServiceImplTest {
     private final OrderTimeline timeline = mock(OrderTimeline.class);
     private final StockAlerts stockAlerts = mock(StockAlerts.class);
     private final OrderExcelExporter excel = mock(OrderExcelExporter.class);
+    private final CoinTransactionRepository coinBook = mock(CoinTransactionRepository.class);
+    private final UserRepository users = mock(UserRepository.class);
+    private final CoinWallet coins = new CoinWallet(coinBook, users, 1, 50);
     private final OrderServiceImpl service = new OrderServiceImpl(
             orders, customers, addresses, variants, carts, notifications, accessGuard, accounts, pricing, stock, timeline,
-            stockAlerts, excel, new ReturnPolicy(7));
+            stockAlerts, excel, new ReturnPolicy(7), coins);
 
     private User buyer;
     private User staff;
@@ -236,6 +241,68 @@ class OrderServiceImplTest {
         order.setItems(new ArrayList<>(List.of(tracked, untracked)));
         when(orders.findById(900L)).thenReturn(Optional.of(order));
         return order;
+    }
+
+    @Test
+    void coinsCoverAtMostHalfTheGoodsAndAreTakenFromTheWallet() {
+        when(coinBook.balanceOf(7L)).thenReturn(900_000L);
+        when(coinBook.lockedBalanceOf(7L)).thenReturn(900_000L);
+        OrderRequest req = customerOrder();
+        req.setUseCoins(true);
+
+        OrderQuoteResponse quote = service.quote(req);
+        assertEquals(900_000, quote.getCoinBalance());
+        assertEquals(600_000, quote.getCoinsUsable(), "tối đa 50% của 1.200.000");
+        assertEquals(600_000, quote.getCoinsUsed());
+        assertEquals(600_000, quote.getTotal());
+        assertEquals(6_000, quote.getCoinsReward(), "1% tiền hàng thực trả");
+
+        OrderResponse res = service.create(req);
+        assertEquals(600_000, res.getFinalAmount());
+        assertEquals(600_000, res.getDiscountAmount());
+        assertEquals(600_000, res.getCoinsUsed());
+        assertEquals(6_000, res.getCoinsReward());
+        assertTrue(res.getDiscountNote().contains("600000 xu"), res.getDiscountNote());
+        verify(users).lockById(7L);
+        verify(coinBook).save(argThat(t -> t.getAmount() == -600_000 && t.getBalanceAfter() == 300_000
+                && t.getType() == CoinTransactionType.REDEEM));
+    }
+
+    @Test
+    void ordersWithoutCoinsOrAtTheCounterTouchNoWallet() {
+        when(coinBook.balanceOf(7L)).thenReturn(50_000L);
+        when(coinBook.lockedBalanceOf(7L)).thenReturn(50_000L);
+        OrderResponse res = service.create(customerOrder());
+        assertNull(res.getCoinsUsed());
+        assertEquals(1_200_000, res.getFinalAmount());
+
+        when(accessGuard.currentUser()).thenReturn(staff);
+        OrderRequest counter = OrderRequest.builder().items(new ArrayList<>(List.of(item(100L, 1)))).useCoins(true).build();
+        assertEquals(0, service.quote(counter).getCoinsUsable());
+        verify(coinBook, never()).save(any());
+    }
+
+    @Test
+    void cancellingGivesUsedCoinsBackOnceAndCompletingEarnsOnePercentOnce() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        Order cancelled = placed(OrderStatus.CHUA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
+        cancelled.setCoinsUsed(20_000);
+        when(coinBook.balanceOf(7L)).thenReturn(5_000L);
+        when(coinBook.lockedBalanceOf(7L)).thenReturn(5_000L);
+        service.updateStatus(900L, OrderStatus.DA_HUY);
+        verify(coinBook).save(argThat(t -> t.getAmount() == 20_000 && t.getBalanceAfter() == 25_000
+                && t.getType() == CoinTransactionType.REFUND));
+
+        Order done = placed(OrderStatus.DA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
+        done.setFinalAmount(330_000.0);
+        done.setShippingFee(30_000.0);
+        OrderResponse res = service.updateStatus(900L, OrderStatus.HOAN_THANH);
+        assertEquals(3_000, res.getCoinsEarned(), "1% của 300.000 tiền hàng, không tính phí giao");
+        assertNull(res.getCoinsReward());
+        verify(coinBook).save(argThat(t -> t.getAmount() == 3_000 && t.getType() == CoinTransactionType.EARN));
+
+        coins.earn(done);
+        verify(coinBook, times(2)).save(any());
     }
 
     @Test

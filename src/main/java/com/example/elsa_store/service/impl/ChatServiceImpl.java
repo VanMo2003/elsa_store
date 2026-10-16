@@ -79,6 +79,9 @@ public class ChatServiceImpl implements ChatService {
         if (!store.isApproved()) {
             throw new AppException(ErrorCode.STORE_NOT_APPROVED);
         }
+        if (store.isSuspended()) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "Cửa hàng đang tạm ngừng hoạt động trên Elsa Store");
+        }
         try {
             return transaction.execute(status -> openOrCreate(customer, store));
         } catch (DataIntegrityViolationException e) {

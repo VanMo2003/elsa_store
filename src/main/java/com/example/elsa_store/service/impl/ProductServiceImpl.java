@@ -348,7 +348,7 @@ public class ProductServiceImpl implements ProductService {
     /** Đang bán và (nếu có) cửa hàng đã được duyệt. */
     static boolean isPublic(Product product) {
         boolean active = product.getStatus() == null || product.getStatus() == 1;
-        boolean storeOpen = product.getStore() == null || product.getStore().isApproved();
+        boolean storeOpen = product.getStore() == null || product.getStore().isOpenToCustomers();
         return active && storeOpen;
     }
 

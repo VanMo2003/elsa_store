@@ -44,6 +44,7 @@ chỉ được ghi log.
 | Thanh toán chuyển sang thành công / thất bại (callback VNPay hoặc `PUT /orders/{id}/status?paymentStatus=`) | Khách | Trong app + push + email |
 | Có hồ sơ mở cửa hàng mới (hoặc chủ gửi lại hồ sơ) | Admin | Trong app + push |
 | Hồ sơ được duyệt / bị từ chối (kèm lý do) | Chủ cửa hàng | Trong app + push + email |
+| ADMIN đình chỉ (kèm lý do) / mở lại cửa hàng (`STORE_SUSPENDED` / `STORE_REINSTATED`) | Chủ, quản lý | Trong app + push |
 
 Chỉ báo khi trạng thái **thật sự đổi** (VNPay gọi lại nhiều lần không gửi trùng). Người nhận là tài
 khoản của khách hàng gắn với đơn, nếu đơn không có khách hàng thì là người tạo đơn.
@@ -490,6 +491,12 @@ Quy tắc chính:
   cho tới khi ADMIN gọi `PUT /store-registrations/{id}/approve`. Bị `reject` (kèm lý do) thì chủ sửa hồ sơ
   và gửi lại bằng `PUT /store-registrations/me`. ADMIN nhận thông báo khi có hồ sơ mới; chủ nhận thông báo
   và email khi có kết quả.
+- **Đình chỉ cửa hàng** (vi phạm): ADMIN gọi `PUT /store-registrations/{id}/suspend` `{reason}` với cửa hàng đã duyệt
+  → `stores.suspended`, `suspend_reason`, `suspended_at`. Cửa hàng và sản phẩm biến khỏi mọi chỗ khách thấy (trang cửa
+  hàng / sản phẩm trả 404, tìm kiếm, gợi ý, trang chủ, danh sách cửa hàng, yêu thích, thông báo "giảm giá / có hàng / sản
+  phẩm mới"); khách không đặt đơn online và không mở cuộc trò chuyện mới. Người của cửa hàng **vẫn đăng nhập và xử lý
+  đơn đang có**, tổng quan có `suspendReason`, `/stores/me` có `suspended`. Chủ và quản lý nhận `STORE_SUSPENDED`;
+  `PUT /store-registrations/{id}/reinstate` mở lại (`STORE_REINSTATED`). Bảng xếp hạng cửa hàng có cờ `suspended`.
 - **Nhân sự**: `/store-members` — chủ tạo quản lý và nhân viên, quản lý chỉ tạo nhân viên. Xoá tài khoản đã
   từng xử lý đơn thì BE khoá thay vì xoá. Tài khoản bị khoá không đăng nhập được và token đang dùng vô hiệu.
 - **ADMIN chỉ xem** dữ liệu của cửa hàng (đơn hàng, báo cáo — có thể truyền `storeId`); mọi thao tác ghi bị
@@ -532,7 +539,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 88 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 91 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

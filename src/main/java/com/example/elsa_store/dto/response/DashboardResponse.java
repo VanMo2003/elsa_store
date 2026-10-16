@@ -42,6 +42,9 @@ public class DashboardResponse {
     /** Đánh giá của khách chưa được trả lời (khi xem một cửa hàng). */
     private Long unrepliedReviews;
 
+    /** Cửa hàng đang xem bị ADMIN đình chỉ: lý do (null = đang hoạt động). */
+    private String suspendReason;
+
     /** Câu hỏi của khách chưa được trả lời (khi xem một cửa hàng). */
     private Long unansweredQuestions;
 

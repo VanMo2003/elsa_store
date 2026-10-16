@@ -42,6 +42,10 @@ step(F1, "ADMIN: hồ sơ chờ duyệt", "GET", "/store-registrations", token="
      saves=[("storeId", "j.data.content.find(s => s.name === 'Elsa Demo ' + pm.collectionVariables.get('runSuffix')).id",
              lambda j, v: [s for s in j["data"]["content"] if s["name"] == "Elsa Demo " + v["runSuffix"]][0]["id"])])
 step(F1, "ADMIN: duyệt cửa hàng", "PUT", "/store-registrations/{{storeId}}/approve", token="adminToken")
+step(F1, "ADMIN: đình chỉ cửa hàng (thử)", "PUT", "/store-registrations/{{storeId}}/suspend", token="adminToken",
+     body={"reason": "Kiểm tra đình chỉ"},
+     note="Cửa hàng bị ẩn khỏi sàn, khách không đặt đơn mới; request sau mở lại ngay để các bước tiếp theo chạy được.")
+step(F1, "ADMIN: mở lại cửa hàng", "PUT", "/store-registrations/{{storeId}}/reinstate", token="adminToken")
 step(F1, "Chủ cửa hàng đăng nhập", "POST", "/auth/login", body={"username": "own{{runSuffix}}", "password": "123456"},
      saves=[("ownerToken", "j.data.accessToken", lambda j: j["data"]["accessToken"])])
 step(F1, "Chủ tạo nhân viên", "POST", "/store-members", token="ownerToken",
@@ -193,6 +197,8 @@ step(F4, "Xuất Excel", "GET", "/reports/export", token="ownerToken", query={"f
      note="Postman: Send and Download để lưu tệp .xlsx.")
 
 step(F5, "Nhân viên không xem được báo cáo", "GET", "/reports/dashboard", token="staffToken", expect=403)
+step(F5, "Chủ cửa hàng không tự đình chỉ / mở lại", "PUT", "/store-registrations/{{storeId}}/reinstate",
+     token="ownerToken", expect=403)
 step(F5, "Chủ cửa hàng không xem bảng xếp hạng toàn sàn", "GET", "/reports/stores", token="ownerToken",
      query={"from": "{{today}}", "to": "{{today}}"}, expect=403)
 step(F5, "Nhân viên không mở được kho / giá vốn", "GET", "/inventories/stock", token="staffToken", expect=403)

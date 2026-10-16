@@ -37,6 +37,10 @@ public class StoreResponse {
     /** Đang tạm nghỉ bán và lời nhắn cho khách. */
     Boolean paused;
     String pauseNote;
+    /** ADMIN đình chỉ cửa hàng: lý do và thời điểm (chỉ trả cho chính cửa hàng và ADMIN). */
+    Boolean suspended;
+    String suspendReason;
+    LocalDateTime suspendedAt;
     /** Trang cửa hàng công khai: điểm đánh giá trung bình (một chữ số thập phân) trên mọi sản phẩm, trống khi chưa có. */
     Double ratingAverage;
     Long ratingCount;

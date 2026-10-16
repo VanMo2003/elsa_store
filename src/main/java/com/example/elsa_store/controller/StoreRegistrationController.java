@@ -57,4 +57,15 @@ public class StoreRegistrationController {
     public ApiResponse<StoreResponse> reject(@PathVariable Long id, @Valid @RequestBody StoreRejectRequest req) {
         return ApiResponse.ok(storeRegistrationService.reject(id, req));
     }
+
+    /** ADMIN đình chỉ cửa hàng đã duyệt: ẩn khỏi sàn, khách không đặt đơn mới; body {@code {reason}}. */
+    @PutMapping("/{id}/suspend")
+    public ApiResponse<StoreResponse> suspend(@PathVariable Long id, @Valid @RequestBody StoreRejectRequest req) {
+        return ApiResponse.ok(storeRegistrationService.suspend(id, req));
+    }
+
+    @PutMapping("/{id}/reinstate")
+    public ApiResponse<StoreResponse> reinstate(@PathVariable Long id) {
+        return ApiResponse.ok(storeRegistrationService.reinstate(id));
+    }
 }

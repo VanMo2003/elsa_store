@@ -18,12 +18,13 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     Page<Store> findAllByApprovalStatus(ApprovalStatus approvalStatus, Pageable pageable);
 
     /** Cửa hàng đang hoạt động — hiện công khai cho khách. */
-    @Query("select s from Store s where s.approvalStatus = com.example.elsa_store.constant.ApprovalStatus.APPROVED"
-            + " or s.approvalStatus is null")
+    @Query("select s from Store s where (s.approvalStatus = com.example.elsa_store.constant.ApprovalStatus.APPROVED"
+            + " or s.approvalStatus is null) and (s.suspended is null or s.suspended = false)")
     Page<Store> findAllApproved(Pageable pageable);
 
     /** Cửa hàng đang hoạt động có tên khớp mẫu {@code like} (đã thoát ký tự đặc biệt) — gợi ý tìm kiếm. */
     @Query("select s from Store s where (s.approvalStatus = com.example.elsa_store.constant.ApprovalStatus.APPROVED"
-            + " or s.approvalStatus is null) and lower(s.name) like :pattern escape '\\' order by s.id desc")
+            + " or s.approvalStatus is null) and (s.suspended is null or s.suspended = false)"
+            + " and lower(s.name) like :pattern escape '\\' order by s.id desc")
     List<Store> suggest(@Param("pattern") String pattern, Pageable pageable);
 }

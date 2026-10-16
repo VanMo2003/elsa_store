@@ -10,6 +10,7 @@ public record StoreRankingResponse(
         String name,
         String imageUrl,
         boolean paused,
+        boolean suspended,
         double revenue,
         double revenueShare,
         long completedOrders,

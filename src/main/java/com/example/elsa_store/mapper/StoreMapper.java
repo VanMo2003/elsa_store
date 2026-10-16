@@ -26,6 +26,9 @@ public class StoreMapper {
                 .freeShippingThreshold(s.getFreeShippingThreshold())
                 .paused(s.isPaused())
                 .pauseNote(s.isPaused() ? s.getPauseNote() : null)
+                .suspended(s.isSuspended())
+                .suspendReason(s.isSuspended() ? s.getSuspendReason() : null)
+                .suspendedAt(s.isSuspended() ? s.getSuspendedAt() : null)
                 .build();
     }
 

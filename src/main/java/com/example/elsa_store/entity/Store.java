@@ -83,8 +83,30 @@ public class Store extends BaseEntity {
     @Column(name = "pause_note", length = 255)
     private String pauseNote;
 
+    /**
+     * ADMIN đình chỉ (vi phạm): cửa hàng và sản phẩm bị ẩn khỏi sàn, khách không đặt đơn / mở cuộc trò chuyện mới; người
+     * của cửa hàng vẫn đăng nhập và xử lý các đơn đã có.
+     */
+    @Column(name = "suspended")
+    private Boolean suspended;
+
+    @Column(name = "suspend_reason", length = 1000)
+    private String suspendReason;
+
+    @Column(name = "suspended_at")
+    private LocalDateTime suspendedAt;
+
     public boolean isPaused() {
         return Boolean.TRUE.equals(paused);
+    }
+
+    public boolean isSuspended() {
+        return Boolean.TRUE.equals(suspended);
+    }
+
+    /** Hiện công khai cho khách: đã duyệt và không bị đình chỉ. */
+    public boolean isOpenToCustomers() {
+        return isApproved() && !isSuspended();
     }
 
     public boolean isApproved() {

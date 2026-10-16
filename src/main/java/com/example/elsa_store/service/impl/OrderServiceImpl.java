@@ -140,6 +140,9 @@ public class OrderServiceImpl implements OrderService {
             if (!store.isApproved()) {
                 throw new AppException(ErrorCode.BAD_REQUEST, "Store is not open");
             }
+            if (store.isSuspended()) {
+                throw new AppException(ErrorCode.BAD_REQUEST, "Cửa hàng đang tạm ngừng hoạt động trên Elsa Store");
+            }
             rejectIfPaused(store);
             buyer = current;
             customer = accountFactory.ensureCustomerProfile(current);

@@ -293,7 +293,8 @@ public class MailServiceImpl implements MailService {
             // Thông báo nội bộ (đơn mới cho cửa hàng, hồ sơ cửa hàng cho ADMIN) chỉ hiện trong app, không gửi email đơn hàng.
             case NEW_ORDER, STORE_REGISTERED, STORE_APPROVED, STORE_REJECTED, LOW_STOCK, RETURN_REQUESTED,
                     RETURN_UPDATED, REVIEW_NEW, REVIEW_REPLIED, BACK_IN_STOCK, PRICE_DROP, NEW_PRODUCT, QUESTION_NEW,
-                    QUESTION_ANSWERED, TIER_UP, CART_REMINDER -> null;
+                    QUESTION_ANSWERED, TIER_UP, CART_REMINDER, STORE_SUSPENDED,
+                    STORE_REINSTATED -> null;
         };
     }
 

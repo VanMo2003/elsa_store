@@ -25,4 +25,10 @@ public interface StoreRegistrationService {
     StoreResponse approve(Long id);
 
     StoreResponse reject(Long id, StoreRejectRequest req);
+
+    /** ADMIN đình chỉ cửa hàng đã duyệt (vi phạm) kèm lý do; báo chủ và quản lý. */
+    StoreResponse suspend(Long id, StoreRejectRequest req);
+
+    /** ADMIN mở lại cửa hàng bị đình chỉ; gọi lại khi đang mở thì không đổi gì. */
+    StoreResponse reinstate(Long id);
 }

@@ -38,5 +38,9 @@ public enum NotificationType {
     /** Cho khách: vừa lên hạng thành viên (nhận nhiều xu hơn). */
     TIER_UP,
     /** Cho khách: còn hàng trong giỏ đã lâu chưa đặt. */
-    CART_REMINDER
+    CART_REMINDER,
+    /** Cho chủ và quản lý: ADMIN đình chỉ cửa hàng. */
+    STORE_SUSPENDED,
+    /** Cho chủ và quản lý: ADMIN mở lại cửa hàng. */
+    STORE_REINSTATED
 }

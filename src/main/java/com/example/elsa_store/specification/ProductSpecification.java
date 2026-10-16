@@ -32,6 +32,11 @@ public final class ProductSpecification {
                     cb.isNull(store.get("id")),
                     cb.isNull(store.get("approvalStatus")),
                     cb.equal(store.get("approvalStatus"), ApprovalStatus.APPROVED)));
+            // Cửa hàng bị ADMIN đình chỉ: ẩn khỏi tìm kiếm.
+            predicates.add(cb.or(
+                    cb.isNull(store.get("id")),
+                    cb.isNull(store.get("suspended")),
+                    cb.isFalse(store.get("suspended"))));
 
             String keyword = req.getKeyword() == null ? "" : req.getKeyword().trim().toLowerCase(Locale.ROOT);
             if (!keyword.isEmpty()) {

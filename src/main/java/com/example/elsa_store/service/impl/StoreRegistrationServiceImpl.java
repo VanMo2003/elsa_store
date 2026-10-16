@@ -167,6 +167,44 @@ public class StoreRegistrationServiceImpl implements StoreRegistrationService {
         return StoreMapper.toResponse(store);
     }
 
+    @Override
+    public StoreResponse suspend(Long id, StoreRejectRequest req) {
+        accessGuard.requireAdmin();
+        Store store = findStore(id);
+        if (!store.isApproved()) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "Only approved stores can be suspended");
+        }
+        String reason = req.getReason().trim();
+        boolean changed = !store.isSuspended() || !reason.equals(store.getSuspendReason());
+        store.setSuspended(true);
+        store.setSuspendReason(reason);
+        if (store.getSuspendedAt() == null) {
+            store.setSuspendedAt(LocalDateTime.now());
+        }
+        store = storeRepository.save(store);
+        if (changed) {
+            notificationService.notifyStoreManagers(store, NotificationType.STORE_SUSPENDED,
+                    NotificationMessages.storeSuspended(store, reason), AppLinks.notifications(), store.getId());
+        }
+        return StoreMapper.toResponse(store);
+    }
+
+    @Override
+    public StoreResponse reinstate(Long id) {
+        accessGuard.requireAdmin();
+        Store store = findStore(id);
+        if (!store.isSuspended()) {
+            return StoreMapper.toResponse(store);
+        }
+        store.setSuspended(false);
+        store.setSuspendReason(null);
+        store.setSuspendedAt(null);
+        store = storeRepository.save(store);
+        notificationService.notifyStoreManagers(store, NotificationType.STORE_REINSTATED,
+                NotificationMessages.storeReinstated(store), AppLinks.notifications(), store.getId());
+        return StoreMapper.toResponse(store);
+    }
+
     private void notifyAdmins(Store store, boolean resubmitted) {
         notificationService.notifyAdmins(
                 NotificationType.STORE_REGISTERED,

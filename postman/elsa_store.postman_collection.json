@@ -292,6 +292,99 @@
           }
         },
         {
+          "name": "ADMIN: đình chỉ cửa hàng (thử)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store-registrations/{{storeId}}/suspend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store-registrations",
+                "{{storeId}}",
+                "suspend"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Kiểm tra đình chỉ\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cửa hàng bị ẩn khỏi sàn, khách không đặt đơn mới; request sau mở lại ngay để các bước tiếp theo chạy được."
+          }
+        },
+        {
+          "name": "ADMIN: mở lại cửa hàng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/store-registrations/{{storeId}}/reinstate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store-registrations",
+                "{{storeId}}",
+                "reinstate"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Chủ cửa hàng đăng nhập",
           "event": [
             {
@@ -3708,6 +3801,45 @@
                 {
                   "key": "token",
                   "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Chủ cửa hàng không tự đình chỉ / mở lại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/store-registrations/{{storeId}}/reinstate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store-registrations",
+                "{{storeId}}",
+                "reinstate"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
                   "type": "string"
                 }
               ]

@@ -54,7 +54,7 @@ public class StoreServiceImpl implements StoreService {
     public StoreResponse getPublic(Long id) {
         Store store = storeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found with id=" + id));
-        if (!store.isApproved()) {
+        if (!store.isOpenToCustomers()) {
             throw new ResourceNotFoundException("Store not found with id=" + id);
         }
         StoreResponse response = StoreMapper.toPublicResponse(store);

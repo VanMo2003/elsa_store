@@ -71,7 +71,7 @@ public class StoreFollowServiceImpl implements StoreFollowService {
 
     private Store openStore(Long storeId) {
         return storeRepository.findById(storeId)
-                .filter(Store::isApproved)
+                .filter(Store::isOpenToCustomers)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found with id=" + storeId));
     }
 }

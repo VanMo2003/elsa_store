@@ -381,6 +381,7 @@ public class ReportServiceImpl implements ReportService {
                     s.getName(),
                     s.getImageUrl(),
                     s.isPaused(),
+                    s.isSuspended(),
                     row.revenue(),
                     total == 0 ? 0 : row.revenue() / total,
                     row.completed(),
@@ -454,7 +455,12 @@ public class ReportServiceImpl implements ReportService {
             outOfStock = overview.getOutOfStockVariants();
         }
 
+        String suspendReason = scope == null
+                ? null
+                : storeRepository.findById(scope).filter(Store::isSuspended).map(Store::getSuspendReason).orElse(null);
+
         return DashboardResponse.builder()
+                .suspendReason(suspendReason)
                 .todayRevenue(orderRepository.revenueBetween(startOfToday, startOfTomorrow, scope))
                 .yesterdayRevenue(orderRepository.revenueBetween(today.minusDays(1).atStartOfDay(), startOfToday, scope))
                 .monthRevenue(monthRevenue)

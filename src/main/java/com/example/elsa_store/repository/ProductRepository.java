@@ -24,6 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
           and (p.store is null
                or p.store.approvalStatus = com.example.elsa_store.constant.ApprovalStatus.APPROVED
                or p.store.approvalStatus is null)
+          and (p.store is null or (p.store.suspended is null or p.store.suspended = false))
           and (:categoryId is null or p.category.id = :categoryId)
           and (:storeId is null or p.store.id = :storeId)
         order by p.id desc
@@ -39,6 +40,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
           and (p.store is null
                or p.store.approvalStatus = com.example.elsa_store.constant.ApprovalStatus.APPROVED
                or p.store.approvalStatus is null)
+          and (p.store is null or (p.store.suspended is null or p.store.suspended = false))
           and lower(p.name) like :pattern escape '\\'
         group by p.name
         order by max(p.id) desc

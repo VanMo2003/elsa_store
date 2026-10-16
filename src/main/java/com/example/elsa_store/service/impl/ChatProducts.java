@@ -72,7 +72,7 @@ public class ChatProducts {
 
     public static boolean onSale(Product product) {
         boolean active = product.getStatus() == null || product.getStatus() == 1;
-        boolean storeOpen = product.getStore() == null || product.getStore().isApproved();
+        boolean storeOpen = product.getStore() == null || product.getStore().isOpenToCustomers();
         return active && storeOpen;
     }
 

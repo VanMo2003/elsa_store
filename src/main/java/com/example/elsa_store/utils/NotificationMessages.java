@@ -254,6 +254,19 @@ public final class NotificationMessages {
                         + " đã sẵn sàng. Mở ứng dụng để thêm sản phẩm, quản lý và nhân viên.");
     }
 
+    public static Message storeSuspended(Store store, String reason) {
+        return new Message(
+                store.getName() + " bị tạm ngừng trên Elsa Store",
+                "Lý do: " + shorten(reason, 160) + " Khách không thấy cửa hàng và không đặt được đơn mới; bạn vẫn xử lý "
+                        + "các đơn đang có. Liên hệ quản trị viên để được mở lại.");
+    }
+
+    public static Message storeReinstated(Store store) {
+        return new Message(
+                store.getName() + " đã hoạt động lại",
+                "Quản trị viên đã mở lại cửa hàng. Khách lại thấy sản phẩm và đặt đơn bình thường.");
+    }
+
     public static Message storeRejected(Store store, String reason) {
         String trimmed = reason.trim();
         String separator = trimmed.matches(".*[.!?…]$") ? " " : ". ";

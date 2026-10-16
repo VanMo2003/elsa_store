@@ -21,6 +21,7 @@ import com.example.elsa_store.repository.UserRepository;
 import com.example.elsa_store.repository.WishlistItemRepository;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.service.AuthenticationService;
+import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Transactional
@@ -43,6 +45,7 @@ public class UserServiceImpl implements UserService {
     private final CustomerRepository customerRepository;
     private final UserAccountFactory accountFactory;
     private final AccessGuard accessGuard;
+    private final FileStorageService fileStorageService;
     private final AuthenticationService authenticationService;
 
     @Override
@@ -166,6 +169,21 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponse getMe() {
         return toResponse(accessGuard.currentUser());
+    }
+
+    @Override
+    public UserResponse updateAvatar(MultipartFile file) {
+        User user = accessGuard.currentUser();
+        user.setAvatarUrl(fileStorageService.storeAvatar(file));
+        return toResponse(userRepository.save(user));
+    }
+
+    /** File cũ giữ lại trên đĩa (đánh giá / tin nhắn đã tải về máy khác có thể còn trỏ tới). */
+    @Override
+    public UserResponse removeAvatar() {
+        User user = accessGuard.currentUser();
+        user.setAvatarUrl(null);
+        return toResponse(userRepository.save(user));
     }
 
     @Override

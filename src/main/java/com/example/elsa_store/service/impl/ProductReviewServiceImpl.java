@@ -297,6 +297,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                 .comment(r.getComment())
                 .variantLabel(r.getVariantLabel())
                 .authorName(maskedName(r.getUser().getUsername()))
+                .authorAvatarUrl(r.getUser().getAvatarUrl())
                 .createdAt(r.getCreatedAt())
                 .edited(r.getEditedAt() != null)
                 .storeReply(r.getStoreReply())

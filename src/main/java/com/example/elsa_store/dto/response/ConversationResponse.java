@@ -22,6 +22,8 @@ public class ConversationResponse {
     private Long customerId;
     private String customerName;
     private String customerPhone;
+    /** Ảnh đại diện của khách (hộp thư cửa hàng). */
+    private String customerAvatarUrl;
     private String lastMessage;
     private ChatSide lastSenderSide;
     private LocalDateTime lastMessageAt;

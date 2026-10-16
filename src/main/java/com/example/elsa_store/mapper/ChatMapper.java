@@ -51,6 +51,7 @@ public final class ChatMapper {
                 .customerId(customer.getId())
                 .customerName(displayName(customer))
                 .customerPhone(customer.getPhone())
+                .customerAvatarUrl(customer.getAvatarUrl())
                 .lastMessage(conversation.getLastMessage())
                 .lastSenderSide(conversation.getLastSenderSide())
                 .lastMessageAt(conversation.getLastMessageAt())

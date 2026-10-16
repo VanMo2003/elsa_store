@@ -45,6 +45,7 @@ public class UserMapper {
         res.setEmail(u.getEmail());
         res.setPhone(u.getPhone());
         res.setFullName(u.getFullName());
+        res.setAvatarUrl(u.getAvatarUrl());
         res.setEnabled(u.isEnabled());
         res.setRole(u.getRole());
         Store resolved = store != null ? store : u.getStore();

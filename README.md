@@ -248,6 +248,10 @@ collation MySQL); `%`, `_` trong từ khoá được thoát nên không thành k
 **Sản phẩm tương tự:** `GET /products/{id}/related?size=8` (công khai, tối đa 20) — sản phẩm đang bán cùng danh mục, mới
 nhất trước; chưa đủ thì bù hàng cùng cửa hàng; không gồm chính sản phẩm, không lặp. Sản phẩm đang ẩn trả 404.
 
+**Ảnh đại diện tài khoản:** `POST /users/me/avatar` (multipart, phần `file`) / `DELETE /users/me/avatar` — mọi vai trò,
+lưu ở `/uploads/avatars/`; `avatarUrl` có trong `/users/me`, `authorAvatarUrl` trong đánh giá, `customerAvatarUrl` trong
+hộp thư của cửa hàng.
+
 **Ảnh cửa hàng (logo):** `POST /stores/me/image` (multipart, phần `file`) lưu vào `/uploads/stores/` và đặt làm ảnh
 cửa hàng; `DELETE /stores/me/image` gỡ. Chủ và quản lý; ảnh hiện ở trang cửa hàng công khai và khung chat.
 

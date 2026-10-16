@@ -20,6 +20,8 @@ public class ReviewResponse {
     private String variantLabel;
     /** Tên hiển thị của khách (tên đăng nhập được che bớt khi không có họ tên). */
     private String authorName;
+    /** Ảnh đại diện của người viết. */
+    private String authorAvatarUrl;
     private LocalDateTime createdAt;
     /** Khách đã sửa sau khi đăng. */
     private Boolean edited;

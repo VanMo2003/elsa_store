@@ -37,6 +37,10 @@ public class User extends BaseEntity {
     @Column(name = "role", length = 30)
     private Role role;
 
+    /** Ảnh đại diện (đường dẫn /uploads/avatars/...); null = hiện chữ cái đầu của tên. */
+    @Column(name = "avatar_url", length = 255)
+    private String avatarUrl;
+
     /** Cửa hàng mà quản lý / nhân viên làm việc. Chủ cửa hàng gắn qua {@code Store.owner}. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id")

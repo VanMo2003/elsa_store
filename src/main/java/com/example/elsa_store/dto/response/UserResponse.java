@@ -12,12 +12,18 @@ public class UserResponse {
     private String email;
     private String phone;
     private String fullName;
+    /** Ảnh đại diện; null = chưa có. */
+    private String avatarUrl;
     private Boolean enabled;
     private Role role;
     private Long storeId;
     private String storeName;
 
     public Long getId() { return id; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public void setId(Long id) { this.id = id; }
 

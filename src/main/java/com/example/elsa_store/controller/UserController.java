@@ -11,7 +11,9 @@ import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.UserResponse;
 import com.example.elsa_store.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/users")
@@ -45,6 +47,17 @@ public class UserController {
     public ApiResponse<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ApiResponse.ok(null);
+    }
+
+    /** Ảnh đại diện của chính mình: multipart, phần {@code file}. */
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<UserResponse> updateAvatar(@RequestPart("file") MultipartFile file) {
+        return ApiResponse.ok(userService.updateAvatar(file));
+    }
+
+    @DeleteMapping("/me/avatar")
+    public ApiResponse<UserResponse> removeAvatar() {
+        return ApiResponse.ok(userService.removeAvatar());
     }
 
     @GetMapping("/me")

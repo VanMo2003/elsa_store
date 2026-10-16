@@ -7,6 +7,7 @@ import com.example.elsa_store.dto.request.UserUpdateRequest;
 import com.example.elsa_store.dto.response.AuthenticationResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.UserResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
     /** Khách tự đăng ký (vai trò USER) — công khai. */
@@ -25,6 +26,12 @@ public interface UserService {
 
     /** Tài khoản đang đăng nhập. */
     UserResponse getMe();
+
+    /** Đổi ảnh đại diện của chính mình (mọi vai trò). */
+    UserResponse updateAvatar(MultipartFile file);
+
+    /** Gỡ ảnh đại diện của chính mình. */
+    UserResponse removeAvatar();
 
     /** Chỉ ADMIN; lọc theo vai trò nếu có. */
     PageResponse<UserResponse> getAll(Role role, int page, int size);

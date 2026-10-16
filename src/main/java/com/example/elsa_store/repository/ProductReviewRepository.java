@@ -46,6 +46,15 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
     @Query("select avg(r.rating), count(r.id) from ProductReview r where r.product.store.id = :storeId")
     List<Object[]> storeStats(@Param("storeId") Long storeId);
 
+    /** Điểm trung bình và số đánh giá của mọi cửa hàng: mỗi dòng {storeId, avg, count}. */
+    @Query("""
+        select r.product.store.id, avg(r.rating), count(r.id)
+        from ProductReview r
+        where r.product.store is not null
+        group by r.product.store.id
+    """)
+    List<Object[]> statsByStore();
+
     /** Số lượt đánh giá theo số sao của một sản phẩm. */
     @Query("select r.rating, count(r.id) from ProductReview r where r.product.id = :productId group by r.rating")
     List<Object[]> distribution(@Param("productId") Long productId);

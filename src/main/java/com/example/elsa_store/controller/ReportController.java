@@ -107,6 +107,14 @@ public class ReportController {
         return ApiResponse.ok(reportService.breakdown(from, to, statuses, storeId));
     }
 
+    /** ADMIN: xếp hạng các cửa hàng theo doanh thu trong kỳ (kèm số đơn, tỉ lệ huỷ, điểm đánh giá, thị phần). */
+    @GetMapping("/stores")
+    public ApiResponse<List<StoreRankingResponse>> storeRanking(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ApiResponse.ok(reportService.storeRanking(from, to));
+    }
+
     @GetMapping("/low-stock")
     public ApiResponse<List<LowStockResponse>> lowStock(@RequestParam(required = false) Long storeId) {
         return ApiResponse.ok(reportService.lowStock(storeId));

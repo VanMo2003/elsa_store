@@ -187,10 +187,14 @@ step(F4, "Sản phẩm bán chạy (kèm lãi gộp)", "GET", "/reports/top-prod
      query={"from": "{{today}}", "to": "{{today}}"})
 step(F4, "ADMIN xem báo cáo một cửa hàng", "GET", "/reports/summary", token="adminToken",
      query={"from": "{{today}}", "to": "{{today}}", "storeId": "{{storeId}}"})
+step(F4, "ADMIN: xếp hạng cửa hàng theo doanh thu", "GET", "/reports/stores", token="adminToken",
+     query={"from": "{{today}}", "to": "{{today}}"})
 step(F4, "Xuất Excel", "GET", "/reports/export", token="ownerToken", query={"from": "{{today}}", "to": "{{today}}"},
      note="Postman: Send and Download để lưu tệp .xlsx.")
 
 step(F5, "Nhân viên không xem được báo cáo", "GET", "/reports/dashboard", token="staffToken", expect=403)
+step(F5, "Chủ cửa hàng không xem bảng xếp hạng toàn sàn", "GET", "/reports/stores", token="ownerToken",
+     query={"from": "{{today}}", "to": "{{today}}"}, expect=403)
 step(F5, "Nhân viên không mở được kho / giá vốn", "GET", "/inventories/stock", token="staffToken", expect=403)
 step(F5, "ADMIN chỉ xem, không sửa khuyến mãi", "POST", "/promotions", token="adminToken",
      body={"name": "x", "type": 2, "value": 5}, expect=403)

@@ -1,5 +1,6 @@
 package com.example.elsa_store.service.impl;
 
+import com.example.elsa_store.constant.ApprovalStatus;
 import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.constant.ReturnStatus;
 import com.example.elsa_store.constant.RevenueGroupBy;
@@ -7,6 +8,7 @@ import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.response.*;
 import com.example.elsa_store.entity.Inventory;
 import com.example.elsa_store.entity.ProductVariant;
+import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.entity.User;
 import com.example.elsa_store.exception.AppException;
 import com.example.elsa_store.exception.ErrorCode;
@@ -25,6 +27,7 @@ import com.example.elsa_store.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -342,6 +345,62 @@ public class ReportServiceImpl implements ReportService {
                 .cancelledOrders(cancelled)
                 .rate(total == 0 ? 0.0 : (double) cancelled / total)
                 .build();
+    }
+
+    @Override
+    public List<StoreRankingResponse> storeRanking(LocalDate from, LocalDate to) {
+        checkRange(from, to);
+        accessGuard.requireAdmin();
+        Map<Long, Object[]> revenue = byStoreId(orderRepository.revenueByStore(start(from), endExclusive(to)));
+        Map<Long, Object[]> placed = byStoreId(orderRepository.placedAndCancelledByStore(start(from), endExclusive(to)));
+        Map<Long, Object[]> ratings = byStoreId(reviewRepository.statsByStore());
+        double total = revenue.values().stream().mapToDouble(row -> number(row[1]).doubleValue()).sum();
+
+        record Row(Store store, double revenue, long completed, long placed, long cancelled, Object[] rating) {}
+        List<Row> rows = new ArrayList<>();
+        for (Store store : storeRepository.findAllByApprovalStatus(ApprovalStatus.APPROVED, Pageable.unpaged())) {
+            Object[] r = revenue.get(store.getId());
+            Object[] p = placed.get(store.getId());
+            rows.add(new Row(store,
+                    r == null ? 0 : number(r[1]).doubleValue(),
+                    r == null ? 0 : number(r[2]).longValue(),
+                    p == null ? 0 : number(p[1]).longValue(),
+                    p == null ? 0 : number(p[2]).longValue(),
+                    ratings.get(store.getId())));
+        }
+        rows.sort(Comparator.comparingDouble(Row::revenue).reversed()
+                .thenComparing(Comparator.comparingLong(Row::completed).reversed())
+                .thenComparing(row -> row.store().getName() == null ? "" : row.store().getName()));
+
+        List<StoreRankingResponse> result = new ArrayList<>();
+        for (Row row : rows) {
+            Store s = row.store();
+            result.add(new StoreRankingResponse(
+                    result.size() + 1,
+                    s.getId(),
+                    s.getName(),
+                    s.getImageUrl(),
+                    s.isPaused(),
+                    row.revenue(),
+                    total == 0 ? 0 : row.revenue() / total,
+                    row.completed(),
+                    row.placed(),
+                    row.cancelled(),
+                    row.placed() == 0 ? 0 : (double) row.cancelled() / row.placed(),
+                    row.rating() == null ? null : Math.round(number(row.rating()[1]).doubleValue() * 10) / 10.0,
+                    row.rating() == null ? 0 : number(row.rating()[2]).longValue()));
+        }
+        return result;
+    }
+
+    private static Map<Long, Object[]> byStoreId(List<Object[]> rows) {
+        Map<Long, Object[]> map = new HashMap<>();
+        for (Object[] row : rows) {
+            if (row[0] != null) {
+                map.put(((Number) row[0]).longValue(), row);
+            }
+        }
+        return map;
     }
 
     @Override

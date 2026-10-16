@@ -35,6 +35,9 @@ public interface ReportService {
 
     List<LowStockResponse> lowStock(Long storeId);
 
+    /** ADMIN: xếp hạng mọi cửa hàng đã duyệt theo doanh thu trong kỳ. */
+    List<StoreRankingResponse> storeRanking(LocalDate from, LocalDate to);
+
     DashboardResponse dashboard(Long storeId);
 
     /** Doanh thu tách theo cách trả tiền và kênh bán (online / tại quầy). */

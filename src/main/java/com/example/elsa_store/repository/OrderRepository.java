@@ -141,6 +141,28 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                           @Param("since") LocalDateTime since,
                           @Param("excludeId") Long excludeId);
 
+    /** Xếp hạng cửa hàng: mỗi dòng {storeId, doanh thu, số đơn} của đơn hoàn thành trong kỳ (theo ngày hoàn thành). */
+    @Query("""
+        SELECT o.store.id, COALESCE(SUM(o.finalAmount), 0), COUNT(o.id)
+        FROM Order o
+        WHERE o.store IS NOT NULL
+          AND o.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+          AND coalesce(o.completedAt, o.orderDate) >= :start
+          AND coalesce(o.completedAt, o.orderDate) < :end
+        GROUP BY o.store.id
+    """)
+    List<Object[]> revenueByStore(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    /** Xếp hạng cửa hàng: mỗi dòng {storeId, số đơn đặt, số đơn huỷ} theo ngày đặt trong kỳ. */
+    @Query("""
+        SELECT o.store.id, COUNT(o.id),
+               SUM(CASE WHEN o.status = com.example.elsa_store.constant.OrderStatus.DA_HUY THEN 1 ELSE 0 END)
+        FROM Order o
+        WHERE o.store IS NOT NULL AND o.orderDate >= :start AND o.orderDate < :end
+        GROUP BY o.store.id
+    """)
+    List<Object[]> placedAndCancelledByStore(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
     /** Doanh thu đơn hoàn thành, ghi nhận theo ngày hoàn thành (đơn cũ chưa có thì theo ngày đặt). */
     @Query("""
         SELECT COALESCE(SUM(o.finalAmount),0)

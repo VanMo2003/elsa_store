@@ -232,6 +232,9 @@ step(F6, "Quên mật khẩu: đặt mật khẩu mới (chạy tay)", "POST", "
 step(F6, "Đổi mật khẩu khi đang đăng nhập (trả cặp token mới)", "PUT", "/users/me/password", token="customerToken",
      body={"currentPassword": "123456", "newPassword": "doimatkhau1"},
      saves=[("customerToken", "j.data.accessToken", lambda j: j["data"]["accessToken"])])
+step(F6, "Khách xoá tài khoản (bị chặn vì còn đơn VNPay đang chờ)", "POST", "/users/me/delete", token="customerToken",
+     body={"password": "doimatkhau1"}, expect=400,
+     note="Hết đơn đang xử lý thì trả 200: thông tin cá nhân bị ẩn danh, tài khoản khoá, mọi token hết hiệu lực.")
 
 PRE_FIRST = [
     "if (!pm.collectionVariables.get('runSuffix')) {",

@@ -128,6 +128,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     boolean existsByUser_Id(Long userId);
 
+    long countByUser_IdAndStatusIn(Long userId, Collection<OrderStatus> statuses);
+
     boolean existsByCustomer_Id(Long customerId);
 
     boolean existsByCustomer_IdAndStore_Id(Long customerId, Long storeId);

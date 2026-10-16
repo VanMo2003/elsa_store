@@ -18,5 +18,7 @@ public interface StoreFollowRepository extends JpaRepository<StoreFollow, Long> 
 
     List<StoreFollow> findAllByStore_Id(Long storeId);
 
+    List<StoreFollow> findAllByUser_Id(Long userId);
+
     Page<StoreFollow> findByUser_IdOrderByIdDesc(Long userId, Pageable pageable);
 }

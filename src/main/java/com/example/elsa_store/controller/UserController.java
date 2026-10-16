@@ -4,13 +4,16 @@ package com.example.elsa_store.controller;
 import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.common.ApiResponse;
 import com.example.elsa_store.dto.request.ChangePasswordRequest;
+import com.example.elsa_store.dto.request.DeleteAccountRequest;
 import com.example.elsa_store.dto.request.UserRequest;
 import com.example.elsa_store.dto.request.UserUpdateRequest;
 import com.example.elsa_store.dto.response.AuthenticationResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.UserResponse;
 import com.example.elsa_store.service.UserService;
+import com.example.elsa_store.service.impl.AccountDeletion;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +23,13 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController {
 
     private final UserService userService;
+    private AccountDeletion accountDeletion;
+
+    /** Khách tự xoá tài khoản (tiêm qua setter để giữ nguyên hàm dựng). */
+    @Autowired
+    void setAccountDeletion(AccountDeletion accountDeletion) {
+        this.accountDeletion = accountDeletion;
+    }
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -63,6 +73,13 @@ public class UserController {
     @GetMapping("/me")
     public ApiResponse<UserResponse> getMe() {
         return ApiResponse.ok(userService.getMe());
+    }
+
+    /** Khách xoá tài khoản của mình (nhập lại mật khẩu); xong thì mọi phiên đăng nhập hết hiệu lực. */
+    @PostMapping("/me/delete")
+    public ApiResponse<Void> deleteMe(@Valid @RequestBody DeleteAccountRequest body) {
+        accountDeletion.deleteMe(body);
+        return ApiResponse.ok(null);
     }
 
     @GetMapping("/{id}")

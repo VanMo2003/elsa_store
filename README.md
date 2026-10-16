@@ -460,6 +460,12 @@ lần. `POST /{id}/cancel` huỷ phiếu nháp; `GET /purchase-orders?status=0|1
 - Ảnh tải lên được kiểm tra theo **nội dung tệp** (JPEG, PNG, WEBP, GIF), không tin phần mở rộng. Lỗi không lường trước
   trả `999` với câu chung, chi tiết chỉ ghi log; dữ liệu đang được dùng / trùng báo `1019`, sửa đồng thời báo `1020`.
 
+**Khách tự xoá tài khoản** (yêu cầu của kho ứng dụng): `POST /users/me/delete` `{password}` — chỉ tài khoản `USER`,
+sai mật khẩu báo `1022`, còn đơn chưa xong (chờ xác nhận / đã xác nhận / đang giao) thì 400. Đơn hàng, đánh giá, sổ xu
+được giữ cho sổ sách cửa hàng; tên đăng nhập đổi thành `deleted_<id>_…`, email / SĐT / ảnh đại diện bỏ, hồ sơ khách và
+sổ địa chỉ ẩn danh, giỏ hàng / yêu thích / theo dõi / thông báo / thiết bị push bị xoá; tài khoản bị khoá và mọi token
+hết hiệu lực (`AccountDeletion`).
+
 ## Vai trò và phân quyền
 
 Năm vai trò: `ADMIN`, `STORE_OWNER`, `STORE_MANAGER`, `STAFF`, `USER`. Mỗi cửa hàng (`Store`) là một
@@ -549,7 +555,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 97 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 98 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

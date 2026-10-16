@@ -133,6 +133,7 @@ tham gia chat. Mọi kiểm tra quyền đi qua `AccessGuard`, tin nhắn chỉ 
 | `POST /conversations/{id}/messages` `{content, productIds?, askAi?}` | Hai phía | Gửi tin (≤ 2000 ký tự, ≤ 3 sản phẩm) |
 | `POST /conversations/{id}/images` (multipart: `files` 1–4 ảnh, `content` chú thích tuỳ chọn) | Hai phía | Gửi ảnh thành một tin (`images` trong tin nhắn; ảnh lưu `/uploads/chat/`, kiểm tra theo nội dung tệp); tin chỉ có ảnh hiện "[Ảnh]" ở danh sách và "Đã gửi ảnh" ở push |
 | `PUT /conversations/{id}/read` | Hai phía | Đánh dấu đã đọc |
+| `GET` / `POST /chat/quick-replies`, `PUT` / `DELETE /chat/quick-replies/{id}` `{title ≤ 60, content ≤ 1000}` | Chủ, quản lý, nhân viên | **Câu trả lời nhanh** (`chat_quick_replies`): mẫu tin nhắn dùng chung của cửa hàng, tối đa 30; cửa hàng khác không thấy (404) |
 
 **Thời gian thực:** `ws://<host>/elsa-store/api/ws/chat?token=<accessToken>` (WebSocket thuần, không STOMP; trình duyệt
 không đặt được header nên token đi theo query, header `Authorization: Bearer` cũng được). Token đi qua
@@ -547,7 +548,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 95 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 97 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

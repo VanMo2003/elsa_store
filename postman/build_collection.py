@@ -152,6 +152,9 @@ step(F3, "Cửa hàng trả lời câu hỏi", "PUT", "/questions/{{questionId}}
      body={"answer": "Dạ có size 45, bạn đặt nhé!"})
 step(F3, "Hỏi đáp của sản phẩm (công khai, chỉ câu đã trả lời)", "GET", "/products/{{productId}}/questions",
      query={"page": "0", "size": "10"})
+step(F3, "Cửa hàng: thêm câu trả lời nhanh cho chat", "POST", "/chat/quick-replies", token="staffToken",
+     body={"title": "Chào khách", "content": "Dạ Elsa chào bạn, bạn cần tư vấn size nào ạ?"})
+step(F3, "Cửa hàng: danh sách câu trả lời nhanh", "GET", "/chat/quick-replies", token="ownerToken")
 step(F3, "Khách báo cáo sản phẩm vi phạm", "POST", "/products/{{productId}}/violations", token="customerToken",
      body={"reason": "WRONG_DESCRIPTION", "note": "Màu thực tế khác ảnh"},
      saves=[("violationId", "j.data.id", lambda j: j["data"]["id"])],

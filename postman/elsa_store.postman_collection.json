@@ -1545,6 +1545,44 @@
           }
         },
         {
+          "name": "Khách mua sản phẩm này cũng mua (công khai)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/bought-together?size=8",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "bought-together"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "8"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
           "name": "Thêm địa chỉ giao hàng",
           "event": [
             {

@@ -82,6 +82,22 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                                @Param("storeId") Long storeId);
 
     /** Dòng hàng mới nhất của sản phẩm trong các đơn đã hoàn thành của khách — điều kiện để viết đánh giá. */
+    /**
+     * "Khách mua sản phẩm này cũng mua": sản phẩm khác nằm chung đơn (không tính đơn huỷ) với {@code productId}, nhiều đơn
+     * chung nhất trước, hoà thì đơn mới hơn trước. Mỗi dòng {productId, số đơn chung}.
+     */
+    @Query("""
+        select other.productVariant.product.id, count(distinct other.order.id)
+        from OrderItem mine, OrderItem other
+        where mine.productVariant.product.id = :productId
+          and other.order.id = mine.order.id
+          and other.productVariant.product.id <> :productId
+          and mine.order.status <> com.example.elsa_store.constant.OrderStatus.DA_HUY
+        group by other.productVariant.product.id
+        order by count(distinct other.order.id) desc, max(other.order.id) desc
+    """)
+    List<Object[]> boughtTogether(@Param("productId") Long productId, Pageable pageable);
+
     @Query("""
         select i from OrderItem i
         join i.order o

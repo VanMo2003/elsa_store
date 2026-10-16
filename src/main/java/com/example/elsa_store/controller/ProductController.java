@@ -85,6 +85,13 @@ public class ProductController {
     }
 
     /** Sản phẩm tương tự (công khai) cho trang chi tiết. */
+    /** "Khách mua sản phẩm này cũng mua" — theo các đơn có chung sản phẩm (không tính đơn huỷ). */
+    @GetMapping("/{id:\\d+}/bought-together")
+    public ApiResponse<List<ProductResponse>> boughtTogether(@PathVariable Long id,
+                                                             @RequestParam(defaultValue = "8") int size) {
+        return ApiResponse.ok(productService.boughtTogether(id, size));
+    }
+
     @GetMapping("/{id:\\d+}/related")
     public ApiResponse<List<ProductResponse>> related(@PathVariable Long id, @RequestParam(defaultValue = "8") int size) {
         return ApiResponse.ok(productService.related(id, size));

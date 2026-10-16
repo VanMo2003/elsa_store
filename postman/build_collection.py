@@ -100,6 +100,8 @@ step(F3, "Gợi ý khi gõ ô tìm kiếm (công khai)", "GET", "/search/suggest
 step(F3, "Tìm sản phẩm (công khai)", "POST", "/products/search", body={"keyword": "giày", "page": 0, "sizePage": 10})
 step(F3, "Chi tiết sản phẩm (giá khuyến mãi, điểm đánh giá)", "GET", "/products/{{productId}}")
 step(F3, "Sản phẩm tương tự (công khai)", "GET", "/products/{{productId}}/related", query={"size": "8"})
+step(F3, "Khách mua sản phẩm này cũng mua (công khai)", "GET", "/products/{{productId}}/bought-together",
+     query={"size": "8"})
 step(F3, "Thêm địa chỉ giao hàng", "POST", "/addresses", token="customerToken",
      body={"fullName": "Khách Demo", "phone": "0900000099", "detail": "12 Lê Lợi", "district": "Quận 1",
            "province": "TP HCM", "isDefault": True},

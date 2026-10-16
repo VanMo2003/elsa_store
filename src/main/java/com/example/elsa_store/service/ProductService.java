@@ -38,5 +38,8 @@ public interface ProductService {
 
     /** Công khai: sản phẩm tương tự — cùng danh mục trước, thiếu thì lấy thêm hàng cùng cửa hàng; không gồm chính nó. */
     List<ProductResponse> related(Long productId, int size);
+
+    /** Sản phẩm hay được mua cùng (chung đơn) với sản phẩm này; chỉ sản phẩm đang bán. */
+    List<ProductResponse> boughtTogether(Long productId, int size);
     PageResponse<ProductResponse> search(ProductSearchRequest request);
 }

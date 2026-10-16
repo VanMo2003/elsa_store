@@ -18,6 +18,7 @@ import com.example.elsa_store.exception.ErrorCode;
 import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.mapper.ProductMapper;
 import com.example.elsa_store.repository.CategoryRepository;
+import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.ProductImageRepository;
 import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
@@ -27,6 +28,7 @@ import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.service.ProductService;
 import com.example.elsa_store.specification.ProductSpecification;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -58,6 +60,13 @@ public class ProductServiceImpl implements ProductService {
     private final AccessGuard accessGuard;
     private final CatalogPresenter catalog;
     private final WishlistItemRepository wishlistRepository;
+    private OrderItemRepository orderItemRepository;
+
+    /** Gợi ý "mua cùng" (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
+    @Autowired
+    void setOrderItemRepository(OrderItemRepository orderItemRepository) {
+        this.orderItemRepository = orderItemRepository;
+    }
 
     public ProductServiceImpl(ProductRepository productRepository,
                               CategoryRepository categoryRepository,
@@ -257,6 +266,30 @@ public class ProductServiceImpl implements ProductService {
             picked.remove(product.getId());
         }
         return catalog.products(picked.values().stream().limit(limit).toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponse> boughtTogether(Long productId, int size) {
+        Product product = find(productId);
+        if (!isPublic(product)) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        int limit = Math.min(Math.max(size, 1), 20);
+        if (orderItemRepository == null) {
+            return List.of();
+        }
+        // Lấy dư vì sản phẩm đã ẩn / cửa hàng ngừng bán bị bỏ khỏi gợi ý.
+        List<Long> ids = orderItemRepository.boughtTogether(productId, PageRequest.of(0, limit * 2)).stream()
+                .map(row -> ((Number) row[0]).longValue())
+                .toList();
+        Map<Long, Product> byId = new LinkedHashMap<>();
+        productRepository.findAllById(ids).forEach(p -> byId.put(p.getId(), p));
+        return catalog.products(ids.stream()
+                .map(byId::get)
+                .filter(p -> p != null && isPublic(p))
+                .limit(limit)
+                .toList());
     }
 
     @Override

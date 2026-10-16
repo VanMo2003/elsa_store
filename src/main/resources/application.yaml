@@ -56,6 +56,9 @@ app:
     auto-complete-days: ${ORDER_AUTO_COMPLETE_DAYS:7}
     # Khách gửi yêu cầu trả hàng trong chừng này ngày sau khi đơn hoàn thành. 0 = tắt đổi trả.
     return-window-days: ${ORDER_RETURN_WINDOW_DAYS:7}
+  # Nhắc khách còn hàng trong giỏ sau chừng này giờ không đổi giỏ (mỗi lần bỏ quên nhắc một lần). 0 = tắt.
+  cart:
+    reminder-hours: ${CART_REMINDER_HOURS:24}
   # Xu thưởng của khách: nhận earn-percent % tiền hàng thực trả khi đơn hoàn thành; 1 xu = 1đ, dùng tối đa
   # max-redeem-percent % tiền hàng của một đơn.
   coins:

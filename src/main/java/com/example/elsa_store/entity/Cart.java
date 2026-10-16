@@ -3,6 +3,7 @@ package com.example.elsa_store.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,4 +28,8 @@ public class Cart extends BaseEntity {
     // optional: lưu snapshot tổng tiền (có thể không cần, tính động)
     @Column(name = "total_amount")
     private Double totalAmount;
+
+    /** Lần gần nhất nhắc khách về giỏ hàng bị bỏ quên (null = chưa nhắc). */
+    @Column(name = "reminded_at")
+    private LocalDateTime remindedAt;
 }

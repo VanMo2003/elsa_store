@@ -99,7 +99,7 @@ class NotificationSettingsTest {
         User fan = signIn("khach01", Role.USER);
         NotificationSettingsResponse res = service.updateSettings(
                 new NotificationSettingsRequest(Map.of("NEW_PRODUCT", false, "BACK_IN_STOCK", true)));
-        assertEquals(List.of("PRICE_DROP", "NEW_PRODUCT", "BACK_IN_STOCK", "STORE_REPLIES"),
+        assertEquals(List.of("PRICE_DROP", "NEW_PRODUCT", "BACK_IN_STOCK", "STORE_REPLIES", "CART_REMINDER"),
                 res.getGroups().stream().map(NotificationSettingsResponse.Group::group).toList());
         assertFalse(res.getGroups().get(1).enabled());
         assertTrue(res.getGroups().get(0).enabled());

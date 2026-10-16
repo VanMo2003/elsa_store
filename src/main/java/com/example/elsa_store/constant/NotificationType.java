@@ -36,5 +36,7 @@ public enum NotificationType {
     /** Cho khách: cửa hàng trả lời câu hỏi của mình. */
     QUESTION_ANSWERED,
     /** Cho khách: vừa lên hạng thành viên (nhận nhiều xu hơn). */
-    TIER_UP
+    TIER_UP,
+    /** Cho khách: còn hàng trong giỏ đã lâu chưa đặt. */
+    CART_REMINDER
 }

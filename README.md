@@ -34,6 +34,7 @@ chỉ được ghi log.
 | Khách hỏi về sản phẩm (`QUESTION_NEW`, mở `elsastore://questions`) | Chủ, quản lý, nhân viên | Trong app + push |
 | Cửa hàng trả lời / sửa câu trả lời câu hỏi (`QUESTION_ANSWERED`, mở `elsastore://products/{id}`) | Khách đặt câu hỏi | Trong app + push |
 | Đơn hoàn thành làm khách lên hạng thành viên (`TIER_UP`, mở `elsastore://coins`) | Khách | Trong app + push |
+| Giỏ hàng không đổi quá `CART_REMINDER_HOURS` giờ (mặc định 24; mỗi lần bỏ quên nhắc một lần — khách thêm / sửa món thì về sau được nhắc lại; `CART_REMINDER`, mở `elsastore://cart`) | Khách | Trong app + push |
 | Sản phẩm đang hết hàng có hàng lại (nhập hàng, kiểm kê, hoàn kho do huỷ đơn / trả hàng — `BACK_IN_STOCK`, mở `elsastore://products/{id}`; chỉ báo lúc chuyển từ hết sang còn) | Khách đã thả tim sản phẩm | Trong app + push |
 | Chủ / quản lý tạo hoặc sửa khuyến mãi tự động đang chạy làm sản phẩm **vừa được** giảm giá (`PRICE_DROP`, mở `elsastore://products/{id}`; sửa tên / sản phẩm đã giảm trước đó không báo lại; khuyến mãi hẹn ngày bắt đầu sau và mã giảm giá không báo) | Khách đã thả tim sản phẩm | Trong app + push |
 | Cửa hàng đang theo dõi mở bán sản phẩm mới (phân loại đầu tiên của sản phẩm đang bán — `NEW_PRODUCT`, mở `elsastore://products/{id}`) | Khách theo dõi cửa hàng | Trong app + push |
@@ -57,6 +58,7 @@ cửa hàng không thuộc nhóm nào nên luôn gửi.
 | `NEW_PRODUCT` | Cửa hàng đang theo dõi có sản phẩm mới | Khách |
 | `BACK_IN_STOCK` | Sản phẩm đã thả tim có hàng trở lại | Khách |
 | `STORE_REPLIES` | Cửa hàng trả lời đánh giá / câu hỏi (`REVIEW_REPLIED`, `QUESTION_ANSWERED`) | Khách |
+| `CART_REMINDER` | Nhắc còn hàng trong giỏ | Khách |
 | `CUSTOMER_FEEDBACK` | Đánh giá / câu hỏi mới của khách (`REVIEW_NEW`, `QUESTION_NEW`) | Chủ, quản lý, nhân viên |
 
 `GET /notifications/settings` trả `{groups: [{group, enabled}]}` (chỉ các nhóm của vai trò đang đăng nhập; ADMIN không có
@@ -560,6 +562,7 @@ dùng cho `docker compose`).
 | `ORDER_UNPAID_CANCEL_MINUTES` | `30` | Tự huỷ đơn VNPay chưa trả sau chừng này phút (tối thiểu 20); `0` = tắt |
 | `ORDER_AUTO_COMPLETE_DAYS` | `7` | Tự hoàn thành đơn đang giao sau chừng này ngày; `0` = tắt |
 | `ORDER_RETURN_WINDOW_DAYS` | `7` | Khách gửi yêu cầu trả hàng trong chừng này ngày sau khi đơn hoàn thành; `0` = tắt |
+| `CART_REMINDER_HOURS` | `24` | Nhắc khách còn hàng trong giỏ sau chừng này giờ giỏ không đổi (`CartReminders`, quét mỗi giờ); `0` = tắt |
 | `COINS_EARN_PERCENT` | `1` | % tiền hàng thực trả đổi thành xu khi đơn hoàn thành |
 | `COINS_MAX_REDEEM_PERCENT` | `50` | % tiền hàng tối đa trả bằng xu trong một đơn (1 xu = 1đ) |
 | `COINS_REVIEW_REWARD` | `100` | Xu thưởng khi viết đánh giá đầu tiên cho một sản phẩm |

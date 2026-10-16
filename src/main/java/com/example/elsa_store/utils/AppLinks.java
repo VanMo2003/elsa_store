@@ -12,6 +12,7 @@ public final class AppLinks {
     public static final String REVIEWS = "reviews";
     public static final String QUESTIONS = "questions";
     public static final String COINS = "coins";
+    public static final String CART = "cart";
 
     private AppLinks() {}
 
@@ -45,6 +46,11 @@ public final class AppLinks {
     /** Câu hỏi của khách về sản phẩm của cửa hàng (màn trả lời câu hỏi). */
     public static String storeQuestions() {
         return deepLink(QUESTIONS);
+    }
+
+    /** Giỏ hàng của khách. */
+    public static String cart() {
+        return deepLink(CART);
     }
 
     /** Ví xu và hạng thành viên của khách. */

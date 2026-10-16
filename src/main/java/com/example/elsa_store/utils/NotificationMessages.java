@@ -1,6 +1,8 @@
 package com.example.elsa_store.utils;
 
 import com.example.elsa_store.constant.MemberTier;
+import com.example.elsa_store.entity.Cart;
+import com.example.elsa_store.entity.CartItem;
 import com.example.elsa_store.entity.Order;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.Promotion;
@@ -149,6 +151,19 @@ public final class NotificationMessages {
         return new Message(
                 store + " đã trả lời đánh giá của bạn",
                 "Về " + review.getProduct().getName() + ": \u201C" + shorten(review.getStoreReply(), 100) + "\u201D");
+    }
+
+    /** Cho khách: giỏ hàng bị bỏ quên. */
+    public static Message cartReminder(Cart cart) {
+        List<CartItem> items = cart.getItems();
+        int count = items.stream().mapToInt(i -> i.getQuantity() == null ? 1 : i.getQuantity()).sum();
+        String first = items.isEmpty() || items.get(0).getProductVariant().getProduct() == null
+                ? "Sản phẩm"
+                : items.get(0).getProductVariant().getProduct().getName();
+        String body = items.size() > 1
+                ? "\u201C" + shorten(first, 60) + "\u201D và " + (items.size() - 1) + " sản phẩm khác đang chờ bạn đặt."
+                : "\u201C" + shorten(first, 60) + "\u201D đang chờ bạn đặt.";
+        return new Message("Bạn còn " + count + " sản phẩm trong giỏ", body + " Đặt ngay kẻo hết hàng!");
     }
 
     /** Cho khách: vừa lên hạng thành viên. */

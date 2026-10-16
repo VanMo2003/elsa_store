@@ -33,6 +33,7 @@ chỉ được ghi log.
 | Cửa hàng trả lời / sửa câu trả lời đánh giá (`REVIEW_REPLIED`, mở `elsastore://products/{id}`) | Khách viết đánh giá | Trong app + push |
 | Khách hỏi về sản phẩm (`QUESTION_NEW`, mở `elsastore://questions`) | Chủ, quản lý, nhân viên | Trong app + push |
 | Cửa hàng trả lời / sửa câu trả lời câu hỏi (`QUESTION_ANSWERED`, mở `elsastore://products/{id}`) | Khách đặt câu hỏi | Trong app + push |
+| Đơn hoàn thành làm khách lên hạng thành viên (`TIER_UP`, mở `elsastore://coins`) | Khách | Trong app + push |
 | Sản phẩm đang hết hàng có hàng lại (nhập hàng, kiểm kê, hoàn kho do huỷ đơn / trả hàng — `BACK_IN_STOCK`, mở `elsastore://products/{id}`; chỉ báo lúc chuyển từ hết sang còn) | Khách đã thả tim sản phẩm | Trong app + push |
 | Chủ / quản lý tạo hoặc sửa khuyến mãi tự động đang chạy làm sản phẩm **vừa được** giảm giá (`PRICE_DROP`, mở `elsastore://products/{id}`; sửa tên / sản phẩm đã giảm trước đó không báo lại; khuyến mãi hẹn ngày bắt đầu sau và mã giảm giá không báo) | Khách đã thả tim sản phẩm | Trong app + push |
 | Cửa hàng đang theo dõi mở bán sản phẩm mới (phân loại đầu tiên của sản phẩm đang bán — `NEW_PRODUCT`, mở `elsastore://products/{id}`) | Khách theo dõi cửa hàng | Trong app + push |
@@ -343,7 +344,23 @@ kèm số dư sau và đơn liên quan); số dư = tổng sổ.
   ảnh +`COINS_REVIEW_PHOTO_REWARD` xu (mặc định 200) — mỗi khoản một lần cho mỗi sản phẩm (sổ ghi `product_id`, loại
   `REVIEW_REWARD` / `PHOTO_REWARD`); sửa, xoá rồi viết lại không nhận lại, xoá đánh giá không thu lại. Phản hồi viết
   đánh giá / thêm ảnh có `rewardCoins` (xu vừa nhận); `GET /products/{id}/reviews/me` có `rewardCoins` (xu còn nhận được).
-- `GET /coins/me?page&size` — số dư, quy tắc (`earnPercent`, `maxRedeemPercent`), lịch sử mới nhất trước.
+- `GET /coins/me?page&size` — số dư, quy tắc (`earnPercent`, `maxRedeemPercent`), lịch sử mới nhất trước, và hạng
+  thành viên: `tier`, `earnRate` (% nhận xu thực tế), `spending`, `nextTier`, `nextTierSpending` (`tier` null với tài
+  khoản không phải khách).
+
+**Hạng thành viên** (`MemberTier`, `MemberTiers`): tính từ tiền hàng thực trả của các đơn hoàn thành trong **365 ngày gần
+nhất** trừ tiền đã hoàn do trả hàng — không lưu cột riêng nên trả hàng hay đơn quá hạn 365 ngày tự hạ hạng.
+
+| Hạng | Chi tiêu 365 ngày | Xu nhận |
+|---|---|---|
+| `MEMBER` Thành viên | dưới 2.000.000đ | ×1 (1%) |
+| `SILVER` Bạc | từ 2.000.000đ | ×1,5 (1,5%) |
+| `GOLD` Vàng | từ 5.000.000đ | ×2 (2%) |
+| `DIAMOND` Kim cương | từ 15.000.000đ | ×3 (3%) |
+
+Số xu của một đơn tính theo hạng **trước** đơn đó (báo giá, `coinsReward` của đơn đang chờ và lúc cộng xu đều như nhau).
+Đơn hoàn thành làm khách vượt ngưỡng thì khách nhận thông báo `TIER_UP` "Chúc mừng bạn lên hạng …" (mở
+`elsastore://coins`).
 
 ## Đổi / trả hàng
 

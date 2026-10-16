@@ -254,7 +254,7 @@ public class OrderServiceImpl implements OrderService {
                 .coinBalance(coinWallet.balance(coinOwner))
                 .coinsUsable(coinsUsable)
                 .coinsUsed(coinsUsed)
-                .coinsReward(CoinWallet.eligible(coinOwner) ? coinWallet.rewardFor(quote.total() - coinsUsed) : 0)
+                .coinsReward(coinWallet.rewardFor(coinOwner, quote.total() - coinsUsed, null))
                 .storeId(store.getId())
                 .storeName(store.getName())
                 .items(lines)

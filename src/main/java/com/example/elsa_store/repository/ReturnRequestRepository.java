@@ -19,6 +19,18 @@ public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Lo
     boolean existsByCode(String code);
 
     /** Yêu cầu của một khách, mới nhất trước; {@code orderId} null = mọi đơn. */
+    /** Hạng thành viên: tiền đã hoàn cho các đơn hoàn thành từ {@code since} của khách. */
+    @Query("""
+        select coalesce(sum(r.refundAmount), 0) from ReturnRequest r
+        where r.order.user.id = :userId
+          and r.status = com.example.elsa_store.constant.ReturnStatus.DA_HOAN_TIEN
+          and coalesce(r.order.completedAt, r.order.orderDate) >= :since
+          and (:excludeId is null or r.order.id <> :excludeId)
+    """)
+    double memberRefunds(@Param("userId") Long userId,
+                         @Param("since") LocalDateTime since,
+                         @Param("excludeId") Long excludeId);
+
     @Query("""
         select r from ReturnRequest r
         where r.user.id = :userId and (:orderId is null or r.order.id = :orderId)

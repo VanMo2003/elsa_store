@@ -128,6 +128,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     long countByStatus(OrderStatus status);
 
+    /** Hạng thành viên: tiền hàng thực trả (không gồm phí giao) của đơn hoàn thành từ {@code since}. */
+    @Query("""
+        SELECT COALESCE(SUM(o.finalAmount - COALESCE(o.shippingFee, 0)), 0)
+        FROM Order o
+        WHERE o.user.id = :userId
+          AND o.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+          AND coalesce(o.completedAt, o.orderDate) >= :since
+          AND (:excludeId IS NULL OR o.id <> :excludeId)
+    """)
+    double memberSpending(@Param("userId") Long userId,
+                          @Param("since") LocalDateTime since,
+                          @Param("excludeId") Long excludeId);
+
     /** Doanh thu đơn hoàn thành, ghi nhận theo ngày hoàn thành (đơn cũ chưa có thì theo ngày đặt). */
     @Query("""
         SELECT COALESCE(SUM(o.finalAmount),0)

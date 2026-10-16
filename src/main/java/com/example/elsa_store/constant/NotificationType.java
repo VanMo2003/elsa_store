@@ -34,5 +34,7 @@ public enum NotificationType {
     /** Cho cửa hàng (chủ, quản lý, nhân viên): khách hỏi về một sản phẩm. */
     QUESTION_NEW,
     /** Cho khách: cửa hàng trả lời câu hỏi của mình. */
-    QUESTION_ANSWERED
+    QUESTION_ANSWERED,
+    /** Cho khách: vừa lên hạng thành viên (nhận nhiều xu hơn). */
+    TIER_UP
 }

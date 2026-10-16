@@ -1,6 +1,7 @@
 package com.example.elsa_store.service.impl;
 
 import com.example.elsa_store.constant.CoinTransactionType;
+import com.example.elsa_store.constant.MemberTier;
 import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.response.CoinWalletResponse;
 import com.example.elsa_store.dto.response.PageResponse;
@@ -12,6 +13,7 @@ import com.example.elsa_store.exception.AppException;
 import com.example.elsa_store.exception.ErrorCode;
 import com.example.elsa_store.repository.CoinTransactionRepository;
 import com.example.elsa_store.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +34,7 @@ public class CoinWallet {
     private final UserRepository userRepository;
     private final int earnPercent;
     private final int maxRedeemPercent;
+    private MemberTiers tiers;
 
     public CoinWallet(CoinTransactionRepository repository,
                       UserRepository userRepository,
@@ -41,6 +44,12 @@ public class CoinWallet {
         this.userRepository = userRepository;
         this.earnPercent = Math.max(0, earnPercent);
         this.maxRedeemPercent = Math.min(100, Math.max(0, maxRedeemPercent));
+    }
+
+    /** Hạng thành viên (tiêm qua setter để giữ nguyên hàm dựng dùng trong test); không có thì ai cũng hạng thường. */
+    @Autowired
+    void setTiers(MemberTiers tiers) {
+        this.tiers = tiers;
     }
 
     /** Chỉ tài khoản khách có ví xu. */
@@ -63,9 +72,27 @@ public class CoinWallet {
         return Math.max(0, Math.min(balance(user), cap));
     }
 
-    /** Số xu nhận được cho {@code goodsPaid} tiền hàng thực trả. */
+    /** Số xu nhận được cho {@code goodsPaid} tiền hàng thực trả ở hạng thường. */
     public int rewardFor(double goodsPaid) {
-        return goodsPaid <= 0 ? 0 : (int) Math.floor(goodsPaid * earnPercent / 100.0);
+        return rewardFor(goodsPaid, MemberTier.MEMBER);
+    }
+
+    /** Số xu khách {@code user} nhận cho {@code goodsPaid} theo hạng hiện tại (không tính đơn {@code excludeOrderId}). */
+    @Transactional(readOnly = true)
+    public int rewardFor(User user, double goodsPaid, Long excludeOrderId) {
+        return eligible(user) ? rewardFor(goodsPaid, tierOf(user, excludeOrderId)) : 0;
+    }
+
+    static int rewardForRate(double goodsPaid, int earnPercent, MemberTier tier) {
+        return goodsPaid <= 0 ? 0 : (int) Math.floor(goodsPaid * earnPercent * tier.coinMultiplier() / 10_000.0);
+    }
+
+    private int rewardFor(double goodsPaid, MemberTier tier) {
+        return rewardForRate(goodsPaid, earnPercent, tier);
+    }
+
+    private MemberTier tierOf(User user, Long excludeOrderId) {
+        return tiers == null ? MemberTier.MEMBER : tiers.tierOf(user, excludeOrderId);
     }
 
     /** Xu sẽ nhận khi đơn hoàn thành (đơn chưa xong, chưa huỷ); null nếu không áp dụng. */
@@ -73,7 +100,7 @@ public class CoinWallet {
         if (!eligible(order.getUser()) || order.getCoinsEarned() != null) {
             return null;
         }
-        return rewardFor(goodsPaid(order));
+        return rewardFor(order.getUser(), goodsPaid(order), order.getId());
     }
 
     /** Trừ xu lúc đặt đơn; không đủ số dư (vừa dùng ở đơn khác) thì báo lỗi. */
@@ -100,13 +127,17 @@ public class CoinWallet {
         write(user, used, balance + used, CoinTransactionType.REFUND, order, "Hoàn xu đơn huỷ " + order.getCode());
     }
 
-    /** Cộng xu khi đơn hoàn thành — mỗi đơn một lần ({@code coinsEarned} đánh dấu đã cộng). */
+    /**
+     * Cộng xu khi đơn hoàn thành — mỗi đơn một lần ({@code coinsEarned} đánh dấu đã cộng). Số xu theo hạng trước đơn này;
+     * đơn này làm khách lên hạng thì {@link MemberTiers} báo cho khách.
+     */
     public void earn(Order order) {
         User user = order.getUser();
         if (!eligible(user) || order.getCoinsEarned() != null) {
             return;
         }
-        int coins = rewardFor(goodsPaid(order));
+        MemberTier tier = tiers == null ? MemberTier.MEMBER : tiers.completing(order);
+        int coins = rewardFor(goodsPaid(order), tier);
         order.setCoinsEarned(coins);
         if (coins <= 0) {
             return;
@@ -164,12 +195,18 @@ public class CoinWallet {
     @Transactional(readOnly = true)
     public CoinWalletResponse wallet(User user, int page, int size) {
         if (!eligible(user)) {
-            return new CoinWalletResponse(0, earnPercent, maxRedeemPercent, PageResponse.from(Page.empty()));
+            return new CoinWalletResponse(0, earnPercent, maxRedeemPercent, PageResponse.from(Page.empty()),
+                    null, null, 0, null, null);
         }
         var history = repository.findByUser_IdOrderByIdDesc(user.getId(),
                 PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 50)));
+        double spending = tiers == null ? 0 : tiers.spending(user, null);
+        MemberTier tier = MemberTier.forSpending(spending);
+        MemberTier next = tier.next();
         return new CoinWalletResponse(balance(user), earnPercent, maxRedeemPercent,
-                PageResponse.from(history.map(CoinWallet::toResponse)));
+                PageResponse.from(history.map(CoinWallet::toResponse)),
+                tier, earnPercent * tier.coinMultiplier() / 100.0, Math.round(spending),
+                next, next == null ? null : next.minSpending());
     }
 
     static CoinWalletResponse.Entry toResponse(CoinTransaction t) {

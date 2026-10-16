@@ -1,5 +1,6 @@
 package com.example.elsa_store.utils;
 
+import com.example.elsa_store.constant.MemberTier;
 import com.example.elsa_store.entity.Order;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.Promotion;
@@ -148,6 +149,16 @@ public final class NotificationMessages {
         return new Message(
                 store + " đã trả lời đánh giá của bạn",
                 "Về " + review.getProduct().getName() + ": \u201C" + shorten(review.getStoreReply(), 100) + "\u201D");
+    }
+
+    /** Cho khách: vừa lên hạng thành viên. */
+    public static Message tierUp(MemberTier tier) {
+        String rate = tier.coinMultiplier() % 100 == 0
+                ? "x" + tier.coinMultiplier() / 100
+                : "x" + String.valueOf(tier.coinMultiplier() / 100.0).replace('.', ',');
+        return new Message(
+                "Chúc mừng bạn lên hạng " + tier.label() + "!",
+                "Từ đơn tiếp theo bạn nhận xu " + rate + " so với thường. Mua sắm tiếp để giữ hạng nhé.");
     }
 
     /** Cho cửa hàng: khách hỏi về sản phẩm. */

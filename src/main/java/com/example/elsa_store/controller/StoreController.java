@@ -6,13 +6,13 @@ import com.example.elsa_store.dto.request.StorePauseRequest;
 import com.example.elsa_store.dto.request.StoreUpdateRequest;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.StoreResponse;
+import com.example.elsa_store.service.StoreFollowService;
 import com.example.elsa_store.service.StoreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.elsa_store.service.StoreFollowService;
 
 @RestController
 @RequestMapping("/stores")

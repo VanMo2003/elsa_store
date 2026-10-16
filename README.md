@@ -82,7 +82,9 @@ nhóm lạ hoặc không thuộc vai trò báo 400.
   cho ai và độ trễ SMTP/FCM không làm chậm request.
 - Ứng dụng mail bỏ qua liên kết custom-scheme, nên nút "Mở ứng dụng" trong email trỏ tới trang công
   khai `GET /app-links/{target}` (dựng từ `APP_PUBLIC_URL`), trang đó chuyển điện thoại sang
-  `elsastore://{target}`. Chỉ các đích trong danh sách cho phép (`orders`, `notifications`) được phục vụ.
+  `elsastore://{target}`. Chỉ các đích trong danh sách cho phép (`orders`, `notifications`, `store-status`) được phục vụ;
+  nút **Chia sẻ** trong app sao chép `GET /app-links/products/{id}` hoặc `/app-links/stores/{id}` (mở `elsastore://products/{id}`,
+  `elsastore://stores/{id}`).
 
 **Email (Gmail):**
 

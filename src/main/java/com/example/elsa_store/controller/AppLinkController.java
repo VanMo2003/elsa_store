@@ -21,6 +21,9 @@ public class AppLinkController {
 
     private static final Set<String> TARGETS = Set.of(AppLinks.ORDERS, AppLinks.NOTIFICATIONS, AppLinks.STORE_STATUS);
 
+    /** Đích có id — dùng cho nút "Chia sẻ" sản phẩm / cửa hàng trong app. */
+    private static final Set<String> ITEM_TARGETS = Set.of("products", "stores");
+
     private static final String PAGE =
             """
             <!doctype html>
@@ -68,6 +71,19 @@ public class AppLinkController {
         if (!TARGETS.contains(target)) {
             return ResponseEntity.notFound().build();
         }
+        return page(target);
+    }
+
+    /** Liên kết chia sẻ sản phẩm / cửa hàng: {@code /app-links/products/12} mở {@code elsastore://products/12}. */
+    @GetMapping("/{target}/{id:\\d+}")
+    public ResponseEntity<String> openItem(@PathVariable String target, @PathVariable Long id) {
+        if (!ITEM_TARGETS.contains(target)) {
+            return ResponseEntity.notFound().build();
+        }
+        return page(target + "/" + id);
+    }
+
+    private static ResponseEntity<String> page(String target) {
         String deepLink = AppLinks.deepLink(target);
         // Chrome trên Android chỉ theo custom scheme ổn định qua URL intent://.
         String androidIntent = "intent://" + target + "#Intent;scheme=" + AppLinks.SCHEME + ";end";

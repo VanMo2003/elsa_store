@@ -30,6 +30,7 @@ public class SecurityConfig {
     // "/app-links/*": trang chuyển link trong email sang deep link elsastore:// của app.
     private final String[] PUBLIC_ENDPOINT_GET = {
         "/app-links/*",
+        "/app-links/*/*",
         "/categories",
         "/categories/{id:\\d+}",
         "/products",

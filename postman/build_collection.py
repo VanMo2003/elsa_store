@@ -152,6 +152,13 @@ step(F3, "Cửa hàng trả lời câu hỏi", "PUT", "/questions/{{questionId}}
      body={"answer": "Dạ có size 45, bạn đặt nhé!"})
 step(F3, "Hỏi đáp của sản phẩm (công khai, chỉ câu đã trả lời)", "GET", "/products/{{productId}}/questions",
      query={"page": "0", "size": "10"})
+step(F3, "Khách báo cáo sản phẩm vi phạm", "POST", "/products/{{productId}}/violations", token="customerToken",
+     body={"reason": "WRONG_DESCRIPTION", "note": "Màu thực tế khác ảnh"},
+     saves=[("violationId", "j.data.id", lambda j: j["data"]["id"])],
+     note="reason: FAKE, WRONG_DESCRIPTION, SCAM, PROHIBITED, OTHER. Đang chờ xử lý thì báo lại cùng sản phẩm bị 409.")
+step(F3, "ADMIN: báo cáo vi phạm chờ xử lý", "GET", "/violations", token="adminToken", query={"status": "PENDING"})
+step(F3, "ADMIN: bỏ qua báo cáo (kèm ghi chú gửi khách)", "PUT", "/violations/{{violationId}}", token="adminToken",
+     body={"status": "DISMISSED", "note": "Ảnh đúng với sản phẩm"})
 step(F3, "Khách xem tuỳ chọn thông báo", "GET", "/notifications/settings", token="customerToken",
      note="Nhóm tắt được: PRICE_DROP, NEW_PRODUCT, BACK_IN_STOCK, STORE_REPLIES (khách); CUSTOMER_FEEDBACK (cửa hàng).")
 step(F3, "Khách tắt thông báo sản phẩm mới", "PUT", "/notifications/settings", token="customerToken",
@@ -197,6 +204,8 @@ step(F4, "Xuất Excel", "GET", "/reports/export", token="ownerToken", query={"f
      note="Postman: Send and Download để lưu tệp .xlsx.")
 
 step(F5, "Nhân viên không xem được báo cáo", "GET", "/reports/dashboard", token="staffToken", expect=403)
+step(F5, "Nhân viên không báo cáo vi phạm", "POST", "/products/{{productId}}/violations", token="staffToken",
+     body={"reason": "FAKE"}, expect=403)
 step(F5, "Chủ cửa hàng không tự đình chỉ / mở lại", "PUT", "/store-registrations/{{storeId}}/reinstate",
      token="ownerToken", expect=403)
 step(F5, "Chủ cửa hàng không xem bảng xếp hạng toàn sàn", "GET", "/reports/stores", token="ownerToken",

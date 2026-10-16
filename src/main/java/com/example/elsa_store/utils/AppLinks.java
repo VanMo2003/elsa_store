@@ -13,6 +13,7 @@ public final class AppLinks {
     public static final String QUESTIONS = "questions";
     public static final String COINS = "coins";
     public static final String CART = "cart";
+    public static final String VIOLATIONS = "violations";
 
     private AppLinks() {}
 
@@ -46,6 +47,11 @@ public final class AppLinks {
     /** Câu hỏi của khách về sản phẩm của cửa hàng (màn trả lời câu hỏi). */
     public static String storeQuestions() {
         return deepLink(QUESTIONS);
+    }
+
+    /** Báo cáo vi phạm chờ ADMIN xử lý. */
+    public static String violations() {
+        return deepLink(VIOLATIONS);
     }
 
     /** Giỏ hàng của khách. */

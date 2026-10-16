@@ -45,6 +45,7 @@ chỉ được ghi log.
 | Có hồ sơ mở cửa hàng mới (hoặc chủ gửi lại hồ sơ) | Admin | Trong app + push |
 | Hồ sơ được duyệt / bị từ chối (kèm lý do) | Chủ cửa hàng | Trong app + push + email |
 | ADMIN đình chỉ (kèm lý do) / mở lại cửa hàng (`STORE_SUSPENDED` / `STORE_REINSTATED`) | Chủ, quản lý | Trong app + push |
+| Khách báo cáo sản phẩm vi phạm (`PRODUCT_REPORTED`, mở `elsastore://violations`) / ADMIN chốt báo cáo (`REPORT_HANDLED`) | Admin / khách báo cáo | Trong app + push |
 
 Chỉ báo khi trạng thái **thật sự đổi** (VNPay gọi lại nhiều lần không gửi trùng). Người nhận là tài
 khoản của khách hàng gắn với đơn, nếu đơn không có khách hàng thì là người tạo đơn.
@@ -491,6 +492,13 @@ Quy tắc chính:
   cho tới khi ADMIN gọi `PUT /store-registrations/{id}/approve`. Bị `reject` (kèm lý do) thì chủ sửa hồ sơ
   và gửi lại bằng `PUT /store-registrations/me`. ADMIN nhận thông báo khi có hồ sơ mới; chủ nhận thông báo
   và email khi có kết quả.
+- **Báo cáo vi phạm** (`violation_reports`): khách (`USER`) gửi `POST /products/{id}/violations` `{reason, note ≤ 500}` —
+  `reason`: `FAKE` (hàng giả), `WRONG_DESCRIPTION` (sai mô tả), `SCAM` (lừa đảo), `PROHIBITED` (hàng cấm / phản cảm),
+  `OTHER`; đang có báo cáo chờ xử lý cho cùng sản phẩm thì 409. Mọi ADMIN nhận `PRODUCT_REPORTED` (mở
+  `elsastore://violations`); tổng quan ADMIN có `pendingViolations`. ADMIN xem `GET /violations?status&page&size`
+  (kèm `pendingForProduct`, cửa hàng có đang bị đình chỉ không) và chốt bằng `PUT /violations/{id}` `{status: RESOLVED |
+  DISMISSED, note}` — lần chốt đầu báo người báo cáo `REPORT_HANDLED` kèm ghi chú. Vi phạm nặng thì ADMIN mở hồ sơ cửa
+  hàng để đình chỉ (bên dưới).
 - **Đình chỉ cửa hàng** (vi phạm): ADMIN gọi `PUT /store-registrations/{id}/suspend` `{reason}` với cửa hàng đã duyệt
   → `stores.suspended`, `suspend_reason`, `suspended_at`. Cửa hàng và sản phẩm biến khỏi mọi chỗ khách thấy (trang cửa
   hàng / sản phẩm trả 404, tìm kiếm, gợi ý, trang chủ, danh sách cửa hàng, yêu thích, thông báo "giảm giá / có hàng / sản
@@ -539,7 +547,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 91 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 95 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

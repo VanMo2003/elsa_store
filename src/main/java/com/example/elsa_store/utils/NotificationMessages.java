@@ -1,6 +1,7 @@
 package com.example.elsa_store.utils;
 
 import com.example.elsa_store.constant.MemberTier;
+import com.example.elsa_store.constant.ViolationStatus;
 import com.example.elsa_store.entity.Cart;
 import com.example.elsa_store.entity.CartItem;
 import com.example.elsa_store.entity.Order;
@@ -10,6 +11,7 @@ import com.example.elsa_store.entity.ProductQuestion;
 import com.example.elsa_store.entity.ProductReview;
 import com.example.elsa_store.entity.ReturnRequest;
 import com.example.elsa_store.entity.Store;
+import com.example.elsa_store.entity.ViolationReport;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -252,6 +254,36 @@ public final class NotificationMessages {
                 "Cửa hàng đã được duyệt",
                 "Cửa hàng " + store.getName()
                         + " đã sẵn sàng. Mở ứng dụng để thêm sản phẩm, quản lý và nhân viên.");
+    }
+
+    /** Cho ADMIN: khách báo cáo sản phẩm vi phạm. */
+    public static Message productReported(ViolationReport report) {
+        String store = report.getStore() == null ? "" : " (" + report.getStore().getName() + ")";
+        return new Message(
+                "Báo cáo vi phạm: " + violationLabel(report),
+                report.getProduct().getName() + store
+                        + (report.getNote() == null ? "" : ": \u201C" + shorten(report.getNote(), 80) + "\u201D"));
+    }
+
+    /** Cho khách: báo cáo vi phạm đã được xử lý / bỏ qua. */
+    public static Message reportHandled(ViolationReport report) {
+        boolean resolved = report.getStatus() == ViolationStatus.RESOLVED;
+        String note = report.getAdminNote() == null ? "" : " Ghi chú: " + shorten(report.getAdminNote(), 120);
+        return new Message(
+                resolved ? "Cảm ơn bạn đã báo cáo vi phạm" : "Báo cáo vi phạm đã được xem xét",
+                (resolved
+                        ? "Elsa Store đã xử lý báo cáo về " + report.getProduct().getName() + "."
+                        : "Báo cáo về " + report.getProduct().getName() + " chưa đủ cơ sở để xử lý.") + note);
+    }
+
+    private static String violationLabel(ViolationReport report) {
+        return switch (report.getReason()) {
+            case FAKE -> "hàng giả";
+            case WRONG_DESCRIPTION -> "sai mô tả";
+            case SCAM -> "lừa đảo";
+            case PROHIBITED -> "hàng cấm / phản cảm";
+            case OTHER -> "khác";
+        };
     }
 
     public static Message storeSuspended(Store store, String reason) {

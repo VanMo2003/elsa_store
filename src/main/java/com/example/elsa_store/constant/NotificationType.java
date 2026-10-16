@@ -42,5 +42,9 @@ public enum NotificationType {
     /** Cho chủ và quản lý: ADMIN đình chỉ cửa hàng. */
     STORE_SUSPENDED,
     /** Cho chủ và quản lý: ADMIN mở lại cửa hàng. */
-    STORE_REINSTATED
+    STORE_REINSTATED,
+    /** Cho ADMIN: khách báo cáo một sản phẩm vi phạm. */
+    PRODUCT_REPORTED,
+    /** Cho khách: báo cáo vi phạm của mình đã được xử lý / bỏ qua. */
+    REPORT_HANDLED
 }

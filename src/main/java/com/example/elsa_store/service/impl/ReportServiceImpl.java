@@ -5,6 +5,7 @@ import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.constant.ReturnStatus;
 import com.example.elsa_store.constant.RevenueGroupBy;
 import com.example.elsa_store.constant.Role;
+import com.example.elsa_store.constant.ViolationStatus;
 import com.example.elsa_store.dto.response.*;
 import com.example.elsa_store.entity.Inventory;
 import com.example.elsa_store.entity.ProductVariant;
@@ -21,6 +22,7 @@ import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
 import com.example.elsa_store.repository.ReturnRequestRepository;
 import com.example.elsa_store.repository.StoreRepository;
+import com.example.elsa_store.repository.ViolationReportRepository;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.service.ExcelReportService;
 import com.example.elsa_store.service.ReportService;
@@ -57,6 +59,13 @@ public class ReportServiceImpl implements ReportService {
     private final ReturnRequestRepository returnRequestRepository;
     private final ProductReviewRepository reviewRepository;
     private ProductQuestionRepository questionRepository;
+    private ViolationReportRepository violationRepository;
+
+    /** Đếm báo cáo vi phạm chờ xử lý cho tổng quan ADMIN (tiêm qua setter để giữ hàm dựng dùng trong test). */
+    @Autowired
+    void setViolationRepository(ViolationReportRepository violationRepository) {
+        this.violationRepository = violationRepository;
+    }
 
     /** Đếm câu hỏi chưa trả lời cho tổng quan (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
     @Autowired
@@ -461,6 +470,9 @@ public class ReportServiceImpl implements ReportService {
 
         return DashboardResponse.builder()
                 .suspendReason(suspendReason)
+                .pendingViolations(scope != null || violationRepository == null
+                        ? null
+                        : violationRepository.countByStatus(ViolationStatus.PENDING))
                 .todayRevenue(orderRepository.revenueBetween(startOfToday, startOfTomorrow, scope))
                 .yesterdayRevenue(orderRepository.revenueBetween(today.minusDays(1).atStartOfDay(), startOfToday, scope))
                 .monthRevenue(monthRevenue)

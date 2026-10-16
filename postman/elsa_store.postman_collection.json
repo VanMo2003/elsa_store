@@ -4035,6 +4035,59 @@
           }
         },
         {
+          "name": "Lượt xem sản phẩm và tỉ lệ chuyển đổi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/product-views?from={{today}}&to={{today}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "product-views"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{today}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{today}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Lượt xem đếm khi khách / người chưa đăng nhập mở GET /products/{id}; người của cửa hàng và ADMIN không tính."
+          }
+        },
+        {
           "name": "ADMIN xem báo cáo một cửa hàng",
           "event": [
             {

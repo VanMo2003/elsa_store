@@ -35,6 +35,9 @@ public interface ReportService {
 
     List<LowStockResponse> lowStock(Long storeId);
 
+    /** Sản phẩm được xem nhiều nhất trong kỳ kèm số đơn và tỉ lệ chuyển đổi. */
+    List<ProductViewStatResponse> productViews(LocalDate from, LocalDate to, int limit, Long storeId);
+
     /** ADMIN: xếp hạng mọi cửa hàng đã duyệt theo doanh thu trong kỳ. */
     List<StoreRankingResponse> storeRanking(LocalDate from, LocalDate to);
 

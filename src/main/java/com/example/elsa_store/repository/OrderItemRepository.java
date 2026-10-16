@@ -82,6 +82,19 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                                @Param("storeId") Long storeId);
 
     /** Dòng hàng mới nhất của sản phẩm trong các đơn đã hoàn thành của khách — điều kiện để viết đánh giá. */
+    /** Mỗi dòng {productId, số đơn, số món} của đơn (trừ đơn huỷ) đặt trong kỳ có các sản phẩm {@code productIds}. */
+    @Query("""
+        select i.productVariant.product.id, count(distinct o.id), sum(i.quantity)
+        from OrderItem i join i.order o
+        where i.productVariant.product.id in :productIds
+          and o.orderDate >= :from and o.orderDate < :to
+          and o.status <> com.example.elsa_store.constant.OrderStatus.DA_HUY
+        group by i.productVariant.product.id
+    """)
+    List<Object[]> ordersForProducts(@Param("productIds") Collection<Long> productIds,
+                                     @Param("from") LocalDateTime from,
+                                     @Param("to") LocalDateTime to);
+
     /**
      * "Khách mua sản phẩm này cũng mua": sản phẩm khác nằm chung đơn (không tính đơn huỷ) với {@code productId}, nhiều đơn
      * chung nhất trước, hoà thì đơn mới hơn trước. Mỗi dòng {productId, số đơn chung}.

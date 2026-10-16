@@ -7,7 +7,9 @@ import com.example.elsa_store.dto.response.ProductDetailResponse;
 import com.example.elsa_store.dto.response.ProductImageResponse;
 import com.example.elsa_store.dto.response.ProductResponse;
 import com.example.elsa_store.service.ProductService;
+import com.example.elsa_store.service.impl.ProductViewCounter;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.example.elsa_store.dto.common.ApiResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 import org.springframework.http.MediaType;
@@ -21,6 +23,13 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private ProductViewCounter viewCounter;
+
+    /** Đếm lượt xem trang sản phẩm (tiêm qua setter để giữ nguyên hàm dựng). */
+    @Autowired
+    void setViewCounter(ProductViewCounter viewCounter) {
+        this.viewCounter = viewCounter;
+    }
 
     public ProductController(ProductService productService) {
         this.productService = productService;
@@ -55,7 +64,11 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public ApiResponse<ProductDetailResponse> getById(@PathVariable Long id) {
-        return ApiResponse.ok(productService.getById(id));
+        ProductDetailResponse detail = productService.getById(id);
+        if (viewCounter != null) {
+            viewCounter.record(id, detail.getStoreId());
+        }
+        return ApiResponse.ok(detail);
     }
 
     /** Sản phẩm của cửa hàng người gọi, gồm cả sản phẩm đang ẩn. */

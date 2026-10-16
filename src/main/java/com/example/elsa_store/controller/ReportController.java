@@ -107,6 +107,16 @@ public class ReportController {
         return ApiResponse.ok(reportService.breakdown(from, to, statuses, storeId));
     }
 
+    /** Sản phẩm được xem nhiều nhất trong kỳ, số đơn và tỉ lệ chuyển đổi (chủ / quản lý; ADMIN chọn storeId hoặc toàn sàn). */
+    @GetMapping("/product-views")
+    public ApiResponse<List<ProductViewStatResponse>> productViews(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) Long storeId) {
+        return ApiResponse.ok(reportService.productViews(from, to, limit, storeId));
+    }
+
     /** ADMIN: xếp hạng các cửa hàng theo doanh thu trong kỳ (kèm số đơn, tỉ lệ huỷ, điểm đánh giá, thị phần). */
     @GetMapping("/stores")
     public ApiResponse<List<StoreRankingResponse>> storeRanking(

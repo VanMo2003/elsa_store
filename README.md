@@ -416,6 +416,7 @@ nay" đúng giờ Việt Nam dù máy chủ đặt UTC.
 | `GET /reports/summary?from&to` | Số đơn, tiền hàng gốc, giảm giá, phí giao hàng khách trả (`shippingTotal`), doanh thu thực thu, giá trị TB/đơn, **giá vốn, lợi nhuận gộp, biên lợi nhuận**, số lượng bán chưa có giá vốn, **kỳ liền trước cùng độ dài** (`previous`) và % tăng trưởng doanh thu / số đơn / lợi nhuận (`null` khi kỳ trước bằng 0) |
 | `GET /reports/breakdown?from&to` | Doanh thu theo cách trả tiền (`COD`, `VNPAY`, `OTHER`) và kênh bán (`ONLINE` khách tự đặt, `COUNTER` lập tại quầy), kèm tỷ trọng |
 | `GET /reports/revenue?groupBy=DAY\|WEEK\|MONTH\|YEAR`, `top-products` (kèm lợi nhuận, `null` khi còn món chưa có giá vốn), `revenue-by-category`, `top-customers`, `staff-performance`, `cancellation-rate`, `low-stock` | Như tên |
+| `GET /reports/product-views?from&to&limit` | Sản phẩm được xem nhiều nhất (`product_view_days`: mỗi lần khách / người chưa đăng nhập mở `GET /products/{id}` cộng 1 lượt trong ngày bằng `INSERT … ON DUPLICATE KEY UPDATE`; người của cửa hàng và ADMIN không tính), kèm `orders` (đơn trừ đơn huỷ đặt trong kỳ có sản phẩm), `unitsSold` và `conversionRate` = orders / views |
 | `GET /reports/stores?from&to` | **Chỉ ADMIN:** xếp hạng mọi cửa hàng đã duyệt theo doanh thu kỳ (`rank`, `revenue`, `revenueShare` 0–1 trên toàn sàn, `completedOrders` theo ngày hoàn thành, `placedOrders` / `cancelledOrders` / `cancelRate` theo ngày đặt, `ratingAverage` / `ratingCount` trên mọi sản phẩm, `paused`); cửa hàng chưa bán gì vẫn có mặt ở cuối |
 | `GET /reports/export?from&to` | Excel: tổng quan (có lợi nhuận và so với kỳ trước), doanh thu theo ngày, danh mục, sản phẩm (giá vốn, lãi), **kênh bán**, khách hàng, nhân viên, tồn kho thấp, **giá trị kho** (khi xem một cửa hàng) |
 
@@ -561,7 +562,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 102 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 103 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

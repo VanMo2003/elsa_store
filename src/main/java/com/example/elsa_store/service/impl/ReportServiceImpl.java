@@ -8,6 +8,7 @@ import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.constant.ViolationStatus;
 import com.example.elsa_store.dto.response.*;
 import com.example.elsa_store.entity.Inventory;
+import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductVariant;
 import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.entity.User;
@@ -18,6 +19,8 @@ import com.example.elsa_store.repository.InventoryRepository;
 import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.OrderRepository;
 import com.example.elsa_store.repository.ProductQuestionRepository;
+import com.example.elsa_store.repository.ProductRepository;
+import com.example.elsa_store.repository.ProductViewDayRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
 import com.example.elsa_store.repository.ReturnRequestRepository;
@@ -60,6 +63,15 @@ public class ReportServiceImpl implements ReportService {
     private final ProductReviewRepository reviewRepository;
     private ProductQuestionRepository questionRepository;
     private ViolationReportRepository violationRepository;
+    private ProductViewDayRepository viewRepository;
+    private ProductRepository productRepository;
+
+    /** Lượt xem sản phẩm (tiêm qua setter để giữ hàm dựng dùng trong test). */
+    @Autowired
+    void setViewRepositories(ProductViewDayRepository viewRepository, ProductRepository productRepository) {
+        this.viewRepository = viewRepository;
+        this.productRepository = productRepository;
+    }
 
     /** Đếm báo cáo vi phạm chờ xử lý cho tổng quan ADMIN (tiêm qua setter để giữ hàm dựng dùng trong test). */
     @Autowired
@@ -354,6 +366,43 @@ public class ReportServiceImpl implements ReportService {
                 .cancelledOrders(cancelled)
                 .rate(total == 0 ? 0.0 : (double) cancelled / total)
                 .build();
+    }
+
+    @Override
+    public List<ProductViewStatResponse> productViews(LocalDate from, LocalDate to, int limit, Long storeId) {
+        checkRange(from, to);
+        Long scope = scope(storeId);
+        if (viewRepository == null) {
+            return List.of();
+        }
+        int size = Math.min(Math.max(limit, 1), 50);
+        List<Object[]> viewed = viewRepository.topViewed(scope, from, to, PageRequest.of(0, size));
+        List<Long> ids = viewed.stream().map(r -> ((Number) r[0]).longValue()).toList();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, Object[]> orders = new HashMap<>();
+        for (Object[] row : orderItemRepository.ordersForProducts(ids, start(from), endExclusive(to))) {
+            orders.put(((Number) row[0]).longValue(), row);
+        }
+        Map<Long, Product> products = new HashMap<>();
+        productRepository.findAllById(ids).forEach(p -> products.put(p.getId(), p));
+        List<ProductViewStatResponse> result = new ArrayList<>();
+        for (Object[] row : viewed) {
+            long id = ((Number) row[0]).longValue();
+            long views = number(row[1]).longValue();
+            Object[] o = orders.get(id);
+            long orderCount = o == null ? 0 : number(o[1]).longValue();
+            var product = products.get(id);
+            result.add(new ProductViewStatResponse(id,
+                    product == null ? "Sản phẩm đã xoá" : product.getName(),
+                    product == null ? null : product.getImageUrl(),
+                    views,
+                    orderCount,
+                    o == null ? 0 : number(o[2]).longValue(),
+                    views == 0 ? 0 : Math.min(1.0, (double) orderCount / views)));
+        }
+        return result;
     }
 
     @Override

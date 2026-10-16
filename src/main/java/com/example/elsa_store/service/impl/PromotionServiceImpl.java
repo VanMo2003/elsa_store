@@ -17,11 +17,13 @@ import com.example.elsa_store.security.AccessGuard.Access;
 import com.example.elsa_store.service.PromotionProductService;
 import com.example.elsa_store.service.PromotionService;
 import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /** Khuyến mãi của từng cửa hàng: chỉ chủ và quản lý thao tác; ADMIN chỉ xem. */
 @Service
@@ -33,6 +35,7 @@ public class PromotionServiceImpl implements PromotionService {
     private final AccessGuard accessGuard;
     private final PricingService pricingService;
     private final PromotionProductService promotionProductService;
+    private PriceDropAlerts priceDropAlerts;
 
     public PromotionServiceImpl(
             PromotionRepository promotionRepository,
@@ -54,7 +57,9 @@ public class PromotionServiceImpl implements PromotionService {
         Promotion p = PromotionMapper.toEntity(req);
         p.setStore(store);
         p = promotionRepository.save(p);
-        return withProducts(p, req.getProductIds());
+        PromotionResponse res = withProducts(p, req.getProductIds());
+        alertWishlists(p, Set.of(), res);
+        return res;
     }
 
     @Override
@@ -62,8 +67,23 @@ public class PromotionServiceImpl implements PromotionService {
         Promotion p = find(id);
         accessGuard.authorize(p.getStore(), Access.MANAGER_WRITE);
         validate(req, p.getStore(), p.getId());
+        Set<Long> before = PriceDropAlerts.discountedBy(p, pricingService.today());
         PromotionMapper.update(p, req);
-        return withProducts(p, req.getProductIds());
+        PromotionResponse res = withProducts(p, req.getProductIds());
+        alertWishlists(p, before, res);
+        return res;
+    }
+
+    /** Báo khách thả tim các sản phẩm vừa được giảm giá (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
+    @Autowired
+    void setPriceDropAlerts(PriceDropAlerts priceDropAlerts) {
+        this.priceDropAlerts = priceDropAlerts;
+    }
+
+    private void alertWishlists(Promotion p, Set<Long> before, PromotionResponse res) {
+        if (priceDropAlerts != null) {
+            priceDropAlerts.afterChange(p, before, res.getProductIds(), pricingService.today());
+        }
     }
 
     /**

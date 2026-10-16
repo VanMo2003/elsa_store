@@ -2,6 +2,7 @@ package com.example.elsa_store.utils;
 
 import com.example.elsa_store.entity.Order;
 import com.example.elsa_store.entity.Product;
+import com.example.elsa_store.entity.Promotion;
 import com.example.elsa_store.entity.ProductReview;
 import com.example.elsa_store.entity.ReturnRequest;
 import com.example.elsa_store.entity.Store;
@@ -114,6 +115,17 @@ public final class NotificationMessages {
         return new Message(
                 "Đánh giá mới " + review.getRating() + "\u2605",
                 "Khách vừa đánh giá " + review.getProduct().getName() + comment);
+    }
+
+    /** Cho khách đã thả tim: sản phẩm vừa được giảm giá. */
+    public static Message priceDrop(Product product, Promotion promotion) {
+        boolean percent = promotion.getType() != null && promotion.getType() == 2;
+        String off = percent
+                ? "giảm " + NumberFormat.getIntegerInstance(VI).format(promotion.getValue()) + "%"
+                : "giảm " + money(promotion.getValue());
+        return new Message(
+                "Sản phẩm bạn thích đang giảm giá",
+                product.getName() + " đang " + off + " (" + promotion.getName() + "). Mua ngay kẻo lỡ!");
     }
 
     /** Cho khách đã thả tim: sản phẩm hết hàng vừa có lại. */

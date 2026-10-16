@@ -1,5 +1,7 @@
 # elsa_store
 
+> Tổng hợp chức năng theo vai trò, tác vụ tự động, thông báo, dữ liệu và danh sách API: [`docs/TINH_NANG.md`](docs/TINH_NANG.md).
+
 Backend Spring Boot 3.5 / Java 21 của ứng dụng bán hàng thời trang Elsa Store (đồ án tốt nghiệp).
 API nằm dưới `/elsa-store/api`, dùng MySQL, xác thực JWT, thanh toán VNPay, email (Spring Mail) và
 thông báo đẩy (Firebase Cloud Messaging), chat thời gian thực giữa khách và cửa hàng (WebSocket) và trợ lý

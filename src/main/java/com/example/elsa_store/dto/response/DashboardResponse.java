@@ -42,6 +42,9 @@ public class DashboardResponse {
     /** Đánh giá của khách chưa được trả lời (khi xem một cửa hàng). */
     private Long unrepliedReviews;
 
+    /** Câu hỏi của khách chưa được trả lời (khi xem một cửa hàng). */
+    private Long unansweredQuestions;
+
     /** Đơn đặt hôm nay (mọi trạng thái). */
     private Long todayOrders;
 

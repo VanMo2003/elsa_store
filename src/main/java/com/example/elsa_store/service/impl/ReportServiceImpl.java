@@ -14,6 +14,7 @@ import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.repository.InventoryRepository;
 import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.OrderRepository;
+import com.example.elsa_store.repository.ProductQuestionRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
 import com.example.elsa_store.repository.ProductVariantRepository;
 import com.example.elsa_store.repository.ReturnRequestRepository;
@@ -22,6 +23,7 @@ import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.service.ExcelReportService;
 import com.example.elsa_store.service.ReportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +53,13 @@ public class ReportServiceImpl implements ReportService {
     private final ExcelReportService excelReportService;
     private final ReturnRequestRepository returnRequestRepository;
     private final ProductReviewRepository reviewRepository;
+    private ProductQuestionRepository questionRepository;
+
+    /** Đếm câu hỏi chưa trả lời cho tổng quan (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
+    @Autowired
+    void setQuestionRepository(ProductQuestionRepository questionRepository) {
+        this.questionRepository = questionRepository;
+    }
 
     // ------------------------------------------------------------------ phạm vi và tham số
 
@@ -401,6 +410,9 @@ public class ReportServiceImpl implements ReportService {
                         ? null
                         : returnRequestRepository.countByStore_IdAndStatus(scope, ReturnStatus.CHO_DUYET))
                 .unrepliedReviews(scope == null ? null : reviewRepository.countByProduct_Store_IdAndStoreReplyIsNull(scope))
+                .unansweredQuestions(scope == null || questionRepository == null
+                        ? null
+                        : questionRepository.countByProduct_Store_IdAndAnswerIsNull(scope))
                 .completedOrders(countStatus(scope, OrderStatus.HOAN_THANH))
                 .todayOrders(orderRepository.countInRange(startOfToday, startOfTomorrow, null, scope))
                 .lowStockVariants(lowStock)

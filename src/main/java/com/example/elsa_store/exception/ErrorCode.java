@@ -35,7 +35,9 @@ public enum ErrorCode {
     PURCHASE_ORDER_LOCKED(1025, "Purchase order is no longer a draft", HttpStatus.CONFLICT),
     RESET_CODE_INVALID(1026, "Reset code is invalid or has expired", HttpStatus.BAD_REQUEST),
     TOO_MANY_RESET_REQUESTS(1027, "Too many password reset requests, try again later", HttpStatus.TOO_MANY_REQUESTS),
-    REVIEW_NOT_ALLOWED(1028, "Only customers who received this product can review it", HttpStatus.FORBIDDEN);
+    REVIEW_NOT_ALLOWED(1028, "Only customers who received this product can review it", HttpStatus.FORBIDDEN),
+    TOO_MANY_PENDING_QUESTIONS(
+            1029, "Too many unanswered questions for this product, wait for the store to reply", HttpStatus.TOO_MANY_REQUESTS);
 
     private int code;
     private String message;

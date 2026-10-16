@@ -137,6 +137,15 @@ step(F3, "Danh sách đánh giá (công khai)", "GET", "/products/{{productId}}/
 step(F3, "Cửa hàng: đánh giá chưa trả lời", "GET", "/reviews/store", token="staffToken", query={"unreplied": "true"})
 step(F3, "Cửa hàng trả lời đánh giá", "PUT", "/reviews/{{reviewId}}/reply", token="staffToken",
      body={"reply": "Cảm ơn bạn đã ủng hộ Elsa!"})
+step(F3, "Khách hỏi về sản phẩm", "POST", "/products/{{productId}}/questions", token="customerToken",
+     body={"question": "Giày có size 45 không?"},
+     saves=[("questionId", "j.data.id", lambda j: j["data"]["id"])],
+     note="Mỗi khách treo tối đa 3 câu chưa được trả lời cho một sản phẩm (quá thì 429, mã 1029).")
+step(F3, "Cửa hàng: câu hỏi chưa trả lời", "GET", "/questions/store", token="staffToken", query={"unanswered": "true"})
+step(F3, "Cửa hàng trả lời câu hỏi", "PUT", "/questions/{{questionId}}/answer", token="staffToken",
+     body={"answer": "Dạ có size 45, bạn đặt nhé!"})
+step(F3, "Hỏi đáp của sản phẩm (công khai, chỉ câu đã trả lời)", "GET", "/products/{{productId}}/questions",
+     query={"page": "0", "size": "10"})
 step(F3, "Khách gửi yêu cầu trả 1 sản phẩm", "POST", "/returns", token="customerToken",
      body={"orderId": "{{orderId}}", "reason": "Sai kích cỡ", "note": "Chật quá",
            "items": [{"productVariantId": "{{variantId}}", "quantity": 1}]},
@@ -182,6 +191,8 @@ step(F5, "ADMIN chỉ xem, không sửa khuyến mãi", "POST", "/promotions", t
 step(F5, "Khách chưa đăng nhập không có danh sách yêu thích", "GET", "/wishlist/ids", expect=401)
 step(F5, "Nhân viên không viết đánh giá", "POST", "/products/{{productId}}/reviews", token="staffToken",
      body={"rating": 5}, expect=403)
+step(F5, "Nhân viên không đặt câu hỏi", "POST", "/products/{{productId}}/questions", token="staffToken",
+     body={"question": "x"}, expect=403)
 
 step(F6, "Quên mật khẩu: gửi mã (luôn trả cùng kết quả)", "POST", "/auth/password/forgot",
      body={"identifier": "khach{{runSuffix}}"},

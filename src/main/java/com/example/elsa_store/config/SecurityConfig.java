@@ -39,6 +39,8 @@ public class SecurityConfig {
         "/products/{id:\\d+}/reviews",
         "/products/{id:\\d+}/reviews/summary",
         "/products/{id:\\d+}/reviews/me",
+        // Hỏi đáp sản phẩm: câu đã trả lời ai cũng đọc được.
+        "/products/{id:\\d+}/questions",
         "/product-variants",
         "/product-variants/{id:\\d+}",
         "/stores",

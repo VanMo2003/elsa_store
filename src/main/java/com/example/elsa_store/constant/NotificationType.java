@@ -30,5 +30,9 @@ public enum NotificationType {
     /** Cho khách đã thả tim: sản phẩm vừa được khuyến mãi tự động giảm giá. */
     PRICE_DROP,
     /** Cho khách theo dõi cửa hàng: cửa hàng mở bán sản phẩm mới. */
-    NEW_PRODUCT
+    NEW_PRODUCT,
+    /** Cho cửa hàng (chủ, quản lý, nhân viên): khách hỏi về một sản phẩm. */
+    QUESTION_NEW,
+    /** Cho khách: cửa hàng trả lời câu hỏi của mình. */
+    QUESTION_ANSWERED
 }

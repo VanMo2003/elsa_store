@@ -31,6 +31,8 @@ chỉ được ghi log.
 | Một đơn làm sản phẩm vừa xuống dưới mức cảnh báo tồn kho hoặc hết hàng (`LOW_STOCK`, mở `elsastore://inventory`) | Chủ, quản lý (nhân viên không xem được kho) | Trong app + push |
 | Khách viết đánh giá mới (`REVIEW_NEW`, mở `elsastore://reviews`; sửa đánh giá thì không báo lại) | Chủ, quản lý, nhân viên | Trong app + push |
 | Cửa hàng trả lời / sửa câu trả lời đánh giá (`REVIEW_REPLIED`, mở `elsastore://products/{id}`) | Khách viết đánh giá | Trong app + push |
+| Khách hỏi về sản phẩm (`QUESTION_NEW`, mở `elsastore://questions`) | Chủ, quản lý, nhân viên | Trong app + push |
+| Cửa hàng trả lời / sửa câu trả lời câu hỏi (`QUESTION_ANSWERED`, mở `elsastore://products/{id}`) | Khách đặt câu hỏi | Trong app + push |
 | Sản phẩm đang hết hàng có hàng lại (nhập hàng, kiểm kê, hoàn kho do huỷ đơn / trả hàng — `BACK_IN_STOCK`, mở `elsastore://products/{id}`; chỉ báo lúc chuyển từ hết sang còn) | Khách đã thả tim sản phẩm | Trong app + push |
 | Chủ / quản lý tạo hoặc sửa khuyến mãi tự động đang chạy làm sản phẩm **vừa được** giảm giá (`PRICE_DROP`, mở `elsastore://products/{id}`; sửa tên / sản phẩm đã giảm trước đó không báo lại; khuyến mãi hẹn ngày bắt đầu sau và mã giảm giá không báo) | Khách đã thả tim sản phẩm | Trong app + push |
 | Cửa hàng đang theo dõi mở bán sản phẩm mới (phân loại đầu tiên của sản phẩm đang bán — `NEW_PRODUCT`, mở `elsastore://products/{id}`) | Khách theo dõi cửa hàng | Trong app + push |
@@ -281,6 +283,18 @@ cho cả trang.
 | `GET /reviews/store?rating&unreplied&page&size` | chủ, quản lý, nhân viên | Đánh giá mọi sản phẩm của cửa hàng, lọc số sao / chưa trả lời |
 | `PUT /reviews/{id}/reply` `{reply}` | chủ, quản lý, nhân viên | Trả lời công khai dưới đánh giá (gửi lại = sửa) |
 
+**Hỏi đáp sản phẩm** (`product_questions`): khách (`USER`, không cần đã mua) hỏi về sản phẩm đang bán, người của cửa hàng
+trả lời. Câu đã trả lời ai cũng đọc được; câu chưa trả lời chỉ người hỏi (và cửa hàng) thấy. Mỗi khách treo tối đa **3
+câu chưa được trả lời** cho một sản phẩm (quá thì `1029`, HTTP 429) để chống spam. Tên người hỏi được che như đánh giá.
+
+| Endpoint | Ai | Việc |
+|---|---|---|
+| `GET /products/{id}/questions?page&size` | công khai | Câu đã trả lời + câu của chính người xem, mới nhất trước; có `answer`, `answeredAt`, `storeName`, `mine` |
+| `POST /products/{id}/questions` `{question ≤ 500 ký tự}` | khách | Đặt câu hỏi; báo chủ, quản lý, nhân viên |
+| `DELETE /questions/{id}` | người hỏi; chủ, quản lý, nhân viên; ADMIN | Xoá câu của mình / gỡ câu hỏi không phù hợp |
+| `GET /questions/store?unanswered&page&size` | chủ, quản lý, nhân viên | Câu hỏi về sản phẩm của cửa hàng; mặc định `unanswered=true` |
+| `PUT /questions/{id}/answer` `{answer ≤ 1000 ký tự}` | chủ, quản lý, nhân viên | Trả lời công khai (gửi lại = sửa); ADMIN chỉ xem |
+
 **Trang cửa hàng công khai:** `GET /stores/{id}` (không cần đăng nhập, chỉ cửa hàng đã duyệt) trả tên, ảnh, địa chỉ, SĐT,
 giới thiệu, chính sách giao hàng và thêm `ratingAverage` / `ratingCount` (gộp đánh giá mọi sản phẩm), `productCount`
 (sản phẩm đang bán), `soldCount` (số món của đơn đã hoàn thành); không có email, tài khoản của chủ. Sản phẩm của cửa hàng
@@ -335,7 +349,7 @@ Mã yêu cầu `TH-yyMMdd-XXXX`.
 
 Mỗi bước báo cho bên kia (`RETURN_REQUESTED` cho cửa hàng, `RETURN_UPDATED` cho khách, mở `elsastore://returns`). Báo
 cáo tổng hợp có `refundTotal`, `refundCount` (theo ngày hoàn tiền) và `netAfterRefunds` = doanh thu thực thu − tiền hoàn;
-tổng quan có `pendingReturns` và `unrepliedReviews` (đánh giá chưa trả lời). Lợi nhuận gộp chưa trừ hàng trả.
+tổng quan có `pendingReturns`, `unrepliedReviews` (đánh giá chưa trả lời) và `unansweredQuestions` (câu hỏi chưa trả lời). Lợi nhuận gộp chưa trừ hàng trả.
 
 ## Doanh thu, kho và nhập hàng
 
@@ -478,10 +492,10 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 78 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 83 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
-kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi
+kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi
 mật khẩu. File được sinh từ `postman/build_collection.py` (sửa danh sách request ở đó rồi sinh lại; `--run <baseUrl>`
 chạy thử cả bộ trên một BE đang chạy).
 

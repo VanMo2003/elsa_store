@@ -3,6 +3,7 @@ package com.example.elsa_store.utils;
 import com.example.elsa_store.entity.Order;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.Promotion;
+import com.example.elsa_store.entity.ProductQuestion;
 import com.example.elsa_store.entity.ProductReview;
 import com.example.elsa_store.entity.ReturnRequest;
 import com.example.elsa_store.entity.Store;
@@ -147,6 +148,22 @@ public final class NotificationMessages {
         return new Message(
                 store + " đã trả lời đánh giá của bạn",
                 "Về " + review.getProduct().getName() + ": \u201C" + shorten(review.getStoreReply(), 100) + "\u201D");
+    }
+
+    /** Cho cửa hàng: khách hỏi về sản phẩm. */
+    public static Message questionNew(ProductQuestion question) {
+        return new Message(
+                "Khách hỏi về sản phẩm",
+                question.getProduct().getName() + ": \u201C" + shorten(question.getQuestion(), 80) + "\u201D");
+    }
+
+    /** Cho khách: cửa hàng trả lời câu hỏi. */
+    public static Message questionAnswered(ProductQuestion question) {
+        Store owner = question.getProduct().getStore();
+        String store = owner == null ? "Cửa hàng" : owner.getName();
+        return new Message(
+                store + " đã trả lời câu hỏi của bạn",
+                "Về " + question.getProduct().getName() + ": \u201C" + shorten(question.getAnswer(), 100) + "\u201D");
     }
 
     private static String shorten(String text, int max) {

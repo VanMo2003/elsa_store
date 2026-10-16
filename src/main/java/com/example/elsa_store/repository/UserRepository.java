@@ -39,6 +39,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findAllByRole(Role role, Pageable pageable);
 
+    /** ADMIN tìm tài khoản: theo vai trò và / hoặc mẫu {@code like} (đã viết thường) trên tên đăng nhập, họ tên, email, SĐT. */
+    @Query("""
+        select u from User u
+        where (:role is null or u.role = :role)
+          and (:pattern is null
+               or lower(u.username) like :pattern
+               or lower(u.fullName) like :pattern
+               or lower(u.email) like :pattern
+               or u.phone like :pattern)
+    """)
+    Page<User> search(@Param("role") Role role, @Param("pattern") String pattern, Pageable pageable);
+
     /** Quản lý và nhân viên của một cửa hàng. */
     List<User> findAllByStore_Id(Long storeId);
 

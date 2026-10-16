@@ -74,8 +74,9 @@ public class UserController {
     @GetMapping
     public ApiResponse<PageResponse<UserResponse>> getAll(
             @RequestParam(required = false) Role role,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(userService.getAll(role, page, size));
+        return ApiResponse.ok(userService.getAll(role, keyword, page, size));
     }
 }

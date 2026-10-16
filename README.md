@@ -408,7 +408,7 @@ cửa hàng; danh mục là dùng chung và chỉ ADMIN quản lý. Mọi kiểm
 | Xem cửa hàng, sản phẩm, danh mục (công khai, không cần đăng nhập) | ✔ | ✔ | ✔ | ✔ | ✔ |
 | Đăng ký mở cửa hàng (`POST /store-registrations`) | – | – | – | – | ✔ (công khai) |
 | Duyệt / từ chối cửa hàng | ✔ | – | – | – | – |
-| Quản lý danh mục, khoá / mở khoá tài khoản | ✔ | – | – | – | – |
+| Quản lý danh mục, tìm (`GET /users?role&keyword`: tên đăng nhập, họ tên, email, SĐT), khoá / mở khoá tài khoản | ✔ | – | – | – | – |
 | Tạo tài khoản STORE_MANAGER | – | ✔ | – | – | – |
 | Tạo tài khoản STAFF | – | ✔ | ✔ | – | – |
 | Thêm / sửa sản phẩm, biến thể | – | ✔ | ✔ | ✔ | – |

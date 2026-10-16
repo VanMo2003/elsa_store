@@ -34,5 +34,6 @@ public interface UserService {
     UserResponse removeAvatar();
 
     /** Chỉ ADMIN; lọc theo vai trò nếu có. */
-    PageResponse<UserResponse> getAll(Role role, int page, int size);
+    /** {@code keyword}: tìm trong tên đăng nhập, họ tên, email, SĐT (không bắt buộc). */
+    PageResponse<UserResponse> getAll(Role role, String keyword, int page, int size);
 }

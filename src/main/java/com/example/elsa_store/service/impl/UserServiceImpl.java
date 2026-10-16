@@ -188,12 +188,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<UserResponse> getAll(Role role, int page, int size) {
+    public PageResponse<UserResponse> getAll(Role role, String keyword, int page, int size) {
         accessGuard.requireAdmin();
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-        Page<User> data = role == null
-                ? userRepository.findAll(pageable)
-                : userRepository.findAllByRole(role, pageable);
+        Page<User> data = userRepository.search(role, OrderServiceImpl.likePattern(keyword), pageable);
         return PageResponse.from(data.map(this::toResponse));
     }
 

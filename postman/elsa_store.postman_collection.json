@@ -2781,6 +2781,83 @@
           }
         },
         {
+          "name": "Theo dõi cửa hàng (báo khi có sản phẩm mới)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}/follow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}",
+                "follow"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cửa hàng đang theo dõi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/following",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "following"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Đơn VNPay: tạo đơn trả online",
           "event": [
             {

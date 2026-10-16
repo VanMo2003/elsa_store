@@ -20,6 +20,8 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
             + " where v.product.id in :productIds group by v.product.id")
     List<VariantCount> countByProducts(@Param("productIds") Collection<Long> productIds);
 
+    long countByProduct_Id(Long productId);
+
     interface VariantCount {
         Long getProductId();
 

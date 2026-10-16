@@ -19,6 +19,7 @@ import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.service.ProductVariantService;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.security.AccessGuard.Access;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +38,13 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ProductVariantImageRepository productVariantImageRepository;
     private final AccessGuard accessGuard;
     private final CatalogPresenter catalog;
+    private NewProductAlerts newProductAlerts;
+
+    /** Báo người theo dõi cửa hàng khi có sản phẩm mới (tiêm qua setter để giữ nguyên hàm dựng). */
+    @Autowired
+    void setNewProductAlerts(NewProductAlerts newProductAlerts) {
+        this.newProductAlerts = newProductAlerts;
+    }
 
     public ProductVariantServiceImpl(ProductVariantRepository variantRepository,
                                      ProductRepository productRepository, ProductVariantRepository productVariantRepository, FileStorageService fileStorageService, ProductVariantImageRepository productVariantImageRepository,
@@ -58,6 +66,9 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
         ProductVariant productVariant = ProductVariantMapper.toEntity(req, product);
         productVariant = variantRepository.save(productVariant);
+        if (newProductAlerts != null) {
+            newProductAlerts.afterVariantAdded(product, variantRepository.countByProduct_Id(product.getId()));
+        }
 
         if (files != null && !files.isEmpty()) {
             List<String> urls = files.stream()

@@ -33,6 +33,7 @@ chỉ được ghi log.
 | Cửa hàng trả lời / sửa câu trả lời đánh giá (`REVIEW_REPLIED`, mở `elsastore://products/{id}`) | Khách viết đánh giá | Trong app + push |
 | Sản phẩm đang hết hàng có hàng lại (nhập hàng, kiểm kê, hoàn kho do huỷ đơn / trả hàng — `BACK_IN_STOCK`, mở `elsastore://products/{id}`; chỉ báo lúc chuyển từ hết sang còn) | Khách đã thả tim sản phẩm | Trong app + push |
 | Chủ / quản lý tạo hoặc sửa khuyến mãi tự động đang chạy làm sản phẩm **vừa được** giảm giá (`PRICE_DROP`, mở `elsastore://products/{id}`; sửa tên / sản phẩm đã giảm trước đó không báo lại; khuyến mãi hẹn ngày bắt đầu sau và mã giảm giá không báo) | Khách đã thả tim sản phẩm | Trong app + push |
+| Cửa hàng đang theo dõi mở bán sản phẩm mới (phân loại đầu tiên của sản phẩm đang bán — `NEW_PRODUCT`, mở `elsastore://products/{id}`) | Khách theo dõi cửa hàng | Trong app + push |
 | Tiền VNPay về cho đơn đã huỷ | Chủ, quản lý, nhân viên | Trong app + push ("Cần hoàn tiền cho khách") |
 | Khách gửi yêu cầu trả hàng | Chủ, quản lý, nhân viên | Trong app + push (`RETURN_REQUESTED`) |
 | Yêu cầu trả hàng được duyệt / bị từ chối / đã hoàn tiền | Khách | Trong app + push (`RETURN_UPDATED`) |
@@ -247,6 +248,11 @@ collation MySQL); `%`, `_` trong từ khoá được thoát nên không thành k
 
 **Sản phẩm tương tự:** `GET /products/{id}/related?size=8` (công khai, tối đa 20) — sản phẩm đang bán cùng danh mục, mới
 nhất trước; chưa đủ thì bù hàng cùng cửa hàng; không gồm chính sản phẩm, không lặp. Sản phẩm đang ẩn trả 404.
+
+**Theo dõi cửa hàng** (`store_follows`, chỉ tài khoản khách): `POST` / `DELETE /stores/{id}/follow`, `GET /stores/following`.
+Trang `GET /stores/{id}` có `followerCount` và `following` (khi khách đăng nhập). Khi một sản phẩm đang bán có **phân loại
+đầu tiên** (lúc đó mới đặt mua được), người theo dõi nhận `NEW_PRODUCT` (mở `elsastore://products/{id}`); phân loại sau
+không báo lại.
 
 **Ảnh đại diện tài khoản:** `POST /users/me/avatar` (multipart, phần `file`) / `DELETE /users/me/avatar` — mọi vai trò,
 lưu ở `/uploads/avatars/`; `avatarUrl` có trong `/users/me`, `authorAvatarUrl` trong đánh giá, `customerAvatarUrl` trong
@@ -472,7 +478,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 76 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 78 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

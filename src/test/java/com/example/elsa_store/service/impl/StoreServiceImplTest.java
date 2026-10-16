@@ -9,6 +9,7 @@ import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
+import com.example.elsa_store.repository.StoreFollowRepository;
 import com.example.elsa_store.repository.StoreRepository;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.service.FileStorageService;
@@ -33,7 +34,8 @@ class StoreServiceImplTest {
     private final ProductRepository products = mock(ProductRepository.class);
     private final OrderItemRepository orderItems = mock(OrderItemRepository.class);
     private final FileStorageService storage = mock(FileStorageService.class);
-    private final StoreServiceImpl service = new StoreServiceImpl(stores, accessGuard, reviews, products, orderItems, storage);
+    private final StoreFollowRepository follows = mock(StoreFollowRepository.class);
+    private final StoreServiceImpl service = new StoreServiceImpl(stores, accessGuard, reviews, products, orderItems, storage, follows);
 
     private Store store(ApprovalStatus status) {
         Store store = Store.builder().name("Elsa").approvalStatus(status).email("chu@example.com").build();

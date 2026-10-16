@@ -152,6 +152,8 @@ step(F3, "Khách xem yêu cầu trả hàng của đơn", "GET", "/returns/me", 
 step(F3, "Thả tim sản phẩm", "POST", "/wishlist/{{productId}}", token="customerToken")
 step(F3, "Danh sách yêu thích", "GET", "/wishlist", token="customerToken")
 step(F3, "Bỏ tim", "DELETE", "/wishlist/{{productId}}", token="customerToken")
+step(F3, "Theo dõi cửa hàng (báo khi có sản phẩm mới)", "POST", "/stores/{{storeId}}/follow", token="customerToken")
+step(F3, "Cửa hàng đang theo dõi", "GET", "/stores/following", token="customerToken")
 step(F3, "Đơn VNPay: tạo đơn trả online", "POST", "/orders", token="customerToken",
      body={"addressId": "{{addressId}}", "paymentMethod": 1, "items": [{"productVariantId": "{{variantId}}", "quantity": 1}]},
      saves=[("vnpayOrderId", "j.data.id", lambda j: j["data"]["id"])])

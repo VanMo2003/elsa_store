@@ -117,6 +117,12 @@ public final class NotificationMessages {
                 "Khách vừa đánh giá " + review.getProduct().getName() + comment);
     }
 
+    /** Cho khách theo dõi cửa hàng: sản phẩm mới. */
+    public static Message newProduct(Product product) {
+        String store = product.getStore() == null ? "Cửa hàng" : product.getStore().getName();
+        return new Message(store + " có sản phẩm mới", product.getName() + " vừa lên kệ. Xem ngay!");
+    }
+
     /** Cho khách đã thả tim: sản phẩm vừa được giảm giá. */
     public static Message priceDrop(Product product, Promotion promotion) {
         boolean percent = promotion.getType() != null && promotion.getType() == 2;

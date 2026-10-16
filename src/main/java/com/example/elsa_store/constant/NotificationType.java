@@ -28,5 +28,7 @@ public enum NotificationType {
     /** Cho khách đã thả tim: sản phẩm đang hết hàng vừa có hàng lại. */
     BACK_IN_STOCK,
     /** Cho khách đã thả tim: sản phẩm vừa được khuyến mãi tự động giảm giá. */
-    PRICE_DROP
+    PRICE_DROP,
+    /** Cho khách theo dõi cửa hàng: cửa hàng mở bán sản phẩm mới. */
+    NEW_PRODUCT
 }

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.example.elsa_store.service.StoreFollowService;
 
 @RestController
 @RequestMapping("/stores")
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class StoreController {
 
     private final StoreService storeService;
+    private final StoreFollowService followService;
 
     /** Công khai: các cửa hàng đã được duyệt. */
     @GetMapping
@@ -59,6 +61,24 @@ public class StoreController {
     @PutMapping("/me/shipping")
     public ApiResponse<StoreResponse> updateShipping(@Valid @RequestBody ShippingSettingsRequest req) {
         return ApiResponse.ok(storeService.updateShipping(req));
+    }
+
+    /** Khách theo dõi cửa hàng: nhận thông báo khi có sản phẩm mới. */
+    @PostMapping("/{id:\\d+}/follow")
+    public ApiResponse<StoreResponse> follow(@PathVariable Long id) {
+        return ApiResponse.ok(followService.follow(id));
+    }
+
+    @DeleteMapping("/{id:\\d+}/follow")
+    public ApiResponse<StoreResponse> unfollow(@PathVariable Long id) {
+        return ApiResponse.ok(followService.unfollow(id));
+    }
+
+    /** Cửa hàng khách đang theo dõi. */
+    @GetMapping("/following")
+    public ApiResponse<PageResponse<StoreResponse>> following(@RequestParam(defaultValue = "0") int page,
+                                                              @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(followService.following(page, size));
     }
 
     @GetMapping("/{id:\\d+}")

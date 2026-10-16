@@ -44,4 +44,8 @@ public class StoreResponse {
     Long productCount;
     /** Tổng số món đã giao xong. */
     Long soldCount;
+    /** Số khách đang theo dõi (trang công khai). */
+    Long followerCount;
+    /** Khách đang xem có theo dõi cửa hàng không (chỉ với tài khoản khách). */
+    Boolean following;
 }

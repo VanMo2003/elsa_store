@@ -1,5 +1,6 @@
 package com.example.elsa_store.service.impl;
 
+import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.request.ShippingSettingsRequest;
 import com.example.elsa_store.dto.request.StorePauseRequest;
 import com.example.elsa_store.dto.request.StoreUpdateRequest;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import com.example.elsa_store.repository.StoreFollowRepository;
 
 @Service
 @Transactional
@@ -38,6 +40,7 @@ public class StoreServiceImpl implements StoreService {
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
     private final FileStorageService fileStorageService;
+    private final StoreFollowRepository followRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -64,6 +67,10 @@ public class StoreServiceImpl implements StoreService {
                 : Math.round(avg.doubleValue() * 10) / 10.0);
         response.setProductCount(productRepository.countOnSale(id));
         response.setSoldCount(orderItemRepository.soldQuantity(id));
+        response.setFollowerCount(followRepository.countByStore_Id(id));
+        accessGuard.currentUserOrEmpty()
+                .filter(u -> u.getRole() == Role.USER)
+                .ifPresent(u -> response.setFollowing(followRepository.existsByUser_IdAndStore_Id(u.getId(), id)));
         return response;
     }
 

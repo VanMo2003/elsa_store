@@ -46,6 +46,22 @@ chỉ được ghi log.
 Chỉ báo khi trạng thái **thật sự đổi** (VNPay gọi lại nhiều lần không gửi trùng). Người nhận là tài
 khoản của khách hàng gắn với đơn, nếu đơn không có khách hàng thì là người tạo đơn.
 
+**Tuỳ chọn nhận thông báo** (`users.muted_notifications`, `NotificationGroup`): người dùng tự tắt từng nhóm — tắt thì
+BE không tạo thông báo trong app và không push cho người đó; thông báo đơn hàng, thanh toán, trả hàng, tồn kho, hồ sơ
+cửa hàng không thuộc nhóm nào nên luôn gửi.
+
+| Nhóm | Gồm | Ai thấy |
+|---|---|---|
+| `PRICE_DROP` | Sản phẩm đã thả tim vừa giảm giá | Khách |
+| `NEW_PRODUCT` | Cửa hàng đang theo dõi có sản phẩm mới | Khách |
+| `BACK_IN_STOCK` | Sản phẩm đã thả tim có hàng trở lại | Khách |
+| `STORE_REPLIES` | Cửa hàng trả lời đánh giá / câu hỏi (`REVIEW_REPLIED`, `QUESTION_ANSWERED`) | Khách |
+| `CUSTOMER_FEEDBACK` | Đánh giá / câu hỏi mới của khách (`REVIEW_NEW`, `QUESTION_NEW`) | Chủ, quản lý, nhân viên |
+
+`GET /notifications/settings` trả `{groups: [{group, enabled}]}` (chỉ các nhóm của vai trò đang đăng nhập; ADMIN không có
+nhóm nào); `PUT /notifications/settings` `{"groups": {"NEW_PRODUCT": false}}` bật / tắt, nhóm không gửi lên giữ nguyên,
+nhóm lạ hoặc không thuộc vai trò báo 400.
+
 - `Notification` là hộp thông báo trong app: `GET /notifications`, `GET /notifications/unread-count`,
   `PUT /notifications/{id}/read`, `PUT /notifications/read-all`. Nội dung nằm trong
   `utils/NotificationMessages`, deep link trong `utils/AppLinks` (`elsastore://orders`,
@@ -492,7 +508,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 83 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 85 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

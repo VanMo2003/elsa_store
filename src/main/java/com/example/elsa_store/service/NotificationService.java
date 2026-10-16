@@ -2,8 +2,10 @@ package com.example.elsa_store.service;
 
 import com.example.elsa_store.constant.NotificationType;
 import com.example.elsa_store.dto.request.DeviceTokenRequest;
+import com.example.elsa_store.dto.request.NotificationSettingsRequest;
 import com.example.elsa_store.dto.response.NotificationCountResponse;
 import com.example.elsa_store.dto.response.NotificationResponse;
+import com.example.elsa_store.dto.response.NotificationSettingsResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.TestPushResponse;
 import com.example.elsa_store.entity.Store;
@@ -55,4 +57,9 @@ public interface NotificationService {
     TestPushResponse sendTestPush(int delaySeconds);
 
     void unregisterDevice(String token);
+
+    /** Nhóm thông báo tài khoản đang đăng nhập tắt được và trạng thái bật / tắt. */
+    NotificationSettingsResponse getSettings();
+
+    NotificationSettingsResponse updateSettings(NotificationSettingsRequest request);
 }

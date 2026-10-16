@@ -1,11 +1,18 @@
 
 package com.example.elsa_store.entity;
 
+import com.example.elsa_store.constant.NotificationGroup;
+import com.example.elsa_store.constant.NotificationType;
 import com.example.elsa_store.constant.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -57,6 +64,32 @@ public class User extends BaseEntity {
      */
     @Column(name = "token_version")
     private Integer tokenVersion;
+
+    /** Nhóm thông báo đã tắt ({@link NotificationGroup}, cách nhau dấu phẩy); trống = nhận tất cả. */
+    @Column(name = "muted_notifications", length = 200)
+    private String mutedNotifications;
+
+    public Set<NotificationGroup> mutedGroups() {
+        Set<NotificationGroup> groups = EnumSet.noneOf(NotificationGroup.class);
+        if (mutedNotifications != null) {
+            Arrays.stream(mutedNotifications.split(","))
+                    .map(String::trim)
+                    .flatMap(name -> Arrays.stream(NotificationGroup.values()).filter(g -> g.name().equals(name)))
+                    .forEach(groups::add);
+        }
+        return groups;
+    }
+
+    public void setMutedGroups(Set<NotificationGroup> groups) {
+        this.mutedNotifications = groups.isEmpty()
+                ? null
+                : groups.stream().sorted().map(Enum::name).collect(Collectors.joining(","));
+    }
+
+    /** Người dùng đã tắt nhóm chứa loại thông báo này. */
+    public boolean mutes(NotificationType type) {
+        return NotificationGroup.of(type).map(mutedGroups()::contains).orElse(false);
+    }
 
     public int currentTokenVersion() {
         return tokenVersion == null ? 0 : tokenVersion;

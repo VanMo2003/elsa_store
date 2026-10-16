@@ -146,6 +146,10 @@ step(F3, "Cửa hàng trả lời câu hỏi", "PUT", "/questions/{{questionId}}
      body={"answer": "Dạ có size 45, bạn đặt nhé!"})
 step(F3, "Hỏi đáp của sản phẩm (công khai, chỉ câu đã trả lời)", "GET", "/products/{{productId}}/questions",
      query={"page": "0", "size": "10"})
+step(F3, "Khách xem tuỳ chọn thông báo", "GET", "/notifications/settings", token="customerToken",
+     note="Nhóm tắt được: PRICE_DROP, NEW_PRODUCT, BACK_IN_STOCK, STORE_REPLIES (khách); CUSTOMER_FEEDBACK (cửa hàng).")
+step(F3, "Khách tắt thông báo sản phẩm mới", "PUT", "/notifications/settings", token="customerToken",
+     body={"groups": {"NEW_PRODUCT": False}})
 step(F3, "Khách gửi yêu cầu trả 1 sản phẩm", "POST", "/returns", token="customerToken",
      body={"orderId": "{{orderId}}", "reason": "Sai kích cỡ", "note": "Chật quá",
            "items": [{"productVariantId": "{{variantId}}", "quantity": 1}]},

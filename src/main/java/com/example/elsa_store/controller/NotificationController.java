@@ -3,8 +3,10 @@ package com.example.elsa_store.controller;
 
 import com.example.elsa_store.dto.common.ApiResponse;
 import com.example.elsa_store.dto.request.DeviceTokenRequest;
+import com.example.elsa_store.dto.request.NotificationSettingsRequest;
 import com.example.elsa_store.dto.response.NotificationCountResponse;
 import com.example.elsa_store.dto.response.NotificationResponse;
+import com.example.elsa_store.dto.response.NotificationSettingsResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.TestPushResponse;
 import com.example.elsa_store.service.NotificationService;
@@ -55,6 +57,17 @@ public class NotificationController {
     @PostMapping("/devices/test")
     public ApiResponse<TestPushResponse> sendTestPush(@RequestParam(defaultValue = "10") int delaySeconds) {
         return ApiResponse.ok(notificationService.sendTestPush(delaySeconds));
+    }
+
+    /** Nhóm thông báo tắt được (giảm giá, sản phẩm mới, có hàng lại, cửa hàng trả lời; đánh giá / câu hỏi mới). */
+    @GetMapping("/settings")
+    public ApiResponse<NotificationSettingsResponse> settings() {
+        return ApiResponse.ok(notificationService.getSettings());
+    }
+
+    @PutMapping("/settings")
+    public ApiResponse<NotificationSettingsResponse> updateSettings(@Valid @RequestBody NotificationSettingsRequest req) {
+        return ApiResponse.ok(notificationService.updateSettings(req));
     }
 
     /** Gọi trước khi đăng xuất để thiết bị thôi nhận thông báo của tài khoản này. */

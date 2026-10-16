@@ -1,10 +1,13 @@
 package com.example.elsa_store.service.impl;
 
+import com.example.elsa_store.constant.NotificationGroup;
 import com.example.elsa_store.constant.NotificationType;
 import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.request.DeviceTokenRequest;
+import com.example.elsa_store.dto.request.NotificationSettingsRequest;
 import com.example.elsa_store.dto.response.NotificationCountResponse;
 import com.example.elsa_store.dto.response.NotificationResponse;
+import com.example.elsa_store.dto.response.NotificationSettingsResponse;
 import com.example.elsa_store.dto.response.PageResponse;
 import com.example.elsa_store.dto.response.TestPushResponse;
 import com.example.elsa_store.entity.DeviceToken;
@@ -34,6 +37,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -104,11 +108,13 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private void send(
-            List<User> recipients,
+            List<User> everyone,
             NotificationType type,
             NotificationMessages.Message message,
             String link,
             Long referenceId) {
+        // Người đã tắt nhóm của loại thông báo này ở Cài đặt: không lưu, không đẩy.
+        List<User> recipients = everyone.stream().filter(user -> !user.mutes(type)).toList();
         if (recipients.isEmpty()) {
             return;
         }
@@ -220,6 +226,41 @@ public class NotificationServiceImpl implements NotificationService {
         deviceTokenRepository
                 .findByTokenAndUser_Id(token.trim(), current.getId())
                 .ifPresent(deviceTokenRepository::delete);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NotificationSettingsResponse getSettings() {
+        return settingsOf(currentUser());
+    }
+
+    @Override
+    public NotificationSettingsResponse updateSettings(NotificationSettingsRequest request) {
+        User current = currentUser();
+        var muted = current.mutedGroups();
+        request.getGroups().forEach((name, enabled) -> {
+            NotificationGroup group = Arrays.stream(NotificationGroup.values())
+                    .filter(g -> g.name().equals(name) && g.appliesTo(current.getRole()))
+                    .findFirst()
+                    .orElseThrow(() -> new AppException(ErrorCode.BAD_REQUEST, "groups: unknown notification group " + name));
+            if (Boolean.FALSE.equals(enabled)) {
+                muted.add(group);
+            } else {
+                muted.remove(group);
+            }
+        });
+        current.setMutedGroups(muted);
+        return settingsOf(userRepository.save(current));
+    }
+
+    private static NotificationSettingsResponse settingsOf(User user) {
+        var muted = user.mutedGroups();
+        return NotificationSettingsResponse.builder()
+                .groups(Arrays.stream(NotificationGroup.values())
+                        .filter(g -> g.appliesTo(user.getRole()))
+                        .map(g -> new NotificationSettingsResponse.Group(g.name(), !muted.contains(g)))
+                        .toList())
+                .build();
     }
 
     private User currentUser() {

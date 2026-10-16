@@ -1769,6 +1769,54 @@
           }
         },
         {
+          "name": "Gợi ý cho bạn (theo sản phẩm vừa xem / thả tim / đã mua)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/home/for-you?recent={{productId}}&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "home",
+                "for-you"
+              ],
+              "query": [
+                {
+                  "key": "recent",
+                  "value": "{{productId}}"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Khách mua sản phẩm này cũng mua (công khai)",
           "event": [
             {

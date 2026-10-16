@@ -111,6 +111,8 @@ step(F3, "Gợi ý khi gõ ô tìm kiếm (công khai)", "GET", "/search/suggest
 step(F3, "Tìm sản phẩm (công khai)", "POST", "/products/search", body={"keyword": "giày", "page": 0, "sizePage": 10})
 step(F3, "Chi tiết sản phẩm (giá khuyến mãi, điểm đánh giá)", "GET", "/products/{{productId}}")
 step(F3, "Sản phẩm tương tự (công khai)", "GET", "/products/{{productId}}/related", query={"size": "8"})
+step(F3, "Gợi ý cho bạn (theo sản phẩm vừa xem / thả tim / đã mua)", "GET", "/home/for-you", token="customerToken",
+     query={"recent": "{{productId}}", "size": "10"})
 step(F3, "Khách mua sản phẩm này cũng mua (công khai)", "GET", "/products/{{productId}}/bought-together",
      query={"size": "8"})
 step(F3, "Thêm địa chỉ giao hàng", "POST", "/addresses", token="customerToken",

@@ -276,6 +276,10 @@ collation MySQL); `%`, `_` trong từ khoá được thoát nên không thành k
 **Sản phẩm tương tự:** `GET /products/{id}/related?size=8` (công khai, tối đa 20) — sản phẩm đang bán cùng danh mục, mới
 nhất trước; chưa đủ thì bù hàng cùng cửa hàng; không gồm chính sản phẩm, không lặp. Sản phẩm đang ẩn trả 404.
 
+**Gợi ý cho bạn:** `GET /home/for-you?recent=1,2,3&size=10` (công khai; `recent` = id sản phẩm vừa xem lưu trên máy) — gộp
+sản phẩm vừa xem với sản phẩm đã thả tim và đã đặt (khi khách đăng nhập), lấy tối đa 3 danh mục xuất hiện nhiều nhất rồi
+xen kẽ sản phẩm đang bán của các danh mục đó; bỏ hàng đã mua / đã thích / vừa xem. Không có dữ liệu thì trả mảng rỗng.
+
 **Khách mua sản phẩm này cũng mua:** `GET /products/{id}/bought-together?size=8` (công khai, tối đa 20) — sản phẩm khác
 nằm chung đơn với sản phẩm này (mọi trạng thái trừ đơn huỷ), nhiều đơn chung nhất trước, hoà thì đơn mới hơn trước; bỏ
 sản phẩm đang ẩn. Một đơn chỉ thuộc một cửa hàng nên gợi ý luôn là hàng cùng cửa hàng. Chưa có dữ liệu thì trả mảng rỗng.
@@ -564,7 +568,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 103 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 104 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

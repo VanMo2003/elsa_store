@@ -82,6 +82,14 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                                @Param("storeId") Long storeId);
 
     /** Dòng hàng mới nhất của sản phẩm trong các đơn đã hoàn thành của khách — điều kiện để viết đánh giá. */
+    /** Sản phẩm khách đã đặt (trừ đơn huỷ) — gợi ý "cho bạn" bỏ qua hàng đã mua và lấy danh mục khách quan tâm. */
+    @Query("""
+        select distinct i.productVariant.product.id from OrderItem i
+        where i.order.user.id = :userId
+          and i.order.status <> com.example.elsa_store.constant.OrderStatus.DA_HUY
+    """)
+    List<Long> purchasedProductIds(@Param("userId") Long userId);
+
     /** Mỗi dòng {productId, số đơn, số món} của đơn (trừ đơn huỷ) đặt trong kỳ có các sản phẩm {@code productIds}. */
     @Query("""
         select i.productVariant.product.id, count(distinct o.id), sum(i.quantity)

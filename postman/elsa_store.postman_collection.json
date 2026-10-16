@@ -2463,6 +2463,53 @@
           }
         },
         {
+          "name": "Đánh giá hữu ích nhất trước (công khai)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/reviews?sort=helpful&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "reviews"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "helpful"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Khách khác bấm POST /reviews/{id}/helpful (bỏ: DELETE); tự bấm cho đánh giá của mình bị 400."
+          }
+        },
+        {
           "name": "Cửa hàng: đánh giá chưa trả lời",
           "event": [
             {

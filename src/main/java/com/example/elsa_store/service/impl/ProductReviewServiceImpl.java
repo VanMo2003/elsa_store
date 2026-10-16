@@ -12,6 +12,7 @@ import com.example.elsa_store.entity.OrderItem;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductReview;
 import com.example.elsa_store.entity.ProductVariant;
+import com.example.elsa_store.entity.ReviewVote;
 import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.entity.User;
 import com.example.elsa_store.exception.AppException;
@@ -20,6 +21,7 @@ import com.example.elsa_store.exception.ResourceNotFoundException;
 import com.example.elsa_store.repository.OrderItemRepository;
 import com.example.elsa_store.repository.ProductRepository;
 import com.example.elsa_store.repository.ProductReviewRepository;
+import com.example.elsa_store.repository.ReviewVoteRepository;
 import com.example.elsa_store.security.AccessGuard;
 import com.example.elsa_store.service.FileStorageService;
 import com.example.elsa_store.service.NotificationService;
@@ -34,11 +36,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -51,6 +55,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
     private ReviewRewards rewards;
+    private ReviewVoteRepository voteRepository;
 
     public ProductReviewServiceImpl(ProductReviewRepository reviewRepository,
                                     ProductRepository productRepository,
@@ -70,12 +75,53 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ReviewResponse> list(Long productId, Integer rating, boolean withImages, int page, int size) {
+    public PageResponse<ReviewResponse> list(Long productId, Integer rating, boolean withImages, boolean helpfulFirst,
+                                             int page, int size) {
         visibleProduct(productId);
         Long viewerId = accessGuard.currentUserOrEmpty().map(User::getId).orElse(null);
-        var result = reviewRepository.findForProduct(productId, validRating(rating), withImages,
-                PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 50)));
-        return PageResponse.from(result.map(r -> toResponse(r, viewerId)));
+        var pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 50));
+        var result = helpfulFirst
+                ? reviewRepository.findForProductByHelpful(productId, validRating(rating), withImages, pageable)
+                : reviewRepository.findForProduct(productId, validRating(rating), withImages, pageable);
+        Set<Long> voted = viewerId == null || voteRepository == null || result.isEmpty()
+                ? Set.of()
+                : new HashSet<>(voteRepository.votedReviewIds(viewerId,
+                        result.getContent().stream().map(ProductReview::getId).toList()));
+        return PageResponse.from(result.map(r -> {
+            ReviewResponse res = toResponse(r, viewerId);
+            res.setVotedHelpful(voted.contains(r.getId()));
+            return res;
+        }));
+    }
+
+    @Override
+    public ReviewResponse markHelpful(Long reviewId, boolean helpful) {
+        User user = accessGuard.currentUser();
+        if (user.getRole() != Role.USER) {
+            throw new AppException(ErrorCode.UN_AUTHORIZED, "Only customers can vote on reviews");
+        }
+        ProductReview review = find(reviewId);
+        visibleProduct(review.getProduct().getId());
+        if (review.getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "You cannot vote on your own review");
+        }
+        var existing = voteRepository.findByReview_IdAndUser_Id(reviewId, user.getId());
+        if (helpful && existing.isEmpty()) {
+            voteRepository.save(ReviewVote.builder().review(review).user(user).build());
+        } else if (!helpful) {
+            existing.ifPresent(voteRepository::delete);
+        }
+        voteRepository.flush();
+        review.setHelpfulCount((int) voteRepository.countByReview_Id(reviewId));
+        ReviewResponse res = toResponse(reviewRepository.save(review), user.getId());
+        res.setVotedHelpful(helpful);
+        return res;
+    }
+
+    /** Phiếu "Hữu ích" (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
+    @Autowired
+    void setVoteRepository(ReviewVoteRepository voteRepository) {
+        this.voteRepository = voteRepository;
     }
 
     @Override
@@ -209,6 +255,9 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         if (!review.getUser().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UN_AUTHORIZED);
         }
+        if (voteRepository != null) {
+            voteRepository.deleteAllByReviewId(review.getId());
+        }
         reviewRepository.delete(review);
     }
 
@@ -304,6 +353,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                 .repliedAt(r.getRepliedAt())
                 .mine(viewerId != null && viewerId.equals(r.getUser().getId()))
                 .images(r.getImages() == null ? List.of() : List.copyOf(r.getImages()))
+                .helpfulCount(r.helpful())
                 .build();
     }
 

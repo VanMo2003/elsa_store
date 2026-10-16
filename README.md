@@ -307,6 +307,7 @@ cho cả trang.
 | `POST /products/{id}/reviews/me/images` (multipart, phần `files`) | người viết | Đính kèm ảnh vào đánh giá của mình (viết đánh giá trước), tối đa 5 ảnh, lưu ở `/uploads/reviews/` |
 | `DELETE /products/{id}/reviews/me/images?url=` | người viết | Gỡ một ảnh khỏi đánh giá của mình |
 | `DELETE /reviews/{id}` | người viết | Xoá đánh giá của mình (kèm danh sách ảnh) |
+| `POST` / `DELETE /reviews/{id}/helpful` | khách (không phải người viết) | Bấm / bỏ **"Hữu ích"** (`review_helpful_votes`, mỗi khách một phiếu; `helpfulCount` đếm lại từ bảng phiếu). Danh sách đánh giá có `helpfulCount`, `votedHelpful` (người đang xem đã bấm) và `sort=helpful` (nhiều phiếu nhất trước, mặc định `newest`) |
 | `GET /reviews/store?rating&unreplied&page&size` | chủ, quản lý, nhân viên | Đánh giá mọi sản phẩm của cửa hàng, lọc số sao / chưa trả lời |
 | `PUT /reviews/{id}/reply` `{reply}` | chủ, quản lý, nhân viên | Trả lời công khai dưới đánh giá (gửi lại = sửa) |
 
@@ -555,7 +556,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 98 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 99 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

@@ -33,4 +33,8 @@ public class ReviewResponse {
     private List<String> images;
     /** Xu vừa được thưởng ở lần gọi này (chỉ có trong phản hồi viết đánh giá / thêm ảnh). */
     private Integer rewardCoins;
+    /** Số khách thấy đánh giá này hữu ích. */
+    private Integer helpfulCount;
+    /** Người đang xem đã bấm "Hữu ích". */
+    private Boolean votedHelpful;
 }

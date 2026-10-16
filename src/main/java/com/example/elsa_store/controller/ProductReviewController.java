@@ -29,9 +29,22 @@ public class ProductReviewController {
     public ApiResponse<PageResponse<ReviewResponse>> list(@PathVariable Long productId,
                                                           @RequestParam(required = false) Integer rating,
                                                           @RequestParam(defaultValue = "false") boolean withImages,
+                                                          @RequestParam(defaultValue = "newest") String sort,
                                                           @RequestParam(defaultValue = "0") int page,
                                                           @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.ok(reviewService.list(productId, rating, withImages, page, size));
+        return ApiResponse.ok(reviewService.list(productId, rating, withImages, "helpful".equalsIgnoreCase(sort), page,
+                size));
+    }
+
+    /** Khách bấm "Hữu ích" cho đánh giá của người khác (bấm lại không đếm thêm). */
+    @PostMapping("/reviews/{id}/helpful")
+    public ApiResponse<ReviewResponse> helpful(@PathVariable Long id) {
+        return ApiResponse.ok(reviewService.markHelpful(id, true));
+    }
+
+    @DeleteMapping("/reviews/{id}/helpful")
+    public ApiResponse<ReviewResponse> notHelpful(@PathVariable Long id) {
+        return ApiResponse.ok(reviewService.markHelpful(id, false));
     }
 
     @GetMapping("/products/{productId}/reviews/summary")

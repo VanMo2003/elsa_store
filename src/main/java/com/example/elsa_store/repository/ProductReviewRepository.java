@@ -29,6 +29,18 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
                                        @Param("withImages") boolean withImages,
                                        Pageable pageable);
 
+    /** Như {@link #findForProduct} nhưng nhiều lượt "Hữu ích" nhất trước. */
+    @Query("""
+        select r from ProductReview r
+        where r.product.id = :productId and (:rating is null or r.rating = :rating)
+          and (:withImages = false or r.images is not empty)
+        order by coalesce(r.helpfulCount, 0) desc, r.id desc
+    """)
+    Page<ProductReview> findForProductByHelpful(@Param("productId") Long productId,
+                                                @Param("rating") Integer rating,
+                                                @Param("withImages") boolean withImages,
+                                                Pageable pageable);
+
     /** Số đánh giá có ảnh của một sản phẩm (nhãn bộ lọc "Có ảnh"). */
     @Query("select count(r) from ProductReview r where r.product.id = :productId and r.images is not empty")
     long countWithImages(@Param("productId") Long productId);

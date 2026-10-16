@@ -140,6 +140,9 @@ step(F3, "Khách viết đánh giá 5 sao", "POST", "/products/{{productId}}/rev
      saves=[("reviewId", "j.data.id", lambda j: j["data"]["id"])])
 step(F3, "Tổng quan đánh giá (công khai)", "GET", "/products/{{productId}}/reviews/summary")
 step(F3, "Danh sách đánh giá (công khai)", "GET", "/products/{{productId}}/reviews", query={"page": "0", "size": "10"})
+step(F3, "Đánh giá hữu ích nhất trước (công khai)", "GET", "/products/{{productId}}/reviews",
+     query={"sort": "helpful", "page": "0", "size": "10"},
+     note="Khách khác bấm POST /reviews/{id}/helpful (bỏ: DELETE); tự bấm cho đánh giá của mình bị 400.")
 step(F3, "Cửa hàng: đánh giá chưa trả lời", "GET", "/reviews/store", token="staffToken", query={"unreplied": "true"})
 step(F3, "Cửa hàng trả lời đánh giá", "PUT", "/reviews/{{reviewId}}/reply", token="staffToken",
      body={"reply": "Cảm ơn bạn đã ủng hộ Elsa!"})

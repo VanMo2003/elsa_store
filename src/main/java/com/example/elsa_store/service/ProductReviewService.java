@@ -17,7 +17,16 @@ import com.example.elsa_store.dto.response.ReviewSummaryResponse;
 public interface ProductReviewService {
 
     /** {@code rating} null = mọi số sao. */
-    PageResponse<ReviewResponse> list(Long productId, Integer rating, boolean withImages, int page, int size);
+    default PageResponse<ReviewResponse> list(Long productId, Integer rating, boolean withImages, int page, int size) {
+        return list(productId, rating, withImages, false, page, size);
+    }
+
+    /** {@code helpfulFirst} = nhiều lượt "Hữu ích" nhất trước (mặc định mới nhất trước). */
+    PageResponse<ReviewResponse> list(Long productId, Integer rating, boolean withImages, boolean helpfulFirst, int page,
+                                      int size);
+
+    /** Khách bấm / bỏ "Hữu ích" cho đánh giá của người khác. */
+    ReviewResponse markHelpful(Long reviewId, boolean helpful);
 
     ReviewSummaryResponse summary(Long productId);
 

@@ -68,5 +68,13 @@ public class ProductReview extends BaseEntity {
     @Builder.Default
     private List<String> images = new ArrayList<>();
 
+    /** Số khách bấm "Hữu ích" (đếm lại từ bảng phiếu mỗi lần đổi); trống = 0. */
+    @Column(name = "helpful_count")
+    private Integer helpfulCount;
+
+    public int helpful() {
+        return helpfulCount == null ? 0 : helpfulCount;
+    }
+
     public static final int MAX_IMAGES = 5;
 }

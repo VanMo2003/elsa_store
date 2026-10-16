@@ -323,6 +323,11 @@ câu chưa được trả lời** cho một sản phẩm (quá thì `1029`, HTTP
 | `GET /questions/store?unanswered&page&size` | chủ, quản lý, nhân viên | Câu hỏi về sản phẩm của cửa hàng; mặc định `unanswered=true` |
 | `PUT /questions/{id}/answer` `{answer ≤ 1000 ký tự}` | chủ, quản lý, nhân viên | Trả lời công khai (gửi lại = sửa); ADMIN chỉ xem |
 
+**Banner trang chủ** (`home_banners`, ADMIN quản lý): `GET /home/banners` (công khai) trả banner đang bật và trong thời
+gian `startsAt`–`endsAt`, theo `sortOrder`; ADMIN dùng `GET` / `POST /banners`, `PUT` / `DELETE /banners/{id}`,
+`POST /banners/{id}/image` (multipart `files`, lưu `/uploads/banners/`). Mỗi banner có `title`, `subtitle`, `linkType`
+(`NONE`, `PRODUCT`, `STORE`, `CATEGORY` — `linkValue` là id phải tồn tại — hoặc `SEARCH` với từ khoá), tối đa 20 banner.
+
 **Trang cửa hàng công khai:** `GET /stores/{id}` (không cần đăng nhập, chỉ cửa hàng đã duyệt) trả tên, ảnh, địa chỉ, SĐT,
 giới thiệu, chính sách giao hàng và thêm `ratingAverage` / `ratingCount` (gộp đánh giá mọi sản phẩm), `productCount`
 (sản phẩm đang bán), `soldCount` (số món của đơn đã hoàn thành); không có email, tài khoản của chủ. Sản phẩm của cửa hàng
@@ -556,7 +561,7 @@ docker compose up -d --build
 
 ## Bộ request Postman
 
-`postman/elsa_store.postman_collection.json` — 99 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
+`postman/elsa_store.postman_collection.json` — 102 request chạy tuần tự đi hết một vòng nghiệp vụ: ADMIN duyệt cửa hàng →
 chủ tạo nhân viên, sản phẩm, biến thể, kiểm kê, phiếu nhập, khuyến mãi, mã giảm giá, tạm nghỉ / mở lại, phí giao hàng → khách báo giá,
 đặt hàng COD → nhân viên xác nhận, giao cho đơn vị vận chuyển → khách bấm đã nhận hàng, xem dòng thời gian, huỷ một đơn
 kèm lý do, cửa hàng tìm đơn / đếm theo trạng thái → khách trả hàng, cửa hàng duyệt và hoàn tiền → khách đánh giá, cửa hàng trả lời, khách hỏi đáp, thả tim → đơn VNPay → báo cáo → các trường hợp bị chặn quyền → quên / đổi

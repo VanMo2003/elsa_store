@@ -32,6 +32,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     private static final String REVIEW_FOLDER = "reviews";
     private static final String CHAT_FOLDER = "chat";
     private static final String AVATAR_FOLDER = "avatars";
+    private static final String BANNER_FOLDER = "banners";
 
     private final String uploadDir;
 
@@ -62,6 +63,11 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     public String storeAvatar(MultipartFile file) {
         return storeImage(file, AVATAR_FOLDER);
+    }
+
+    @Override
+    public String storeBannerImage(MultipartFile file) {
+        return storeImage(file, BANNER_FOLDER);
     }
 
     private String storeImage(MultipartFile file, String folder) {

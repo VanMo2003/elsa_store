@@ -42,6 +42,13 @@ step(F1, "ADMIN: hồ sơ chờ duyệt", "GET", "/store-registrations", token="
      saves=[("storeId", "j.data.content.find(s => s.name === 'Elsa Demo ' + pm.collectionVariables.get('runSuffix')).id",
              lambda j, v: [s for s in j["data"]["content"] if s["name"] == "Elsa Demo " + v["runSuffix"]][0]["id"])])
 step(F1, "ADMIN: duyệt cửa hàng", "PUT", "/store-registrations/{{storeId}}/approve", token="adminToken")
+step(F1, "ADMIN: thêm banner trang chủ", "POST", "/banners", token="adminToken",
+     body={"title": "Sale cuối tuần {{runSuffix}}", "subtitle": "Giày chạy giảm đến 30%", "linkType": "SEARCH",
+           "linkValue": "giày chạy", "sortOrder": 1},
+     saves=[("bannerId", "j.data.id", lambda j: j["data"]["id"])],
+     note="linkType: NONE, PRODUCT, STORE, CATEGORY (linkValue = id) hoặc SEARCH (từ khoá). Ảnh: POST /banners/{id}/image (multipart files).")
+step(F1, "Banner trang chủ đang hiện (công khai)", "GET", "/home/banners")
+step(F1, "ADMIN: xoá banner", "DELETE", "/banners/{{bannerId}}", token="adminToken")
 step(F1, "ADMIN: đình chỉ cửa hàng (thử)", "PUT", "/store-registrations/{{storeId}}/suspend", token="adminToken",
      body={"reason": "Kiểm tra đình chỉ"},
      note="Cửa hàng bị ẩn khỏi sàn, khách không đặt đơn mới; request sau mở lại ngay để các bước tiếp theo chạy được.")

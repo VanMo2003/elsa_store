@@ -52,6 +52,7 @@ public class SecurityConfig {
         "/search/suggestions",
         // Trang chủ: sản phẩm đang giảm giá, bán chạy.
         "/home/highlights",
+        "/home/banners",
         // Cho app biết có hiện nút AI hay không (máy chủ chưa có khoá AI thì ẩn).
         "/ai/status",
         // Kết quả thanh toán VNPay (trình duyệt quay về và IPN máy chủ → máy chủ): xác thực bằng chữ ký VNPay.

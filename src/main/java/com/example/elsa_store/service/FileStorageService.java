@@ -20,4 +20,7 @@ public interface FileStorageService {
 
     /** Như {@link #storeProductImage} nhưng lưu vào {@code /uploads/avatars/} (ảnh đại diện tài khoản). */
     String storeAvatar(MultipartFile file);
+
+    /** Như {@link #storeProductImage} nhưng lưu vào {@code /uploads/banners/} (banner trang chủ). */
+    String storeBannerImage(MultipartFile file);
 }

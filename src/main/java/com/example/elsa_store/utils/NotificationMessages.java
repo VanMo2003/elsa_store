@@ -155,6 +155,15 @@ public final class NotificationMessages {
                 "Về " + review.getProduct().getName() + ": \u201C" + shorten(review.getStoreReply(), 100) + "\u201D");
     }
 
+    /** Cho khách: đơn đang giao đã lâu — nhắc xác nhận đã nhận hàng. */
+    public static Message deliveryCheck(Order order, int daysLeft) {
+        String when = daysLeft <= 0 ? "sắp" : "sau " + daysLeft + " ngày";
+        return new Message(
+                "Bạn đã nhận được đơn " + order.getCode() + " chưa?",
+                "Nếu đã nhận, bấm \u201CĐã nhận hàng\u201D để xác nhận; đơn sẽ tự hoàn thành " + when
+                        + ". Chưa nhận được hàng thì nhắn cho cửa hàng nhé.");
+    }
+
     /** Cho khách: giỏ hàng bị bỏ quên. */
     public static Message cartReminder(Cart cart) {
         List<CartItem> items = cart.getItems();

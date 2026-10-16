@@ -46,5 +46,7 @@ public enum NotificationType {
     /** Cho ADMIN: khách báo cáo một sản phẩm vi phạm. */
     PRODUCT_REPORTED,
     /** Cho khách: báo cáo vi phạm của mình đã được xử lý / bỏ qua. */
-    REPORT_HANDLED
+    REPORT_HANDLED,
+    /** Cho khách: đơn đang giao đã lâu, nhắc bấm "Đã nhận hàng" trước khi đơn tự hoàn thành. */
+    ORDER_DELIVERY_CHECK
 }

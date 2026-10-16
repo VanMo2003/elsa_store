@@ -91,6 +91,18 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     List<Long> findUnpaidOnlineOrderIds(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
 
+    /** Đơn của khách đang giao từ trước {@code cutoff} mà chưa nhắc xác nhận đã nhận hàng. */
+    @Query("""
+        select o from Order o
+        where o.status = com.example.elsa_store.constant.OrderStatus.DANG_GIAO
+          and o.user is not null
+          and o.deliveryRemindedAt is null
+          and (select max(h.createdAt) from OrderStatusHistory h
+               where h.order = o and h.status = com.example.elsa_store.constant.OrderStatus.DANG_GIAO) < :cutoff
+        order by o.id
+    """)
+    List<Order> findShippingToRemind(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
+
     /** Đơn đang giao từ trước {@code cutoff} (theo mốc DANG_GIAO gần nhất trong dòng thời gian). */
     @Query("""
         select o.id from Order o

@@ -34,6 +34,7 @@ chỉ được ghi log.
 | Khách hỏi về sản phẩm (`QUESTION_NEW`, mở `elsastore://questions`) | Chủ, quản lý, nhân viên | Trong app + push |
 | Cửa hàng trả lời / sửa câu trả lời câu hỏi (`QUESTION_ANSWERED`, mở `elsastore://products/{id}`) | Khách đặt câu hỏi | Trong app + push |
 | Đơn hoàn thành làm khách lên hạng thành viên (`TIER_UP`, mở `elsastore://coins`) | Khách | Trong app + push |
+| Đơn đang giao đủ `ORDER_AUTO_COMPLETE_DAYS` − 2 ngày mà khách chưa bấm "Đã nhận hàng" (`ORDER_DELIVERY_CHECK`, mở `elsastore://orders`; mỗi đơn một lần, `orders.delivery_reminded_at`) | Khách | Trong app + push |
 | Giỏ hàng không đổi quá `CART_REMINDER_HOURS` giờ (mặc định 24; mỗi lần bỏ quên nhắc một lần — khách thêm / sửa món thì về sau được nhắc lại; `CART_REMINDER`, mở `elsastore://cart`) | Khách | Trong app + push |
 | Sản phẩm đang hết hàng có hàng lại (nhập hàng, kiểm kê, hoàn kho do huỷ đơn / trả hàng — `BACK_IN_STOCK`, mở `elsastore://products/{id}`; chỉ báo lúc chuyển từ hết sang còn) | Khách đã thả tim sản phẩm | Trong app + push |
 | Chủ / quản lý tạo hoặc sửa khuyến mãi tự động đang chạy làm sản phẩm **vừa được** giảm giá (`PRICE_DROP`, mở `elsastore://products/{id}`; sửa tên / sản phẩm đã giảm trước đó không báo lại; khuyến mãi hẹn ngày bắt đầu sau và mã giảm giá không báo) | Khách đã thả tim sản phẩm | Trong app + push |
@@ -577,7 +578,7 @@ dùng cho `docker compose`).
 | `MAIL_SMTP_AUTH` / `MAIL_SMTP_STARTTLS` | `true` / `true` | Tắt khi thử với SMTP giả trên máy |
 | `APP_PUBLIC_URL` | `http://localhost:8080/elsa-store/api` | Địa chỉ API công khai cho link trong email |
 | `ORDER_UNPAID_CANCEL_MINUTES` | `30` | Tự huỷ đơn VNPay chưa trả sau chừng này phút (tối thiểu 20); `0` = tắt |
-| `ORDER_AUTO_COMPLETE_DAYS` | `7` | Tự hoàn thành đơn đang giao sau chừng này ngày; `0` = tắt |
+| `ORDER_AUTO_COMPLETE_DAYS` | `7` | Tự hoàn thành đơn đang giao sau chừng này ngày (2 ngày trước đó khách được nhắc bấm "Đã nhận hàng" — `DeliveryReminders`, `ORDER_DELIVERY_CHECK`, mỗi đơn một lần); `0` = tắt cả hai |
 | `ORDER_RETURN_WINDOW_DAYS` | `7` | Khách gửi yêu cầu trả hàng trong chừng này ngày sau khi đơn hoàn thành; `0` = tắt |
 | `CART_REMINDER_HOURS` | `24` | Nhắc khách còn hàng trong giỏ sau chừng này giờ giỏ không đổi (`CartReminders`, quét mỗi giờ); `0` = tắt |
 | `COINS_EARN_PERCENT` | `1` | % tiền hàng thực trả đổi thành xu khi đơn hoàn thành |

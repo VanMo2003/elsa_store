@@ -277,8 +277,15 @@ public class ChatAssistant {
                 .filter(java.util.Objects::nonNull)
                 .map(p -> p.getName() + " (mã " + p.getId() + ")")
                 .toList();
-        return names.isEmpty()
-                ? message.getContent()
-                : message.getContent() + " [đính kèm sản phẩm: " + String.join(", ", names) + "]";
+        String text = message.getContent() == null ? "" : message.getContent();
+        if (!names.isEmpty()) {
+            text += " [đính kèm sản phẩm: " + String.join(", ", names) + "]";
+        }
+        // Trợ lý không xem được ảnh: chỉ cho biết là có ảnh để không trả lời như thể tin trống.
+        int images = message.imageList().size();
+        if (images > 0) {
+            text += " [gửi " + images + " ảnh, trợ lý không xem được ảnh]";
+        }
+        return text.strip();
     }
 }

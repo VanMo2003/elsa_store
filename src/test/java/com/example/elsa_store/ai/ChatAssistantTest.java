@@ -40,6 +40,13 @@ class ChatAssistantTest {
     }
 
     @Test
+    void photoMessagesTellTheAssistantThereArePhotos() {
+        ChatMessage photos = ChatMessage.builder().content("")
+                .imageUrls(ChatMessage.joinImages(java.util.List.of("/uploads/chat/a.png", "/uploads/chat/b.png"))).build();
+        assertEquals("[gửi 2 ảnh, trợ lý không xem được ảnh]", ChatAssistant.withAttachments(photos, Map.of()));
+    }
+
+    @Test
     void deletedProductsAreSkipped() {
         ChatMessage message = ChatMessage.builder().content("Xem cái này").productIds("99").build();
 

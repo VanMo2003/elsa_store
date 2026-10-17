@@ -275,6 +275,10 @@ thành 30 ngày qua (chưa có thì tính toàn bộ lịch sử), bỏ sản ph
 khoá (không trùng, mới trước, tối đa 10) và tối đa 3 cửa hàng đã duyệt khớp tên. Không phân biệt hoa thường / dấu (theo
 collation MySQL); `%`, `_` trong từ khoá được thoát nên không thành ký tự đại diện.
 
+**Lọc theo danh mục:** danh mục là cây hai tầng (`parentId`). `GET /products?categoryId=` và `POST /products/search`
+với danh mục gốc trả cả sản phẩm của các danh mục con (chọn "Áo" ra cả "Áo sơ mi"); chọn danh mục con chỉ ra sản phẩm
+của nó.
+
 **Sản phẩm tương tự:** `GET /products/{id}/related?size=8` (công khai, tối đa 20) — sản phẩm đang bán cùng danh mục, mới
 nhất trước; chưa đủ thì bù hàng cùng cửa hàng; không gồm chính sản phẩm, không lặp. Sản phẩm đang ẩn trả 404.
 

@@ -2,6 +2,7 @@ package com.example.elsa_store.specification;
 
 import com.example.elsa_store.constant.ApprovalStatus;
 import com.example.elsa_store.dto.request.ProductSearchRequest;
+import com.example.elsa_store.entity.Category;
 import com.example.elsa_store.entity.Product;
 import com.example.elsa_store.entity.ProductVariant;
 import com.example.elsa_store.entity.Store;
@@ -37,6 +38,7 @@ public final class ProductSpecification {
                     cb.isNull(store.get("id")),
                     cb.isNull(store.get("suspended")),
                     cb.isFalse(store.get("suspended"))));
+            Join<Product, Category> category = root.join("category", JoinType.LEFT);
 
             String keyword = req.getKeyword() == null ? "" : req.getKeyword().trim().toLowerCase(Locale.ROOT);
             if (!keyword.isEmpty()) {
@@ -45,10 +47,13 @@ public final class ProductSpecification {
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("name")), pattern, '\\'),
                         cb.like(cb.lower(root.get("description")), pattern, '\\'),
-                        cb.like(cb.lower(root.join("category", JoinType.LEFT).get("name")), pattern, '\\')));
+                        cb.like(cb.lower(category.get("name")), pattern, '\\')));
             }
             if (req.getCategoryId() != null) {
-                predicates.add(cb.equal(root.get("category").get("id"), req.getCategoryId()));
+                // Danh mục gốc gồm cả danh mục con của nó.
+                predicates.add(cb.or(
+                        cb.equal(category.get("id"), req.getCategoryId()),
+                        cb.equal(category.join("parent", JoinType.LEFT).get("id"), req.getCategoryId())));
             }
             if (req.getStoreId() != null) {
                 predicates.add(cb.equal(store.get("id"), req.getStoreId()));

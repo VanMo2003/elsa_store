@@ -17,15 +17,18 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     List<Product> findAllByStore_Id(Long storeId);
 
-    /** Sản phẩm đang bán của các cửa hàng đã duyệt — danh sách công khai cho khách. */
+    /**
+     * Sản phẩm đang bán của các cửa hàng đã duyệt — danh sách công khai cho khách. Lọc theo danh mục gốc thì lấy cả
+     * sản phẩm của danh mục con (chọn "Áo" ra cả "Áo sơ mi").
+     */
     String PUBLIC_PRODUCTS = """
-        select p from Product p
+        select p from Product p left join p.category c
         where (p.status is null or p.status = 1)
           and (p.store is null
                or p.store.approvalStatus = com.example.elsa_store.constant.ApprovalStatus.APPROVED
                or p.store.approvalStatus is null)
           and (p.store is null or (p.store.suspended is null or p.store.suspended = false))
-          and (:categoryId is null or p.category.id = :categoryId)
+          and (:categoryId is null or c.id = :categoryId or c.parent.id = :categoryId)
           and (:storeId is null or p.store.id = :storeId)
         order by p.id desc
     """;

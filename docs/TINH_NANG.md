@@ -25,14 +25,15 @@ toàn bộ API (trích tự động từ controller).
   theo dõi, sản phẩm); trang sản phẩm (bộ ảnh, phân loại, đếm ngược khuyến mãi, mã giảm giá của cửa hàng, **hướng dẫn chọn
   size**, đánh giá có ảnh + "hữu ích", hỏi đáp, "khách mua cũng mua", sản phẩm tương tự, chia sẻ liên kết).
 - **Mua hàng:** giỏ hàng (giá luôn theo khuyến mãi hiện tại, báo hết hàng), báo giá có mã giảm giá + phí giao + **dùng
-  xu**, đặt hàng COD / VNPay (tự huỷ đơn VNPay chưa trả sau 30 phút), theo dõi trạng thái + dòng thời gian, huỷ kèm lý do,
-  bấm "đã nhận hàng" (nhắc trước 2 ngày, tự hoàn thành sau 7 ngày), mua lại, yêu cầu trả hàng trong 7 ngày.
+  xu**, đặt hàng COD / VNPay (tự huỷ đơn VNPay chưa trả sau 30 phút), theo dõi trạng thái + dòng thời gian, **mã vận đơn**
+  (đơn vị vận chuyển + mã, sao chép để tra cứu), huỷ kèm lý do, bấm "đã nhận hàng" (nhắc trước 2 ngày, tự hoàn thành sau 7 ngày), mua lại, yêu cầu trả hàng trong 7 ngày.
 - **Gắn kết:** yêu thích (báo giảm giá / có hàng lại), theo dõi cửa hàng (báo sản phẩm mới), xu thưởng 1% (Bạc / Vàng /
-  Kim cương nhận x1,5 / x2 / x3), thưởng xu khi đánh giá / có ảnh, nhắc giỏ hàng bị bỏ quên, tuỳ chọn tắt từng nhóm thông
+  Kim cương nhận x1,5 / x2 / x3), **điểm danh hằng ngày** (chuỗi 7 ngày 50 → 500 xu), thưởng xu khi đánh giá / có ảnh, nhắc giỏ hàng bị bỏ quên, tuỳ chọn tắt từng nhóm thông
   báo, chat với cửa hàng (gửi ảnh, đính kèm sản phẩm) và trợ lý AI, báo cáo sản phẩm vi phạm.
 
 ### Nhân viên, quản lý, chủ cửa hàng
-- **Đơn hàng:** danh sách phân trang + đếm theo trạng thái, xác nhận → giao → hoàn thành / huỷ, bán tại quầy, xuất Excel
+- **Đơn hàng:** danh sách phân trang + đếm theo trạng thái, xác nhận → giao (kèm đơn vị vận chuyển + mã vận đơn, sửa được
+  khi đang giao) → hoàn thành / huỷ, bán tại quầy, xuất Excel
   (chủ / quản lý), xử lý trả hàng (nhân viên duyệt, chủ / quản lý hoàn tiền).
 - **Sản phẩm & kho:** sản phẩm, phân loại, bộ ảnh tối đa 10, ẩn / mở bán; kho với thẻ kho, kiểm kê, cảnh báo sắp hết;
   phiếu nhập (giá vốn bình quân gia quyền); nhà cung cấp.
@@ -41,7 +42,7 @@ toàn bộ API (trích tự động từ controller).
   vắng), trả lời đánh giá, trả lời câu hỏi, danh sách khách hàng.
 - **Báo cáo (chủ / quản lý):** tổng quan (hôm nay / tháng, lợi nhuận gộp, việc cần làm), doanh thu theo ngày / tuần / tháng /
   năm, so với kỳ trước, sản phẩm bán chạy kèm lãi, danh mục, kênh bán & cách trả tiền, khách mua nhiều, hiệu suất nhân
-  viên, tỷ lệ huỷ, hoàn tiền, **lượt xem & chuyển đổi**, hàng sắp hết, xuất Excel nhiều sheet.
+  viên, tỷ lệ huỷ, hoàn tiền, **lượt xem & chuyển đổi**, hàng sắp hết, **hàng chậm bán** (còn tồn mà 30 ngày không bán, vốn tồn), xuất Excel nhiều sheet.
 - **Quản trị cửa hàng:** thông tin, logo, nhân sự (chủ tạo quản lý / nhân viên, khoá thay vì xoá), tuỳ chọn thông báo.
 
 ### Quản trị (ADMIN)
@@ -67,14 +68,14 @@ Thông báo trong app + push FCM (một số kèm email). Loại thông báo (`N
 
 Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, có hàng lại, cửa hàng trả lời, nhắc giỏ hàng); cửa hàng tắt được nhóm đánh giá / câu hỏi mới. Tin đơn hàng, thanh toán, trả hàng luôn gửi.
 
-## Dữ liệu (40 bảng chính)
+## Dữ liệu (41 bảng chính)
 
 | Nhóm | Thực thể |
 |---|---|
 | Tài khoản & bảo mật | User, Customer, Address, DeviceToken, InvalidatedToken, PasswordResetCode |
 | Cửa hàng | Store, StoreFollow, Supplier, QuickReply |
 | Sản phẩm & kho | Category, Product, ProductImage, ProductVariant, ProductVariantImage, Inventory, StockMovement, PurchaseOrder, PurchaseOrderItem, ProductViewDay |
-| Bán hàng | Cart, CartItem, Order, OrderItem, OrderStatusHistory, Payment, Promotion, PromotionProduct, ReturnRequest, ReturnItem, CoinTransaction |
+| Bán hàng | Cart, CartItem, Order, OrderItem, OrderStatusHistory, Payment, Promotion, PromotionProduct, ReturnRequest, ReturnItem, CoinTransaction, DailyCheckIn |
 | Tương tác | ProductReview, ReviewVote, ProductQuestion, WishlistItem, Conversation, ChatMessage, Notification, HomeBanner, ViolationReport |
 
 ## Kiểm chứng
@@ -85,7 +86,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
   (`test/contract/api_contract_test.dart`, bật bằng `--dart-define=ELSA_CONTRACT=true`).
 - CI GitHub Actions cho cả hai repo.
 
-## Phụ lục: danh sách API (224 endpoint)
+## Phụ lục: danh sách API (228 endpoint)
 
 Đường dẫn tương đối với `/elsa-store/api`. Quyền từng endpoint xem README BE (phần Vai trò và phân quyền) và Postman.
 
@@ -152,6 +153,8 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
 **Coin**
 
 - `GET /coins/me`
+- `GET /coins/check-in`
+- `POST /coins/check-in`
 
 **Customer**
 
@@ -209,6 +212,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
 - `POST /orders/quote`
 - `GET /orders/{id}`
 - `PUT /orders/{orderId}/status`
+- `PUT /orders/{orderId}/tracking`
 - `PUT /orders/{orderId}/payment-status`
 - `GET /orders/page`
 - `GET /orders/export`
@@ -324,6 +328,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
 - `GET /reports/product-views`
 - `GET /reports/stores`
 - `GET /reports/low-stock`
+- `GET /reports/slow-movers`
 - `GET /reports/export`
 
 **Return**

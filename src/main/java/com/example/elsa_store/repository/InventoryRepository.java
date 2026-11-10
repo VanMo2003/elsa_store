@@ -2,8 +2,10 @@
 package com.example.elsa_store.repository;
 
 import com.example.elsa_store.entity.Inventory;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +19,27 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     Optional<Inventory> findByProductVariant_Id(Long variantId);
 
     List<Inventory> findAllByProductVariant_Product_Store_Id(Long storeId);
+
+    /**
+     * Hàng chậm bán: còn tồn, đã theo dõi kho từ trước {@code since} và không có đơn nào (trừ đơn huỷ) đặt từ {@code since}.
+     * Mỗi dòng {inventory, lần bán gần nhất (null = chưa bán)}, vốn tồn nhiều nhất trước. {@code storeId} null = toàn sàn.
+     */
+    @Query("""
+        select i, (select max(o.orderDate) from OrderItem oi join oi.order o
+                   where oi.productVariant = i.productVariant
+                     and o.status <> com.example.elsa_store.constant.OrderStatus.DA_HUY)
+        from Inventory i
+        where coalesce(i.quantity, 0) > 0
+          and (:storeId is null or i.productVariant.product.store.id = :storeId)
+          and (i.createdAt is null or i.createdAt < :since)
+          and not exists (
+              select 1 from OrderItem oi join oi.order o
+              where oi.productVariant = i.productVariant
+                and o.status <> com.example.elsa_store.constant.OrderStatus.DA_HUY
+                and o.orderDate >= :since)
+        order by coalesce(i.quantity, 0) * coalesce(i.productVariant.costPrice, 0) desc, coalesce(i.quantity, 0) desc, i.id asc
+    """)
+    List<Object[]> findSlowMovers(@Param("storeId") Long storeId, @Param("since") LocalDateTime since, Pageable pageable);
 
     /** Biến thể sắp hết hàng: tồn kho không vượt quá mức tối thiểu. {@code storeId} null = toàn hệ thống. */
     @Query("""

@@ -35,6 +35,9 @@ public interface ReportService {
 
     List<LowStockResponse> lowStock(Long storeId);
 
+    /** Hàng còn tồn mà {@code days} ngày qua không bán được, vốn tồn nhiều nhất trước (tối đa {@code limit} dòng). */
+    List<SlowMoverResponse> slowMovers(int days, int limit, Long storeId);
+
     /** Sản phẩm được xem nhiều nhất trong kỳ kèm số đơn và tỉ lệ chuyển đổi. */
     List<ProductViewStatResponse> productViews(LocalDate from, LocalDate to, int limit, Long storeId);
 

@@ -481,6 +481,39 @@ public class ReportServiceImpl implements ReportService {
         return result;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<SlowMoverResponse> slowMovers(int days, int limit, Long storeId) {
+        Long scope = scope(storeId);
+        int window = Math.min(Math.max(days, 7), 365);
+        int size = Math.min(Math.max(limit, 1), 100);
+        LocalDateTime now = LocalDateTime.now();
+        List<SlowMoverResponse> result = new ArrayList<>();
+        for (Object[] row : inventoryRepository.findSlowMovers(scope, now.minusDays(window), PageRequest.of(0, size))) {
+            Inventory inventory = (Inventory) row[0];
+            LocalDateTime lastSold = (LocalDateTime) row[1];
+            ProductVariant v = inventory.getProductVariant();
+            Product p = v.getProduct();
+            int quantity = inventory.getQuantity() == null ? 0 : inventory.getQuantity();
+            Double cost = v.getCostPrice();
+            result.add(new SlowMoverResponse(
+                    p.getId(),
+                    v.getId(),
+                    p.getName(),
+                    v.getImageUrl() != null ? v.getImageUrl() : p.getImageUrl(),
+                    v.getColor(),
+                    v.getSize(),
+                    v.getSku(),
+                    quantity,
+                    cost,
+                    cost == null ? 0 : Math.round(quantity * cost),
+                    lastSold,
+                    lastSold == null ? null : java.time.Duration.between(lastSold, now).toDays(),
+                    p.getStatus() != null && p.getStatus() == 0));
+        }
+        return result;
+    }
+
     /**
      * Tổng quan: doanh thu hôm nay / hôm qua, tháng này / cùng kỳ tháng trước, lợi nhuận gộp tháng, các đơn cần xử lý, hàng
      * sắp hết và doanh thu 7 ngày gần nhất.

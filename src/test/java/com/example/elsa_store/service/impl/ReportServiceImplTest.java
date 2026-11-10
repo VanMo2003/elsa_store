@@ -6,6 +6,10 @@ import com.example.elsa_store.dto.response.DashboardResponse;
 import com.example.elsa_store.dto.response.ProductRevenueResponse;
 import com.example.elsa_store.dto.response.RevenueBreakdownResponse;
 import com.example.elsa_store.dto.response.RevenueSummaryResponse;
+import com.example.elsa_store.dto.response.SlowMoverResponse;
+import com.example.elsa_store.entity.Inventory;
+import com.example.elsa_store.entity.Product;
+import com.example.elsa_store.entity.ProductVariant;
 import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.entity.User;
 import com.example.elsa_store.repository.*;
@@ -22,7 +26,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 class ReportServiceImplTest {
@@ -53,6 +59,57 @@ class ReportServiceImplTest {
 
     private static List<Object[]> rows(Object[]... rows) {
         return new ArrayList<>(List.of(rows));
+    }
+
+    private static Inventory stock(long variantId, String name, int quantity, Double cost, int productStatus) {
+        Product product = Product.builder().name(name).status(productStatus).imageUrl("/uploads/p" + variantId + ".png").build();
+        product.setId(variantId * 10);
+        ProductVariant variant = ProductVariant.builder().product(product).color("Đen").size("42").sku("SKU" + variantId)
+                .costPrice(cost).build();
+        variant.setId(variantId);
+        Inventory inventory = new Inventory();
+        inventory.setProductVariant(variant);
+        inventory.setQuantity(quantity);
+        return inventory;
+    }
+
+    @Test
+    void slowMoversShowStockValueAndHowLongSinceTheLastSale() {
+        LocalDateTime lastSale = LocalDateTime.now().minusDays(45);
+        when(inventories.findSlowMovers(eq(1L), any(), any())).thenReturn(rows(
+                new Object[] {stock(7L, "Giày A", 12, 600_000.0, 1), lastSale},
+                new Object[] {stock(8L, "Túi B", 3, null, 0), null}));
+
+        List<SlowMoverResponse> slow = service.slowMovers(30, 20, null);
+
+        assertEquals(2, slow.size());
+        SlowMoverResponse first = slow.get(0);
+        assertEquals(7_200_000, first.stockValue(), "tồn × giá vốn");
+        assertEquals(45L, first.daysSinceLastSale());
+        assertEquals("/uploads/p7.png", first.imageUrl(), "phân loại chưa có ảnh thì lấy ảnh sản phẩm");
+        assertFalse(first.hidden());
+        SlowMoverResponse never = slow.get(1);
+        assertNull(never.lastSoldAt());
+        assertNull(never.daysSinceLastSale(), "chưa bán lần nào");
+        assertEquals(0, never.stockValue(), "chưa có giá vốn");
+        assertTrue(never.hidden());
+        // Mốc "không bán từ" là 30 ngày trước, chỉ lấy 20 dòng.
+        verify(inventories).findSlowMovers(eq(1L),
+                argThat(since -> Math.abs(java.time.Duration.between(since, LocalDateTime.now().minusDays(30)).toMinutes()) < 2),
+                argThat(page -> page.getPageSize() == 20));
+    }
+
+    @Test
+    void slowMoverWindowAndSizeAreClampedAndAdminSeesTheWholeMarket() {
+        User admin = User.builder().username("admin").role(Role.ADMIN).build();
+        when(accessGuard.currentUser()).thenReturn(admin);
+        when(inventories.findSlowMovers(isNull(), any(), any())).thenReturn(List.of());
+
+        service.slowMovers(1, 1000, null);
+
+        verify(inventories).findSlowMovers(isNull(),
+                argThat(since -> Math.abs(java.time.Duration.between(since, LocalDateTime.now().minusDays(7)).toMinutes()) < 2),
+                argThat(page -> page.getPageSize() == 100));
     }
 
     @Test

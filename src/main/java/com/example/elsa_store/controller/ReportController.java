@@ -130,6 +130,18 @@ public class ReportController {
         return ApiResponse.ok(reportService.lowStock(storeId));
     }
 
+    /**
+     * Hàng chậm bán: còn tồn kho mà {@code days} ngày (7–365, mặc định 30) không có đơn nào, vốn tồn nhiều nhất trước
+     * (chủ / quản lý; ADMIN chọn storeId hoặc toàn sàn).
+     */
+    @GetMapping("/slow-movers")
+    public ApiResponse<List<SlowMoverResponse>> slowMovers(
+            @RequestParam(defaultValue = "30") int days,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) Long storeId) {
+        return ApiResponse.ok(reportService.slowMovers(days, limit, storeId));
+    }
+
     /** Tệp Excel nhiều sheet gồm mọi báo cáo trên. */
     @GetMapping("/export")
     public ResponseEntity<byte[]> export(

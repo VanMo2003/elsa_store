@@ -4313,6 +4313,55 @@
           }
         },
         {
+          "name": "Hàng chậm bán (còn tồn, 30 ngày không bán)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/slow-movers?days=30&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "slow-movers"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Còn tồn kho, theo dõi kho từ trước mốc và không có đơn (trừ huỷ) từ mốc; vốn tồn (tồn × giá vốn) nhiều nhất trước."
+          }
+        },
+        {
           "name": "ADMIN xem báo cáo một cửa hàng",
           "event": [
             {

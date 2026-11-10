@@ -24,6 +24,9 @@ public interface OrderNotificationService {
     /** Báo cửa hàng: tiền VNPay về cho một đơn đã huỷ — cần hoàn tiền cho khách. */
     void paidAfterCancel(Order order);
 
+    /** Báo khách mã vận đơn mới khi cửa hàng nhập / sửa sau lúc chuyển sang đang giao (chỉ trong app + push). */
+    void trackingUpdated(Order order);
+
     /** Chỉ báo khi thanh toán thật sự đổi sang thành công hoặc thất bại. */
     void paymentChanged(Order order, PaymentStatus previous);
 }

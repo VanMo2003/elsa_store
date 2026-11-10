@@ -127,6 +127,32 @@ class OrderNotificationServiceImplTest {
     }
 
     @Test
+    void shippingMessageNamesTheCarrierAndCodeWhenTheStoreGaveThem() {
+        Order order = order(user("an", "an@example.com"));
+        order.setCode("ORD-9");
+        assertTrue(NotificationMessages.orderShipping(order).body().contains("giao cho đơn vị vận chuyển."));
+
+        order.setShippingCarrier("GHN");
+        order.setTrackingCode("GHN123");
+        assertTrue(NotificationMessages.orderShipping(order).body().contains("giao cho GHN, mã vận đơn GHN123."));
+        assertTrue(NotificationMessages.trackingUpdated(order).body().contains("GHN, mã vận đơn GHN123"));
+    }
+
+    @Test
+    void newTrackingCodeIsPushedToTheCustomerWithoutEmail() {
+        User buyer = user("an", "an@example.com");
+        Order order = order(buyer);
+        service.trackingUpdated(order);
+        verifyNoInteractions(notifications);
+
+        order.setTrackingCode("GHN123");
+        service.trackingUpdated(order);
+        verify(notifications)
+                .notify(eq(buyer), eq(NotificationType.ORDER_SHIPPING), any(), anyString(), anyLong());
+        verifyNoInteractions(events);
+    }
+
+    @Test
     void shippingAndStoreSideCancellationsTellTheCustomerWithTheReason() {
         User buyer = user("an", "an@example.com");
         User staff = User.builder().username("nv").build();

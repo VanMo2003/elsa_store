@@ -379,6 +379,71 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void shippingCanCarryTheCarrierAndTrackingCodeOntoTheOrderAndTimeline() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        Order online = placed(OrderStatus.DA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
+        online.setShippingAddress("1 Nguyen Hue, Q1");
+
+        AppException badCode = assertThrows(AppException.class,
+                () -> service.updateStatus(900L, OrderStatus.DANG_GIAO, null, "GHN", "mã có dấu"));
+        assertEquals(ErrorCode.BAD_REQUEST, badCode.getErrorCode());
+        AppException tooLong = assertThrows(AppException.class,
+                () -> service.updateStatus(900L, OrderStatus.DANG_GIAO, null, "x".repeat(51), null));
+        assertEquals(ErrorCode.BAD_REQUEST, tooLong.getErrorCode());
+        assertEquals(OrderStatus.DA_XAC_NHAN, online.getStatus(), "lỗi thì không đổi trạng thái");
+
+        OrderResponse res = service.updateStatus(900L, OrderStatus.DANG_GIAO, null, "  GHN ", " ghn-123.vn ");
+        assertEquals("GHN", res.getShippingCarrier());
+        assertEquals("GHN-123.VN", res.getTrackingCode(), "mã cắt khoảng trắng và viết hoa");
+        assertEquals("GHN-123.VN", online.getTrackingCode());
+        verify(timeline).record(online, OrderStatus.DANG_GIAO, staff, "GHN · GHN-123.VN");
+        verify(notifications).statusChanged(online, OrderStatus.DA_XAC_NHAN, staff);
+    }
+
+    @Test
+    void trackingIsOnlyForTheShippingStep() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        Order order = placed(OrderStatus.CHUA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
+        AppException ex = assertThrows(AppException.class,
+                () -> service.updateStatus(900L, OrderStatus.DA_XAC_NHAN, null, "GHN", "GHN1"));
+        assertEquals(ErrorCode.BAD_REQUEST, ex.getErrorCode());
+        assertEquals(OrderStatus.CHUA_XAC_NHAN, order.getStatus());
+        // Chỉ có ghi chú thì vẫn chạy như cũ.
+        service.updateStatus(900L, OrderStatus.DA_XAC_NHAN, "  ", null, null);
+        verify(timeline).record(order, OrderStatus.DA_XAC_NHAN, staff, null);
+    }
+
+    @Test
+    void trackingCanBeFixedWhileShippingAndTheCustomerHearsOnlyAboutANewCode() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        Order order = placed(OrderStatus.DANG_GIAO, PaymentStatus.CHUA_THANH_TOAN);
+        order.setShippingAddress("1 Nguyen Hue, Q1");
+
+        OrderResponse res = service.updateTracking(900L, "GHTK", "s123");
+        assertEquals("GHTK", res.getShippingCarrier());
+        assertEquals("S123", res.getTrackingCode());
+        verify(notifications).trackingUpdated(order);
+
+        service.updateTracking(900L, "Giao Hàng Tiết Kiệm", "S123");
+        assertEquals("Giao Hàng Tiết Kiệm", order.getShippingCarrier());
+        verify(notifications, times(1)).trackingUpdated(any());
+
+        service.updateTracking(900L, " ", null);
+        assertNull(order.getShippingCarrier());
+        assertNull(order.getTrackingCode());
+        verify(notifications, times(1)).trackingUpdated(any());
+
+        order.setStatus(OrderStatus.HOAN_THANH);
+        AppException done = assertThrows(AppException.class, () -> service.updateTracking(900L, "GHN", "X1"));
+        assertEquals(ErrorCode.BAD_REQUEST, done.getErrorCode());
+
+        order.setStatus(OrderStatus.DANG_GIAO);
+        when(accessGuard.currentUser()).thenReturn(buyer);
+        AppException customer = assertThrows(AppException.class, () -> service.updateTracking(900L, "GHN", "X1"));
+        assertEquals(ErrorCode.UN_AUTHORIZED, customer.getErrorCode());
+    }
+
+    @Test
     void customerConfirmsReceiptOnlyWhileTheOrderIsBeingDelivered() {
         Order order = placed(OrderStatus.DANG_GIAO, PaymentStatus.CHUA_THANH_TOAN);
         order.setShippingAddress("1 Nguyen Hue, Q1");

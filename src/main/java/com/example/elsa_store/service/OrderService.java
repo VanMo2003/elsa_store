@@ -45,7 +45,18 @@ public interface OrderService {
     }
 
     /** {@code reason}: lý do huỷ (lưu vào đơn và dòng thời gian) hoặc ghi chú của mốc; có thể trống. */
-    OrderResponse updateStatus(Long orderId, OrderStatus status, String reason);
+    default OrderResponse updateStatus(Long orderId, OrderStatus status, String reason) {
+        return updateStatus(orderId, status, reason, null, null);
+    }
+
+    /**
+     * Như {@link #updateStatus(Long, OrderStatus, String)}; khi chuyển sang đang giao có thể nhập luôn đơn vị vận chuyển
+     * và mã vận đơn (trạng thái khác thì không được truyền).
+     */
+    OrderResponse updateStatus(Long orderId, OrderStatus status, String reason, String carrier, String trackingCode);
+
+    /** Sửa đơn vị vận chuyển / mã vận đơn của đơn đang giao (nhân viên trở lên); báo khách khi có mã mới. */
+    OrderResponse updateTracking(Long orderId, String carrier, String trackingCode);
 
     OrderResponse updatePaymentStatus(Long orderId, PaymentStatus paymentStatus);
 

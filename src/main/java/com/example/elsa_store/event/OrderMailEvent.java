@@ -19,7 +19,9 @@ public record OrderMailEvent(
         Double finalAmount,
         List<Line> items,
         /** Lý do huỷ (chỉ có ở email huỷ đơn khi người huỷ có nhập). */
-        String cancelReason) {
+        String cancelReason,
+        /** Đơn vị vận chuyển + mã vận đơn (chỉ có ở email đang giao khi cửa hàng có nhập). */
+        String tracking) {
 
     public record Line(String name, int quantity, double lineTotal) {}
 
@@ -31,7 +33,17 @@ public record OrderMailEvent(
                 ? recipient.getUsername()
                 : recipient.getFullName();
         return new OrderMailEvent(type, recipient.getEmail(), name, order.getCode(), order.getFinalAmount(), lines,
-                type == NotificationType.ORDER_CANCELLED ? order.getCancelReason() : null);
+                type == NotificationType.ORDER_CANCELLED ? order.getCancelReason() : null,
+                type == NotificationType.ORDER_SHIPPING ? tracking(order) : null);
+    }
+
+    private static String tracking(Order order) {
+        String carrier = order.getShippingCarrier();
+        String code = order.getTrackingCode();
+        if (code == null || code.isBlank()) {
+            return carrier;
+        }
+        return carrier == null ? "mã vận đơn " + code : carrier + ", mã vận đơn " + code;
     }
 
     private static Line line(OrderItem item) {

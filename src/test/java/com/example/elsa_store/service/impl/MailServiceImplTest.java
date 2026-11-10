@@ -32,6 +32,10 @@ class MailServiceImplTest {
     }
 
     private static OrderMailEvent event(NotificationType type, String cancelReason) {
+        return event(type, cancelReason, null);
+    }
+
+    private static OrderMailEvent event(NotificationType type, String cancelReason, String tracking) {
         return new OrderMailEvent(
                 type,
                 "khach@example.com",
@@ -39,7 +43,8 @@ class MailServiceImplTest {
                 "ORD-1768188571731",
                 1_250_000.0,
                 List.of(new OrderMailEvent.Line("Giày Samba <OG> (Trắng, size 42)", 2, 1_250_000)),
-                cancelReason);
+                cancelReason,
+                tracking);
     }
 
     @SuppressWarnings("unchecked")
@@ -121,6 +126,20 @@ class MailServiceImplTest {
         String cancelled = textOf(sent.getAllValues().get(0));
         assertTrue(cancelled.contains("lý do: Hết size &lt;42&gt;"), "lý do huỷ phải có và được escape HTML");
         assertEquals("[Elsa Store] Đơn hàng ORD-1768188571731 đang được giao", sent.getAllValues().get(1).getSubject());
+        assertTrue(textOf(sent.getAllValues().get(1)).contains("đơn vị vận chuyển"), "chưa có mã thì viết chung chung");
+    }
+
+    @Test
+    void shippingMailNamesTheCarrierAndTrackingCode() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenAnswer(call -> new MimeMessage((Session) null));
+        MailServiceImpl service = new MailServiceImpl(provider(sender), "shop@example.com", "", PUBLIC_URL);
+
+        service.sendOrderMail(event(NotificationType.ORDER_SHIPPING, null, "GHN, mã vận đơn GHN123"));
+
+        ArgumentCaptor<MimeMessage> sent = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender).send(sent.capture());
+        assertTrue(textOf(sent.getValue()).contains("đã được giao cho GHN, mã vận đơn GHN123"));
     }
 
     @Test

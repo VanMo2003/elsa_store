@@ -49,6 +49,9 @@ public class OrderResponse {
     private LocalDateTime returnDeadline;
     /** Lý do huỷ (khi đơn đã huỷ và người huỷ có nhập). */
     private String cancelReason;
+    /** Đơn vị vận chuyển và mã vận đơn cửa hàng nhập khi giao (có thể trống). */
+    private String shippingCarrier;
+    private String trackingCode;
     /** Xu đã dùng cho đơn (null = không dùng). */
     private Integer coinsUsed;
     /** Xu đã nhận khi đơn hoàn thành. */

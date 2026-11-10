@@ -69,6 +69,14 @@ public class Order extends BaseEntity {
     @Column(name = "cancel_reason", length = 255)
     private String cancelReason;
 
+    /** Đơn vị vận chuyển (GHN, GHTK…) cửa hàng nhập khi giao; null = chưa nhập hoặc cửa hàng tự giao không ghi. */
+    @Column(name = "shipping_carrier", length = 50)
+    private String shippingCarrier;
+
+    /** Mã vận đơn để khách tra cứu ở đơn vị vận chuyển; null = chưa nhập. */
+    @Column(name = "tracking_code", length = 50)
+    private String trackingCode;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;

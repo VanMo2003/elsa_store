@@ -558,13 +558,18 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponse updateStatus(Long orderId, OrderStatus status, String reason) {
+    public OrderResponse updateStatus(
+            Long orderId, OrderStatus status, String reason, String carrier, String trackingCode) {
         if (status == null) {
             throw new AppException(ErrorCode.BAD_REQUEST, "status: must not be null");
         }
         String note = trimToNull(reason);
         if (note != null && note.length() > MAX_REASON_LENGTH) {
             throw new AppException(ErrorCode.BAD_REQUEST, "reason: must be at most " + MAX_REASON_LENGTH + " characters");
+        }
+        Tracking tracking = Tracking.of(carrier, trackingCode);
+        if (!tracking.isEmpty() && status != OrderStatus.DANG_GIAO) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "Chỉ nhập mã vận đơn khi chuyển đơn sang đang giao");
         }
         Order order = find(orderId);
         User current = accessGuard.currentUser();
@@ -603,6 +608,13 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setStatus(status);
+        if (status == OrderStatus.DANG_GIAO) {
+            tracking.applyTo(order);
+            // Không có ghi chú riêng thì mốc "đang giao" ghi luôn đơn vị + mã để khách thấy trong dòng thời gian.
+            if (note == null) {
+                note = tracking.label();
+            }
+        }
         if (status == OrderStatus.DA_HUY) {
             order.setCancelReason(note);
             stockService.releaseOrder(order, "Huỷ đơn", current);
@@ -620,6 +632,56 @@ public class OrderServiceImpl implements OrderService {
         timeline.record(order, status, current, note);
         orderNotificationService.statusChanged(order, previousStatus, current);
         return toResponse(order, viewer(current), true);
+    }
+
+    @Override
+    public OrderResponse updateTracking(Long orderId, String carrier, String trackingCode) {
+        Order order = find(orderId);
+        User current = accessGuard.currentUser();
+        authorize(order, Access.STAFF_WRITE);
+        if (order.getStatus() != OrderStatus.DANG_GIAO) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "Chỉ sửa mã vận đơn khi đơn đang giao");
+        }
+        Tracking tracking = Tracking.of(carrier, trackingCode);
+        boolean newCode = tracking.code() != null && !tracking.code().equals(order.getTrackingCode());
+        tracking.applyTo(order);
+        order = orderRepository.save(order);
+        if (newCode) {
+            orderNotificationService.trackingUpdated(order);
+        }
+        return toResponse(order, viewer(current), true);
+    }
+
+    /** Đơn vị vận chuyển + mã vận đơn đã cắt khoảng trắng; mã viết hoa cho dễ đọc / dò. */
+    record Tracking(String carrier, String code) {
+        static final int MAX_LENGTH = 50;
+        private static final java.util.regex.Pattern CODE = java.util.regex.Pattern.compile("[A-Za-z0-9._/-]+");
+
+        static Tracking of(String carrier, String code) {
+            String c = trimToNull(carrier);
+            String t = trimToNull(code);
+            if ((c != null && c.length() > MAX_LENGTH) || (t != null && t.length() > MAX_LENGTH)) {
+                throw new AppException(ErrorCode.BAD_REQUEST, "Đơn vị vận chuyển / mã vận đơn tối đa " + MAX_LENGTH + " ký tự");
+            }
+            if (t != null && !CODE.matcher(t).matches()) {
+                throw new AppException(ErrorCode.BAD_REQUEST, "Mã vận đơn chỉ gồm chữ không dấu, số và - _ . /");
+            }
+            return new Tracking(c, t == null ? null : t.toUpperCase(java.util.Locale.ROOT));
+        }
+
+        boolean isEmpty() {
+            return carrier == null && code == null;
+        }
+
+        void applyTo(Order order) {
+            order.setShippingCarrier(carrier);
+            order.setTrackingCode(code);
+        }
+
+        /** "GHN · GHN123" / "GHN" / "GHN123"; null khi trống. */
+        String label() {
+            return isEmpty() ? null : carrier == null ? code : code == null ? carrier : carrier + " · " + code;
+        }
     }
 
     @Override
@@ -830,6 +892,8 @@ public class OrderServiceImpl implements OrderService {
         res.setItems(itemResponses);
         res.setAllowedNextStatuses(allowedNext(order, viewer));
         res.setCancelReason(order.getCancelReason());
+        res.setShippingCarrier(order.getShippingCarrier());
+        res.setTrackingCode(order.getTrackingCode());
         res.setReturnDeadline(returnPolicy.deadline(order));
         if (withTimeline && order.getId() != null) {
             res.setTimeline(timeline.entries(order, viewer == null ? null : viewer.user()));

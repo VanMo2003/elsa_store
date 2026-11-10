@@ -55,9 +55,26 @@ public final class NotificationMessages {
     }
 
     public static Message orderShipping(Order order) {
+        String tracking = trackingText(order);
         return new Message(
                 "Đơn hàng đang được giao",
-                "Đơn " + order.getCode() + " đã được giao cho đơn vị vận chuyển. Bạn chú ý điện thoại để nhận hàng nhé.");
+                "Đơn " + order.getCode() + " đã được giao cho "
+                        + (order.getShippingCarrier() == null ? "đơn vị vận chuyển" : order.getShippingCarrier())
+                        + (tracking == null ? "" : ", mã vận đơn " + order.getTrackingCode())
+                        + ". Bạn chú ý điện thoại để nhận hàng nhé.");
+    }
+
+    /** Cửa hàng nhập / sửa mã vận đơn sau khi đã chuyển đơn sang đang giao. */
+    public static Message trackingUpdated(Order order) {
+        return new Message(
+                "Đã có mã vận đơn",
+                "Đơn " + order.getCode() + ": "
+                        + (order.getShippingCarrier() == null ? "" : order.getShippingCarrier() + ", ")
+                        + "mã vận đơn " + order.getTrackingCode() + ". Bạn có thể tra cứu hành trình ở đơn vị vận chuyển.");
+    }
+
+    private static String trackingText(Order order) {
+        return order.getTrackingCode() == null || order.getTrackingCode().isBlank() ? null : order.getTrackingCode();
     }
 
     public static Message orderCancelled(Order order) {

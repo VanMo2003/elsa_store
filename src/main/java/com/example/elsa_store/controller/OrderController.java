@@ -4,6 +4,7 @@ package com.example.elsa_store.controller;
 import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.constant.PaymentStatus;
 import com.example.elsa_store.dto.request.OrderRequest;
+import com.example.elsa_store.dto.request.TrackingRequest;
 import com.example.elsa_store.dto.response.OrderQuoteResponse;
 import com.example.elsa_store.dto.response.OrderResponse;
 import com.example.elsa_store.dto.response.PageResponse;
@@ -54,7 +55,10 @@ public class OrderController {
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) PaymentStatus paymentStatus,
             // Lý do huỷ / ghi chú của mốc (tuỳ chọn).
-            @RequestParam(required = false) String reason
+            @RequestParam(required = false) String reason,
+            // Khi chuyển sang đang giao: đơn vị vận chuyển và mã vận đơn (tuỳ chọn).
+            @RequestParam(required = false) String carrier,
+            @RequestParam(required = false) String trackingCode
     ) {
         if (status == null && paymentStatus == null) {
             throw new IllegalArgumentException("Bạn phải truyền status hoặc paymentStatus");
@@ -66,10 +70,17 @@ public class OrderController {
 
         OrderResponse orderResponse =
                 (status != null)
-                        ? orderService.updateStatus(orderId, status, reason)
+                        ? orderService.updateStatus(orderId, status, reason, carrier, trackingCode)
                         : orderService.updatePaymentStatus(orderId, paymentStatus);
 
         return ApiResponse.ok(orderResponse);
+    }
+
+    /** Sửa đơn vị vận chuyển / mã vận đơn của đơn đang giao (nhân viên trở lên). */
+    @PutMapping("/{orderId}/tracking")
+    public ApiResponse<OrderResponse> updateTracking(
+            @PathVariable Long orderId, @Valid @RequestBody TrackingRequest request) {
+        return ApiResponse.ok(orderService.updateTracking(orderId, request.getCarrier(), request.getTrackingCode()));
     }
 
     @PutMapping("/{orderId}/payment-status")

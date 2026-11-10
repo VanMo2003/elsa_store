@@ -114,6 +114,15 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
         }
     }
 
+    @Override
+    public void trackingUpdated(Order order) {
+        User recipient = recipientOf(order);
+        if (recipient != null && order.getTrackingCode() != null) {
+            notificationService.notify(recipient, NotificationType.ORDER_SHIPPING,
+                    NotificationMessages.trackingUpdated(order), AppLinks.orders(), order.getId());
+        }
+    }
+
     /** Thông báo trong app + push, kèm email (gửi sau khi transaction commit). */
     private void deliver(User recipient, Order order, NotificationType type, NotificationMessages.Message message) {
         notificationService.notify(recipient, type, message, AppLinks.orders(), order.getId());

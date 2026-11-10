@@ -267,7 +267,9 @@ public class MailServiceImpl implements MailService {
                 new Copy(
                         "[Elsa Store] Đơn hàng " + code + " đang được giao",
                         "Đơn hàng đang được giao",
-                        "Đơn " + code + " đã được giao cho đơn vị vận chuyển. Bạn chú ý điện thoại để nhận hàng nhé.");
+                        "Đơn " + code + " đã được giao cho "
+                                + (event.tracking() == null ? "đơn vị vận chuyển" : event.tracking())
+                                + ". Bạn chú ý điện thoại để nhận hàng nhé.");
             case ORDER_CANCELLED ->
                 new Copy(
                         "[Elsa Store] Đơn hàng " + code + " đã bị huỷ",

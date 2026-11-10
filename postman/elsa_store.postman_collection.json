@@ -2188,7 +2188,7 @@
           }
         },
         {
-          "name": "Nhân viên giao cho đơn vị vận chuyển",
+          "name": "Nhân viên giao cho đơn vị vận chuyển (kèm mã vận đơn)",
           "event": [
             {
               "listen": "test",
@@ -2204,7 +2204,7 @@
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/orders/{{orderId}}/status?status=DANG_GIAO",
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status?status=DANG_GIAO&carrier=GHN&trackingCode=GHN{{runSuffix}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2217,6 +2217,14 @@
                 {
                   "key": "status",
                   "value": "DANG_GIAO"
+                },
+                {
+                  "key": "carrier",
+                  "value": "GHN"
+                },
+                {
+                  "key": "trackingCode",
+                  "value": "GHN{{runSuffix}}"
                 }
               ]
             },
@@ -2229,6 +2237,60 @@
                   "type": "string"
                 }
               ]
+            },
+            "description": "carrier / trackingCode tuỳ chọn, chỉ nhận khi chuyển sang DANG_GIAO; mã chỉ gồm chữ không dấu, số và - _ . /."
+          }
+        },
+        {
+          "name": "Sửa mã vận đơn khi đang giao (khách nhận thông báo mã mới)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/tracking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "tracking"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carrier\": \"Giao Hàng Nhanh\",\n  \"trackingCode\": \"GHN{{runSuffix}}X\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           }
         },

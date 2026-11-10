@@ -25,7 +25,7 @@ public class OrderExcelExporter {
     private static final String[] ORDER_COLUMNS = {
         "Mã đơn", "Ngày đặt", "Trạng thái", "Cách trả", "Thanh toán", "Kênh bán", "Khách hàng", "SĐT khách",
         "Người nhận", "SĐT nhận", "Địa chỉ giao", "Số sản phẩm", "Tiền hàng", "Giảm giá", "Phí giao", "Khách trả",
-        "Mã giảm giá", "Lập bởi", "Hoàn thành lúc", "Lý do huỷ"
+        "Mã giảm giá", "Lập bởi", "Hoàn thành lúc", "Lý do huỷ", "Vận chuyển", "Mã vận đơn"
     };
     private static final String[] ITEM_COLUMNS = {
         "Mã đơn", "Ngày đặt", "Sản phẩm", "Màu", "Size", "SKU", "Số lượng", "Đơn giá gốc", "Đơn giá bán", "Thành tiền"
@@ -63,7 +63,9 @@ public class OrderExcelExporter {
                 text(row, c++, o.getCouponCode());
                 text(row, c++, name(o.getHandledBy()));
                 date(row, c++, o.getCompletedAt(), styles);
-                text(row, c, o.getCancelReason());
+                text(row, c++, o.getCancelReason());
+                text(row, c++, o.getShippingCarrier());
+                text(row, c, o.getTrackingCode());
                 if (o.getStatus() != OrderStatus.DA_HUY) {
                     goods += nz(o.getTotalAmount());
                     discount += nz(o.getDiscountAmount());

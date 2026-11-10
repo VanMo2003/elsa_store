@@ -242,6 +242,13 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   ghi một mốc vào `order_status_history`; API một đơn (`GET /orders/{id}`, đổi trạng thái) trả `timeline`: trạng thái,
   lúc nào, ai làm (`byRole` = `CUSTOMER` / `STORE` / `SYSTEM`; khách không thấy tên nhân viên), ghi chú. Đơn đặt trước
   khi có bảng này được dựng lại từ ngày đặt / ngày hoàn thành.
+- **Mã vận đơn:** khi chuyển sang đang giao, `PUT /orders/{id}/status?status=DANG_GIAO&carrier=&trackingCode=` nhận
+  thêm đơn vị vận chuyển và mã vận đơn (tuỳ chọn, mỗi trường ≤ 50 ký tự; mã chỉ gồm chữ không dấu, số và `- _ . /`, được
+  viết hoa; trạng thái khác mà gửi kèm thì báo 400). Lưu ở `orders.shipping_carrier` / `orders.tracking_code`, trả trong
+  `shippingCarrier` / `trackingCode`; thông báo + email "đang giao" ghi tên đơn vị và mã, mốc DANG_GIAO trên dòng thời
+  gian ghi "GHN · MÃ" khi không có ghi chú riêng. Đơn đang giao sửa được bằng `PUT /orders/{id}/tracking`
+  `{carrier, trackingCode}` (nhân viên trở lên; gửi trống để xoá) — mã mới thì khách nhận thông báo trong app (không gửi
+  email lần nữa). Excel đơn hàng có thêm cột "Vận chuyển", "Mã vận đơn".
 - **Tự xử lý đơn bị bỏ quên** (`OrderAutomation`, mỗi 5 phút): đơn VNPay chưa trả sau 30 phút (tính từ lúc đặt và lần
   mở link thanh toán gần nhất; link VNPay sống 15 phút) bị huỷ với lý do "Quá hạn thanh toán VNPay", hàng về kho; đơn
   đang giao quá 7 ngày mà khách chưa bấm đã nhận thì tự hoàn thành (COD coi như đã thu). Mốc trên dòng thời gian ghi
@@ -626,6 +633,7 @@ Bảng `notifications`, `device_tokens`, `conversations`, `chat_messages`, `stoc
 `product_reviews`, `wishlist_items`, `order_status_history`, `return_requests` và `return_items` được Hibernate tạo tự động
 (`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `stores.shipping_fee`,
 `stores.free_shipping_threshold`, `orders.completed_at`, `orders.cancel_reason`, `orders.shipping_fee`,
+`orders.shipping_carrier`, `orders.tracking_code`,
 `product_variants.cost_price`, `order_items.cost_price`, `purchase_orders.code/note/received_at`, `users.token_version`…)
 được thêm cùng cách, đều cho phép để trống nên dữ liệu cũ không cần chuyển đổi.
 

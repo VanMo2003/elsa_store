@@ -1998,6 +1998,121 @@
           }
         },
         {
+          "name": "Điểm danh: trạng thái chuỗi 7 ngày",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/coins/check-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "coins",
+                "check-in"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Điểm danh hôm nay (+50 xu ngày 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/coins/check-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "coins",
+                "check-in"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Chuỗi 7 ngày: 50, 50, 100, 100, 150, 150, 500 xu; bỏ lỡ một ngày thì về ngày 1."
+          }
+        },
+        {
+          "name": "Điểm danh lần hai trong ngày bị chặn (1030)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/coins/check-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "coins",
+                "check-in"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Báo giá có dùng xu (useCoins; ví trống thì dùng 0 xu)",
           "event": [
             {

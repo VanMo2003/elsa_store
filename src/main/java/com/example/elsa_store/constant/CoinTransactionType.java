@@ -13,5 +13,7 @@ public enum CoinTransactionType {
     /** Thưởng viết đánh giá sản phẩm (mỗi sản phẩm một lần). */
     REVIEW_REWARD,
     /** Thưởng đánh giá có ảnh (mỗi sản phẩm một lần). */
-    PHOTO_REWARD
+    PHOTO_REWARD,
+    /** Điểm danh hằng ngày (mỗi ngày một lần, chuỗi 7 ngày). */
+    DAILY_CHECK_IN
 }

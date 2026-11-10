@@ -122,6 +122,10 @@ step(F3, "Thêm địa chỉ giao hàng", "POST", "/addresses", token="customerT
 step(F3, "Báo giá trước khi đặt (kèm mã giảm giá, phí giao)", "POST", "/orders/quote", token="customerToken",
      body={"items": [{"productVariantId": "{{variantId}}", "quantity": 1}], "couponCode": "GIAM{{runSuffix}}"})
 step(F3, "Ví xu thưởng của khách (số dư, quy tắc, lịch sử)", "GET", "/coins/me", token="customerToken")
+step(F3, "Điểm danh: trạng thái chuỗi 7 ngày", "GET", "/coins/check-in", token="customerToken")
+step(F3, "Điểm danh hôm nay (+50 xu ngày 1)", "POST", "/coins/check-in", token="customerToken",
+     note="Chuỗi 7 ngày: 50, 50, 100, 100, 150, 150, 500 xu; bỏ lỡ một ngày thì về ngày 1.")
+step(F3, "Điểm danh lần hai trong ngày bị chặn (1030)", "POST", "/coins/check-in", token="customerToken", expect=409)
 step(F3, "Báo giá có dùng xu (useCoins; ví trống thì dùng 0 xu)", "POST", "/orders/quote", token="customerToken",
      body={"items": [{"productVariantId": "{{variantId}}", "quantity": 1}], "useCoins": True})
 step(F3, "Đặt hàng COD", "POST", "/orders", token="customerToken",

@@ -379,6 +379,12 @@ kèm số dư sau và đơn liên quan); số dư = tổng sổ.
   ảnh +`COINS_REVIEW_PHOTO_REWARD` xu (mặc định 200) — mỗi khoản một lần cho mỗi sản phẩm (sổ ghi `product_id`, loại
   `REVIEW_REWARD` / `PHOTO_REWARD`); sửa, xoá rồi viết lại không nhận lại, xoá đánh giá không thu lại. Phản hồi viết
   đánh giá / thêm ảnh có `rewardCoins` (xu vừa nhận); `GET /products/{id}/reviews/me` có `rewardCoins` (xu còn nhận được).
+- **Điểm danh hằng ngày** (`DailyCheckIns`, bảng `daily_check_ins`, một dòng / khách / ngày theo giờ Việt Nam): chuỗi 7
+  ngày nhận 50, 50, 100, 100, 150, 150, 500 xu (loại `DAILY_CHECK_IN`); bỏ lỡ một ngày thì về ngày 1, xong ngày 7 thì
+  sang vòng mới. `GET /coins/check-in` trả `checkedInToday`, `streak` (0 khi đã đứt), `nextDay`, `nextReward`,
+  `rewards`, `balance`; `POST /coins/check-in` điểm danh (có thêm `awarded`), lần hai trong ngày báo `1030` (HTTP 409).
+  Khoá dòng tài khoản trước khi kiểm tra nên bấm nhiều lần cùng lúc chỉ được cộng một lần (đã thử 4 request song song).
+  Chỉ khách; tài khoản cửa hàng / ADMIN nhận 401.
 - `GET /coins/me?page&size` — số dư, quy tắc (`earnPercent`, `maxRedeemPercent`), lịch sử mới nhất trước, và hạng
   thành viên: `tier`, `earnRate` (% nhận xu thực tế), `spending`, `nextTier`, `nextTierSpending` (`tier` null với tài
   khoản không phải khách).

@@ -61,4 +61,16 @@ public class DashboardResponse {
 
     /** Doanh thu 7 ngày gần nhất, đủ 7 điểm (ngày không có đơn = 0). */
     private List<RevenuePointResponse> last7Days;
+
+    /** Mục tiêu doanh thu tháng của cửa hàng (null = chưa đặt / đang xem toàn sàn). */
+    private Double monthTarget;
+
+    /** Dự báo doanh thu cả tháng theo tốc độ từ đầu tháng tới nay (doanh thu / số ngày đã qua × số ngày của tháng). */
+    private Double monthForecast;
+
+    /** Số ngày còn lại của tháng, tính cả hôm nay. */
+    private Integer daysLeftInMonth;
+
+    /** Mỗi ngày còn lại cần bán bao nhiêu để đạt mục tiêu (0 khi đã đạt; null khi chưa đặt mục tiêu). */
+    private Double neededPerDay;
 }

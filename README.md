@@ -466,6 +466,7 @@ nay" đúng giờ Việt Nam dù máy chủ đặt UTC.
 | `GET /reports/summary?from&to` | Số đơn, tiền hàng gốc, giảm giá, phí giao hàng khách trả (`shippingTotal`), doanh thu thực thu, giá trị TB/đơn, **giá vốn, lợi nhuận gộp, biên lợi nhuận**, số lượng bán chưa có giá vốn, **kỳ liền trước cùng độ dài** (`previous`) và % tăng trưởng doanh thu / số đơn / lợi nhuận (`null` khi kỳ trước bằng 0) |
 | `GET /reports/breakdown?from&to` | Doanh thu theo cách trả tiền (`COD`, `VNPAY`, `OTHER`) và kênh bán (`ONLINE` khách tự đặt, `COUNTER` lập tại quầy), kèm tỷ trọng |
 | `GET /reports/revenue?groupBy=DAY\|WEEK\|MONTH\|YEAR`, `top-products` (kèm lợi nhuận, `null` khi còn món chưa có giá vốn), `revenue-by-category`, `top-customers`, `staff-performance`, `cancellation-rate`, `low-stock` | Như tên |
+| `PUT /reports/revenue-target {target}` | **Mục tiêu doanh thu tháng** (chủ / quản lý; trống / 0 = bỏ), lưu `stores.monthly_revenue_target`, trả tổng quan mới. `GET /reports/dashboard` có thêm `monthTarget`, `monthForecast` (doanh thu tháng tới nay ÷ số ngày đã qua × số ngày của tháng), `daysLeftInMonth` (tính cả hôm nay), `neededPerDay` (còn thiếu ÷ số ngày còn lại; 0 khi đã đạt) |
 | `GET /reports/sales-by-time?from&to` | **Giờ vàng**: đơn đặt trong kỳ (theo lúc đặt, trừ đơn huỷ) theo thứ và giờ — `cells` (`dayOfWeek` ISO 1 = Thứ hai … 7 = Chủ nhật, `hour` 0–23, `orders`, `revenue`), `byHour` (24 số), `byWeekday` (7 số, Thứ hai trước), `totalOrders`, `peak` (ô đông nhất), `peakHour`, `peakWeekday` — để chọn giờ chạy khuyến mãi / trực chat |
 | `GET /reports/slow-movers?days&limit` | **Hàng chậm bán**: phân loại còn tồn kho, đã theo dõi kho từ trước mốc `days` ngày (7–365, mặc định 30) và không có đơn nào (trừ đơn huỷ) đặt từ mốc đó; mỗi dòng có `lastSoldAt` / `daysSinceLastSale` (null = chưa bán lần nào), `stockValue` = tồn × giá vốn, `hidden` (sản phẩm đang ẩn); vốn tồn nhiều nhất trước, tối đa `limit` (≤ 100) dòng |
 | `GET /reports/product-views?from&to&limit` | Sản phẩm được xem nhiều nhất (`product_view_days`: mỗi lần khách / người chưa đăng nhập mở `GET /products/{id}` cộng 1 lượt trong ngày bằng `INSERT … ON DUPLICATE KEY UPDATE`; người của cửa hàng và ADMIN không tính), kèm `orders` (đơn trừ đơn huỷ đặt trong kỳ có sản phẩm), `unitsSold` và `conversionRate` = orders / views |
@@ -669,7 +670,7 @@ Bảng `notifications`, `device_tokens`, `conversations`, `chat_messages`, `stoc
 `product_reviews`, `wishlist_items`, `order_status_history`, `return_requests` và `return_items` được Hibernate tạo tự động
 (`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `stores.shipping_fee`,
 `stores.free_shipping_threshold`, `orders.completed_at`, `orders.cancel_reason`, `orders.shipping_fee`,
-`orders.shipping_carrier`, `orders.tracking_code`, `users.referral_code`, `users.referred_by_id`,
+`orders.shipping_carrier`, `orders.tracking_code`, `stores.monthly_revenue_target`, `users.referral_code`, `users.referred_by_id`,
 `users.referral_rewarded_at`,
 `product_variants.cost_price`, `order_items.cost_price`, `purchase_orders.code/note/received_at`, `users.token_version`…)
 được thêm cùng cách, đều cho phép để trống nên dữ liệu cũ không cần chuyển đổi.

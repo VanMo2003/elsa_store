@@ -270,6 +270,37 @@ class ReportServiceImplTest {
         assertEquals(today.toString(), res.getLast7Days().getLast().getPeriod());
         assertEquals(700_000, res.getLast7Days().get(4).getNetRevenue());
         assertEquals(0, res.getLast7Days().get(5).getNetRevenue(), "ngày không có đơn vẫn có điểm 0");
+        assertEquals(Math.round(9_000_000.0 / today.getDayOfMonth() * today.lengthOfMonth()), res.getMonthForecast(),
+                "dự báo theo tốc độ từ đầu tháng");
+        assertEquals(today.lengthOfMonth() - today.getDayOfMonth() + 1, res.getDaysLeftInMonth());
+        assertNull(res.getMonthTarget(), "chưa đặt mục tiêu");
+        assertNull(res.getNeededPerDay());
+    }
+
+    @Test
+    void monthlyTargetShowsWhatIsStillNeededPerDayAndCanBeCleared() {
+        LocalDate today = LocalDate.now();
+        Store store = accessGuard.requireStoreManager();
+        when(stores.findById(1L)).thenReturn(java.util.Optional.of(store));
+        when(orders.revenueBetween(any(), any(), eq(1L))).thenReturn(0.0);
+        when(orders.revenueBetween(today.withDayOfMonth(1).atStartOfDay(), today.plusDays(1).atStartOfDay(), 1L))
+                .thenReturn(4_000_000.0);
+        when(orderItems.costSummary(any(), any(), any(), eq(1L))).thenReturn(rows(new Object[] {0.0, 0L}));
+        when(variants.stockOverview(1L)).thenReturn(rows());
+        when(orders.revenueByDay(any(), any(), any(), eq(1L))).thenReturn(rows());
+        int daysLeft = today.lengthOfMonth() - today.getDayOfMonth() + 1;
+
+        DashboardResponse res = service.setRevenueTarget(10_000_000.4);
+
+        assertEquals(10_000_000.0, store.getMonthlyRevenueTarget(), "làm tròn đồng");
+        verify(stores).save(store);
+        assertEquals(10_000_000.0, res.getMonthTarget());
+        assertEquals(Math.round(6_000_000.0 / daysLeft), res.getNeededPerDay());
+
+        service.setRevenueTarget(3_000_000.0);
+        assertEquals(0.0, service.dashboard(null).getNeededPerDay(), "đã vượt mục tiêu");
+        assertNull(service.setRevenueTarget(0.0).getMonthTarget(), "0 = bỏ mục tiêu");
+        assertNull(store.getMonthlyRevenueTarget());
     }
 
     @Test

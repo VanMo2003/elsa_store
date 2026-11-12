@@ -35,6 +35,9 @@ public interface ReportService {
 
     List<LowStockResponse> lowStock(Long storeId);
 
+    /** Chủ / quản lý đặt mục tiêu doanh thu tháng (trống / 0 = bỏ); trả tổng quan mới. */
+    DashboardResponse setRevenueTarget(Double target);
+
     /** Giờ vàng: đơn đặt trong kỳ theo thứ trong tuần và giờ trong ngày. */
     SalesByTimeResponse salesByTime(LocalDate from, LocalDate to, Long storeId);
 

@@ -4444,6 +4444,59 @@
           }
         },
         {
+          "name": "Đặt mục tiêu doanh thu tháng (trả tổng quan có dự báo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/revenue-target",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "revenue-target"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": 50000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "target trống hoặc 0 = bỏ mục tiêu. Tổng quan có monthTarget, monthForecast, daysLeftInMonth, neededPerDay."
+          }
+        },
+        {
           "name": "Giờ vàng: đơn theo thứ và giờ đặt hàng",
           "event": [
             {

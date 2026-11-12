@@ -117,6 +117,13 @@ public class ReportController {
         return ApiResponse.ok(reportService.productViews(from, to, limit, storeId));
     }
 
+    /** Chủ / quản lý đặt mục tiêu doanh thu tháng của cửa hàng; trống hoặc 0 = bỏ mục tiêu. Trả tổng quan mới. */
+    @PutMapping("/revenue-target")
+    public ApiResponse<DashboardResponse> setRevenueTarget(
+            @jakarta.validation.Valid @RequestBody com.example.elsa_store.dto.request.RevenueTargetRequest request) {
+        return ApiResponse.ok(reportService.setRevenueTarget(request.target()));
+    }
+
     /** Giờ vàng: số đơn / tiền theo thứ và giờ đặt hàng trong kỳ (chủ / quản lý; ADMIN chọn storeId hoặc toàn sàn). */
     @GetMapping("/sales-by-time")
     public ApiResponse<SalesByTimeResponse> salesByTime(

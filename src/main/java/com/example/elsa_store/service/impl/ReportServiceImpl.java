@@ -588,9 +588,11 @@ public class ReportServiceImpl implements ReportService {
             outOfStock = overview.getOutOfStockVariants();
         }
 
-        String suspendReason = scope == null
-                ? null
-                : storeRepository.findById(scope).filter(Store::isSuspended).map(Store::getSuspendReason).orElse(null);
+        Store store = scope == null ? null : storeRepository.findById(scope).orElse(null);
+        String suspendReason = store != null && store.isSuspended() ? store.getSuspendReason() : null;
+        Double target = store == null ? null : store.getMonthlyRevenueTarget();
+        int daysInMonth = today.lengthOfMonth();
+        int daysLeft = daysInMonth - today.getDayOfMonth() + 1;
 
         return DashboardResponse.builder()
                 .suspendReason(suspendReason)
@@ -619,7 +621,20 @@ public class ReportServiceImpl implements ReportService {
                 .lowStockVariants(lowStock)
                 .outOfStockVariants(outOfStock)
                 .last7Days(lastDays(today, 7, scope))
+                .monthTarget(target)
+                .monthForecast((double) Math.round(monthRevenue / today.getDayOfMonth() * daysInMonth))
+                .daysLeftInMonth(daysLeft)
+                .neededPerDay(target == null ? null : (double) Math.round(Math.max(0, target - monthRevenue) / daysLeft))
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public DashboardResponse setRevenueTarget(Double target) {
+        Store store = accessGuard.requireStoreManager();
+        store.setMonthlyRevenueTarget(target == null || target <= 0 ? null : (double) Math.round(target));
+        storeRepository.save(store);
+        return dashboard(store.getId());
     }
 
     private long countStatus(Long scope, OrderStatus status) {

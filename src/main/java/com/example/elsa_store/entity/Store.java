@@ -83,6 +83,10 @@ public class Store extends BaseEntity {
     @Column(name = "pause_note", length = 255)
     private String pauseNote;
 
+    /** Mục tiêu doanh thu mỗi tháng chủ / quản lý đặt (đơn hoàn thành, theo ngày hoàn thành); trống = chưa đặt. */
+    @Column(name = "monthly_revenue_target")
+    private Double monthlyRevenueTarget;
+
     /**
      * ADMIN đình chỉ (vi phạm): cửa hàng và sản phẩm bị ẩn khỏi sàn, khách không đặt đơn / mở cuộc trò chuyện mới; người
      * của cửa hàng vẫn đăng nhập và xử lý các đơn đã có.

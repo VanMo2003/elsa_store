@@ -28,14 +28,15 @@ toàn bộ API (trích tự động từ controller).
   xu**, đặt hàng COD / VNPay (tự huỷ đơn VNPay chưa trả sau 30 phút), theo dõi trạng thái + dòng thời gian, **mã vận đơn**
   (đơn vị vận chuyển + mã, sao chép để tra cứu), huỷ kèm lý do, bấm "đã nhận hàng" (nhắc trước 2 ngày, tự hoàn thành sau 7 ngày), mua lại, yêu cầu trả hàng trong 7 ngày.
 - **Gắn kết:** yêu thích (báo giảm giá / có hàng lại), theo dõi cửa hàng (báo sản phẩm mới), xu thưởng 1% (Bạc / Vàng /
-  Kim cương nhận x1,5 / x2 / x3), **điểm danh hằng ngày** (chuỗi 7 ngày 50 → 500 xu), thưởng xu khi đánh giá / có ảnh, nhắc giỏ hàng bị bỏ quên, tuỳ chọn tắt từng nhóm thông
+  Kim cương nhận x1,5 / x2 / x3), **điểm danh hằng ngày** (chuỗi 7 ngày 50 → 500 xu), **mời bạn bè** (mã giới thiệu: bạn mua đơn đầu từ 100.000đ thì người mời +5.000 xu, người mới +2.000 xu), thưởng xu khi đánh giá / có ảnh, nhắc giỏ hàng bị bỏ quên, tuỳ chọn tắt từng nhóm thông
   báo, chat với cửa hàng (gửi ảnh, đính kèm sản phẩm) và trợ lý AI, báo cáo sản phẩm vi phạm.
 
 ### Nhân viên, quản lý, chủ cửa hàng
 - **Đơn hàng:** danh sách phân trang + đếm theo trạng thái, xác nhận → giao (kèm đơn vị vận chuyển + mã vận đơn, sửa được
   khi đang giao) → hoàn thành / huỷ, bán tại quầy, xuất Excel
   (chủ / quản lý), xử lý trả hàng (nhân viên duyệt, chủ / quản lý hoàn tiền).
-- **Sản phẩm & kho:** sản phẩm, phân loại, bộ ảnh tối đa 10, ẩn / mở bán; kho với thẻ kho, kiểm kê, cảnh báo sắp hết;
+- **Sản phẩm & kho:** sản phẩm, phân loại, bộ ảnh tối đa 10, ẩn / mở bán, **nhập hàng loạt từ Excel** (tệp mẫu, xem trước,
+  lỗi theo dòng, chủ / quản lý); kho với thẻ kho, kiểm kê, cảnh báo sắp hết;
   phiếu nhập (giá vốn bình quân gia quyền); nhà cung cấp.
 - **Bán hàng:** khuyến mãi tự động và mã giảm giá, phí giao / mức miễn phí, tạm nghỉ bán kèm lời nhắn.
 - **Chăm sóc khách:** hộp thư chat chung của cửa hàng (gợi ý trả lời bằng AI, **câu trả lời nhanh**, AI tự trả lời khi
@@ -86,7 +87,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
   (`test/contract/api_contract_test.dart`, bật bằng `--dart-define=ELSA_CONTRACT=true`).
 - CI GitHub Actions cho cả hai repo.
 
-## Phụ lục: danh sách API (228 endpoint)
+## Phụ lục: danh sách API (232 endpoint)
 
 Đường dẫn tương đối với `/elsa-store/api`. Quyền từng endpoint xem README BE (phần Vai trò và phân quyền) và Postman.
 
@@ -281,6 +282,11 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
 - `GET /product-variants`
 - `POST /product-variants/{id}/images`
 
+**ProductImport**
+
+- `GET /products/import/template`
+- `POST /products/import`
+
 **Promotion**
 
 - `POST /promotions`
@@ -313,6 +319,11 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
 - `POST /chat/quick-replies`
 - `PUT /chat/quick-replies/{id}`
 - `DELETE /chat/quick-replies/{id}`
+
+**Referral**
+
+- `GET /referrals/me`
+- `POST /referrals/apply`
 
 **Report**
 

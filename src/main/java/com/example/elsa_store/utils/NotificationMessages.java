@@ -195,6 +195,18 @@ public final class NotificationMessages {
     }
 
     /** Cho khách: vừa lên hạng thành viên. */
+    public static Message referralReward(String friendName, int coins) {
+        return new Message(
+                "Bạn nhận " + String.format(java.util.Locale.ROOT, "%,d", coins).replace(',', '.') + " xu giới thiệu",
+                "Bạn " + friendName + " đã hoàn thành đơn đầu tiên nhờ mã giới thiệu của bạn. Cảm ơn bạn đã giới thiệu Elsa Store!");
+    }
+
+    public static Message referralWelcome(int coins) {
+        return new Message(
+                "Quà chào mừng " + String.format(java.util.Locale.ROOT, "%,d", coins).replace(',', '.') + " xu",
+                "Đơn đầu tiên của bạn đã hoàn thành — đây là quà từ mã giới thiệu. Dùng xu để giảm giá cho đơn sau nhé.");
+    }
+
     public static Message tierUp(MemberTier tier) {
         String rate = tier.coinMultiplier() % 100 == 0
                 ? "x" + tier.coinMultiplier() / 100

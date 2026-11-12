@@ -75,6 +75,13 @@ public class OrderServiceImpl implements OrderService {
     private final OrderExcelExporter excelExporter;
     private final ReturnPolicy returnPolicy;
     private final CoinWallet coinWallet;
+    private Referrals referrals;
+
+    /** Giới thiệu bạn bè: trả thưởng khi đơn hoàn thành (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
+    @org.springframework.beans.factory.annotation.Autowired
+    void setReferrals(Referrals referrals) {
+        this.referrals = referrals;
+    }
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -623,6 +630,9 @@ public class OrderServiceImpl implements OrderService {
         if (status == OrderStatus.HOAN_THANH) {
             order.setCompletedAt(LocalDateTime.now());
             coinWallet.earn(order);
+            if (referrals != null) {
+                referrals.orderCompleted(order);
+            }
         }
         if (status == OrderStatus.HOAN_THANH && paymentStatus == PaymentStatus.CHUA_THANH_TOAN) {
             // Đơn trả khi nhận hàng (COD) đã giao xong nghĩa là đã thu tiền.
@@ -707,6 +717,9 @@ public class OrderServiceImpl implements OrderService {
         if (target == OrderStatus.HOAN_THANH) {
             order.setCompletedAt(LocalDateTime.now());
             coinWallet.earn(order);
+            if (referrals != null) {
+                referrals.orderCompleted(order);
+            }
             if (payment == PaymentStatus.CHUA_THANH_TOAN) {
                 order.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
             }

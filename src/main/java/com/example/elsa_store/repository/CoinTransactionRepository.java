@@ -28,6 +28,9 @@ public interface CoinTransactionRepository extends JpaRepository<CoinTransaction
 
     boolean existsByOrder_IdAndType(Long orderId, CoinTransactionType type);
 
+    @Query("select coalesce(sum(t.amount), 0) from CoinTransaction t where t.user.id = :userId and t.type = :type")
+    long sumForUser(@Param("userId") Long userId, @Param("type") CoinTransactionType type);
+
     boolean existsByUser_IdAndProduct_IdAndType(Long userId, Long productId, CoinTransactionType type);
 
     Page<CoinTransaction> findByUser_IdOrderByIdDesc(Long userId, Pageable pageable);

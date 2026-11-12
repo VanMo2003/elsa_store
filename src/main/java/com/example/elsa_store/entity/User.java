@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
@@ -68,6 +69,20 @@ public class User extends BaseEntity {
     /** Nhóm thông báo đã tắt ({@link NotificationGroup}, cách nhau dấu phẩy); trống = nhận tất cả. */
     @Column(name = "muted_notifications", length = 200)
     private String mutedNotifications;
+
+    /** Mã giới thiệu của khách (sinh khi khách mở mục giới thiệu lần đầu); trống = chưa có. */
+    @Column(name = "referral_code", length = 12, unique = true)
+    private String referralCode;
+
+    /** Người đã giới thiệu tài khoản này (nhập mã lúc đăng ký hoặc trong 7 ngày đầu). */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "referred_by_id")
+    private User referredBy;
+
+    /** Lúc đã trả thưởng giới thiệu cho cặp người mời / được mời (mỗi tài khoản một lần); trống = chưa trả. */
+    @Column(name = "referral_rewarded_at")
+    private LocalDateTime referralRewardedAt;
 
     public Set<NotificationGroup> mutedGroups() {
         Set<NotificationGroup> groups = EnumSet.noneOf(NotificationGroup.class);

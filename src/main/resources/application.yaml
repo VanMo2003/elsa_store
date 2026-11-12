@@ -67,6 +67,12 @@ app:
     # Thưởng đánh giá: viết đánh giá đầu tiên cho một sản phẩm / lần đầu thêm ảnh (mỗi sản phẩm một lần).
     review-reward: ${COINS_REVIEW_REWARD:100}
     review-photo-reward: ${COINS_REVIEW_PHOTO_REWARD:200}
+  # Giới thiệu bạn bè: đơn hoàn thành đầu tiên của người mới (tiền hàng thực trả từ min-order-value) thì người mời nhận
+  # referrer-reward xu, người mới nhận friend-reward xu.
+  referral:
+    referrer-reward: ${REFERRAL_REFERRER_REWARD:5000}
+    friend-reward: ${REFERRAL_FRIEND_REWARD:2000}
+    min-order-value: ${REFERRAL_MIN_ORDER_VALUE:100000}
 
 firebase:
   # File JSON service account của Firebase (Project settings > Service accounts). Để trống thì chỉ có

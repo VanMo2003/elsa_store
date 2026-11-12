@@ -26,6 +26,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
 
+    Optional<User> findByReferralCode(String referralCode);
+
+    boolean existsByReferralCode(String referralCode);
+
+    long countByReferredBy_Id(Long referrerId);
+
+    long countByReferredBy_IdAndReferralRewardedAtIsNotNull(Long referrerId);
+
+    /** Đánh dấu đã trả thưởng giới thiệu — chỉ một lần dù hai đơn hoàn thành cùng lúc (trả 1 = vừa đánh dấu). */
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = false)
+    @Query("update User u set u.referralRewardedAt = :at where u.id = :id and u.referralRewardedAt is null")
+    int markReferralRewarded(@Param("id") Long id, @Param("at") java.time.LocalDateTime at);
+
     /** Khoá dòng tài khoản (SELECT … FOR UPDATE) trong lúc ghi sổ xu. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.id = :id")

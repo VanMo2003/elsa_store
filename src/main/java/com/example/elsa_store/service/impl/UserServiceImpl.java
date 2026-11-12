@@ -47,6 +47,13 @@ public class UserServiceImpl implements UserService {
     private final AccessGuard accessGuard;
     private final FileStorageService fileStorageService;
     private final AuthenticationService authenticationService;
+    private Referrals referrals;
+
+    /** Giới thiệu bạn bè (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
+    @org.springframework.beans.factory.annotation.Autowired
+    void setReferrals(Referrals referrals) {
+        this.referrals = referrals;
+    }
 
     @Override
     public UserResponse create(UserRequest req) {
@@ -66,8 +73,15 @@ public class UserServiceImpl implements UserService {
         if (req.getPassword() == null || req.getPassword().isBlank()) {
             throw new AppException(ErrorCode.BAD_REQUEST, "password: must not be blank");
         }
+        // Mã giới thiệu sai thì báo ngay, chưa tạo tài khoản.
+        boolean hasReferral = req.getReferralCode() != null && !req.getReferralCode().isBlank();
+        User referrer = hasReferral && referrals != null ? referrals.resolve(req.getReferralCode(), null) : null;
         User user = accountFactory.create(
                 req.getUsername(), req.getPassword(), Role.USER, req.getFullName(), req.getEmail(), req.getPhone(), null);
+        if (referrer != null) {
+            user.setReferredBy(referrer);
+            userRepository.save(user);
+        }
         return UserMapper.toResponse(user);
     }
 

@@ -385,6 +385,16 @@ kèm số dư sau và đơn liên quan); số dư = tổng sổ.
   `rewards`, `balance`; `POST /coins/check-in` điểm danh (có thêm `awarded`), lần hai trong ngày báo `1030` (HTTP 409).
   Khoá dòng tài khoản trước khi kiểm tra nên bấm nhiều lần cùng lúc chỉ được cộng một lần (đã thử 4 request song song).
   Chỉ khách; tài khoản cửa hàng / ADMIN nhận 401.
+- **Giới thiệu bạn bè** (`Referrals`): mỗi khách có một mã 6 ký tự (bỏ ký tự dễ nhầm 0/O, 1/I/L), sinh lần đầu mở
+  `GET /referrals/me` (`users.referral_code`). Người mới nhập mã khi đăng ký (`POST /users` có `referralCode`, không phân
+  biệt hoa thường; mã sai / của tài khoản bị khoá → `1031`, không tạo tài khoản) hoặc sau đó bằng `POST /referrals/apply
+  {code}` — chỉ khi chưa có người giới thiệu, tài khoản tạo trong 7 ngày và chưa có đơn hoàn thành (không thì `1032`);
+  không nhập được mã của chính mình. Đơn hoàn thành đầu tiên của người mới có tiền hàng thực trả từ
+  `REFERRAL_MIN_ORDER_VALUE` (100.000đ) → người mời +`REFERRAL_REFERRER_REWARD` (5.000) xu (`REFERRAL_REWARD`), người mới
+  +`REFERRAL_FRIEND_REWARD` (2.000) xu (`REFERRAL_WELCOME`), cả hai nhận thông báo `REFERRAL_REWARD`. Mỗi người mới chỉ
+  thưởng một lần: `users.referral_rewarded_at` đánh dấu bằng câu update có điều kiện (đã thử hai đơn hoàn thành cùng lúc).
+  `GET /referrals/me` trả `code`, `invited`, `rewarded`, `coinsEarned`, quy tắc thưởng, `referredBy` (tên đã che),
+  `canApply`.
 - `GET /coins/me?page&size` — số dư, quy tắc (`earnPercent`, `maxRedeemPercent`), lịch sử mới nhất trước, và hạng
   thành viên: `tier`, `earnRate` (% nhận xu thực tế), `spending`, `nextTier`, `nextTierSpending` (`tier` null với tài
   khoản không phải khách).
@@ -624,6 +634,9 @@ dùng cho `docker compose`).
 | `COINS_MAX_REDEEM_PERCENT` | `50` | % tiền hàng tối đa trả bằng xu trong một đơn (1 xu = 1đ) |
 | `COINS_REVIEW_REWARD` | `100` | Xu thưởng khi viết đánh giá đầu tiên cho một sản phẩm |
 | `COINS_REVIEW_PHOTO_REWARD` | `200` | Xu thưởng khi lần đầu thêm ảnh vào đánh giá |
+| `REFERRAL_REFERRER_REWARD` | `5000` | Xu người giới thiệu nhận khi bạn có đơn đầu tiên đủ điều kiện |
+| `REFERRAL_FRIEND_REWARD` | `2000` | Xu chào mừng người được giới thiệu |
+| `REFERRAL_MIN_ORDER_VALUE` | `100000` | Tiền hàng thực trả tối thiểu của đơn được tính thưởng giới thiệu |
 | `FIREBASE_CREDENTIALS` | trống | Đường dẫn file JSON service account Firebase; trống thì tắt push |
 | `GEMINI_API_KEY` | trống | Khoá Google AI Studio; có khoá thì bật trợ lý AI (provider tự chọn là `gemini`) |
 | `ANTHROPIC_API_KEY` | trống | Dùng Claude thay Gemini (provider `anthropic`) |
@@ -640,7 +653,8 @@ Bảng `notifications`, `device_tokens`, `conversations`, `chat_messages`, `stoc
 `product_reviews`, `wishlist_items`, `order_status_history`, `return_requests` và `return_items` được Hibernate tạo tự động
 (`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `stores.shipping_fee`,
 `stores.free_shipping_threshold`, `orders.completed_at`, `orders.cancel_reason`, `orders.shipping_fee`,
-`orders.shipping_carrier`, `orders.tracking_code`,
+`orders.shipping_carrier`, `orders.tracking_code`, `users.referral_code`, `users.referred_by_id`,
+`users.referral_rewarded_at`,
 `product_variants.cost_price`, `order_items.cost_price`, `purchase_orders.code/note/received_at`, `users.token_version`…)
 được thêm cùng cách, đều cho phép để trống nên dữ liệu cũ không cần chuyển đổi.
 

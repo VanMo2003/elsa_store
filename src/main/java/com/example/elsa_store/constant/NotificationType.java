@@ -48,5 +48,7 @@ public enum NotificationType {
     /** Cho khách: báo cáo vi phạm của mình đã được xử lý / bỏ qua. */
     REPORT_HANDLED,
     /** Cho khách: đơn đang giao đã lâu, nhắc bấm "Đã nhận hàng" trước khi đơn tự hoàn thành. */
-    ORDER_DELIVERY_CHECK
+    ORDER_DELIVERY_CHECK,
+    /** Cho khách: nhận xu giới thiệu bạn bè (người mời và người được mời). */
+    REFERRAL_REWARD
 }

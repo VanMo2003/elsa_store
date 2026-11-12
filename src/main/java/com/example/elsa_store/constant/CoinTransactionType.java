@@ -15,5 +15,9 @@ public enum CoinTransactionType {
     /** Thưởng đánh giá có ảnh (mỗi sản phẩm một lần). */
     PHOTO_REWARD,
     /** Điểm danh hằng ngày (mỗi ngày một lần, chuỗi 7 ngày). */
-    DAILY_CHECK_IN
+    DAILY_CHECK_IN,
+    /** Người giới thiệu: bạn được mời có đơn đầu tiên hoàn thành. */
+    REFERRAL_REWARD,
+    /** Người được mời: thưởng chào mừng khi đơn đầu tiên hoàn thành. */
+    REFERRAL_WELCOME
 }

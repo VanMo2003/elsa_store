@@ -33,4 +33,8 @@ public class UserRequest {
     Role role = Role.USER;
 
     Boolean enabled;
+
+    /** Mã giới thiệu của bạn bè (tuỳ chọn, chỉ khi khách tự đăng ký). */
+    @Size(max = 20)
+    String referralCode;
 }

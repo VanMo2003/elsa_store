@@ -85,6 +85,9 @@ step(F2, "Nhập kho phiếu nhập (cộng kho, tính giá vốn bình quân)",
      token="ownerToken")
 step(F2, "Nhập kho lần 2 bị chặn (1025)", "POST", "/purchase-orders/{{purchaseOrderId}}/receive", token="ownerToken",
      expect=409)
+step(F2, "Tệp Excel mẫu để nhập sản phẩm hàng loạt", "GET", "/products/import/template", token="ownerToken",
+     note="Nhập: POST /products/import (multipart, phần file = .xlsx; dryRun=true để xem trước). Có lỗi ở bất kỳ dòng "
+          "nào thì không tạo gì và trả danh sách lỗi theo số dòng.")
 step(F2, "Danh sách kho", "GET", "/inventories/stock", token="ownerToken", query={"filter": "ALL", "size": "20"})
 step(F2, "Tổng quan kho", "GET", "/inventories/overview", token="ownerToken")
 step(F2, "Thẻ kho của phân loại", "GET", "/inventories/variants/{{variantId}}/movements", token="ownerToken")

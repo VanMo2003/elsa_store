@@ -69,6 +69,11 @@ public final class AppLinks {
         return deepLink("products/" + productId);
     }
 
+    /** Trang công khai của một cửa hàng. */
+    public static String store(Long storeId) {
+        return deepLink("stores/" + storeId);
+    }
+
     /** Trạng thái duyệt cửa hàng của chủ đang đăng nhập. */
     public static String storeStatus() {
         return deepLink(STORE_STATUS);

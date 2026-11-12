@@ -274,6 +274,21 @@ App tạo sản phẩm bằng JSON rồi tải ảnh sau; tạo bằng multipart
 
 Chủ, quản lý, nhân viên của cửa hàng được thêm / gỡ / đổi ảnh; ảnh được kiểm tra theo nội dung tệp (xem Bảo mật).
 
+## Nhập sản phẩm từ Excel
+
+Chủ / quản lý (`ProductImporter`): `GET /products/import/template` tải tệp mẫu `mau-nhap-san-pham.xlsx` (sheet "Sản phẩm"
+có tiêu đề + ví dụ, sheet "Hướng dẫn" giải thích từng cột và liệt kê danh mục kèm mã số); `POST /products/import`
+(multipart, phần `file`, `dryRun=true` để chỉ kiểm tra). Mỗi dòng là một phân loại, cột: tên sản phẩm*, danh mục* (tên
+không phân biệt hoa thường hoặc mã số), giá gốc* (chỉ cần ở dòng tạo sản phẩm mới), mô tả, màu, size, SKU, giá phân loại
+(trống = giá gốc của sản phẩm), tồn kho (có số thì bắt đầu theo dõi kho, ghi thẻ kho "Nhập từ Excel"), giá vốn, trạng
+thái ("Đang bán" / "Ẩn"). Các dòng cùng tên (bỏ khác biệt hoa thường / khoảng trắng) gộp thành một sản phẩm; trùng tên
+sản phẩm đã có của cửa hàng thì thêm phân loại vào đó. Giá nhận "890000", "890.000", "890,000đ"; tồn kho "1,5" bị từ
+chối (không đọc thành 15). **Kiểm tra hết rồi mới ghi**: có lỗi ở bất kỳ dòng nào (thiếu tên, danh mục không có, giá
+không phải số, SKU trùng trong tệp hoặc đã có, khác danh mục với dòng trước cùng sản phẩm…) thì không tạo gì, trả
+`applied=false` và `errors` theo số dòng Excel. Tối đa 500 dòng. Kết quả: `productsCreated`, `productsExtended`,
+`variantsCreated`, `stockTracked`. Người theo dõi cửa hàng nhận **một** tin gộp "… có N sản phẩm mới" (mở trang cửa hàng)
+thay vì một tin cho từng sản phẩm.
+
 **Trang chủ:** `GET /home/highlights?size=10` (công khai, tối đa 20 mỗi dải) — `onSale`: sản phẩm đang bán có khuyến mãi
 tự động đang chạy và thật sự được giảm, giảm nhiều trước; `bestSellers`: sản phẩm bán nhiều món nhất trong đơn hoàn
 thành 30 ngày qua (chưa có thì tính toàn bộ lịch sử), bỏ sản phẩm đang ẩn.

@@ -22,6 +22,9 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     long countByProduct_Id(Long productId);
 
+    /** SKU đã có (so khớp theo collation của MySQL — không phân biệt hoa thường). */
+    boolean existsBySku(String sku);
+
     interface VariantCount {
         Long getProductId();
 

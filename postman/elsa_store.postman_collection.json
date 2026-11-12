@@ -1095,6 +1095,46 @@
           }
         },
         {
+          "name": "Tệp Excel mẫu để nhập sản phẩm hàng loạt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/import/template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "import",
+                "template"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Nhập: POST /products/import (multipart, phần file = .xlsx; dryRun=true để xem trước). Có lỗi ở bất kỳ dòng nào thì không tạo gì và trả danh sách lỗi theo số dòng."
+          }
+        },
+        {
           "name": "Danh sách kho",
           "event": [
             {

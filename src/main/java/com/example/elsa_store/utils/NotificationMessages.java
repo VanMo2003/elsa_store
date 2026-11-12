@@ -146,6 +146,12 @@ public final class NotificationMessages {
         return new Message(store + " có sản phẩm mới", product.getName() + " vừa lên kệ. Xem ngay!");
     }
 
+    /** Cho người theo dõi: cửa hàng vừa nhập một loạt sản phẩm mới (một tin cho cả lô thay vì từng sản phẩm). */
+    public static Message newProducts(com.example.elsa_store.entity.Store store, int count) {
+        return new Message(store.getName() + " có " + count + " sản phẩm mới", "Cửa hàng vừa lên kệ " + count
+                + " sản phẩm. Ghé xem ngay!");
+    }
+
     /** Cho khách đã thả tim: sản phẩm vừa được giảm giá. */
     public static Message priceDrop(Product product, Promotion promotion) {
         boolean percent = promotion.getType() != null && promotion.getType() == 2;

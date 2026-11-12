@@ -2,14 +2,17 @@ package com.example.elsa_store.controller;
 
 import com.example.elsa_store.ai.AiClient;
 import com.example.elsa_store.ai.ChatAssistant;
+import com.example.elsa_store.ai.ProductCopywriter;
 import com.example.elsa_store.ai.ReportAnalyst;
 import com.example.elsa_store.ai.ShoppingAssistant;
 import com.example.elsa_store.dto.common.ApiResponse;
 import com.example.elsa_store.dto.request.AiAskRequest;
 import com.example.elsa_store.dto.request.AiStoreSettingsRequest;
+import com.example.elsa_store.dto.request.ProductDescriptionRequest;
 import com.example.elsa_store.dto.request.ReportInsightRequest;
 import com.example.elsa_store.dto.response.AiStoreSettingsResponse;
 import com.example.elsa_store.dto.response.AiSuggestionResponse;
+import com.example.elsa_store.dto.response.ProductDescriptionResponse;
 import com.example.elsa_store.dto.response.ReportInsightResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -32,6 +35,7 @@ public class AiController {
     private final ChatAssistant chatAssistant;
     private final ShoppingAssistant shoppingAssistant;
     private final ReportAnalyst reportAnalyst;
+    private final ProductCopywriter productCopywriter;
 
     /** Công khai: để app ẩn các nút AI khi máy chủ chưa có khoá API. */
     @GetMapping("/status")
@@ -64,6 +68,15 @@ public class AiController {
     @PostMapping("/report-insights")
     public ApiResponse<ReportInsightResponse> reportInsights(@Valid @RequestBody ReportInsightRequest req) {
         return ApiResponse.ok(reportAnalyst.analyse(req.from(), req.to(), req.storeId()));
+    }
+
+    /**
+     * Thành viên cửa hàng: bản nháp mô tả sản phẩm từ tên, danh mục, màu / cỡ (khi sửa sản phẩm có sẵn) và gợi ý đã gõ. Chưa
+     * bật AI, AI bận hay hết lượt thì trả mẫu soạn sẵn ({@code ai=false} kèm {@code notice}).
+     */
+    @PostMapping("/product-description")
+    public ApiResponse<ProductDescriptionResponse> productDescription(@Valid @RequestBody ProductDescriptionRequest req) {
+        return ApiResponse.ok(productCopywriter.write(req));
     }
 
     @GetMapping("/store-settings")

@@ -72,6 +72,10 @@ step(F2, "Tạo phân loại (biến thể)", "POST", "/product-variants", token
      saves=[("variantId", "j.data.id", lambda j: j["data"]["id"])])
 step(F2, "Bộ ảnh sản phẩm (tải ảnh: POST /products/{id}/images, multipart 'files')", "GET",
      "/products/{{productId}}/images", token="staffToken")
+step(F2, "AI viết mô tả sản phẩm (bản nháp)", "POST", "/ai/product-description", token="staffToken",
+     body={"name": "Giày chạy bộ {{runSuffix}}", "productId": "{{productId}}", "categoryId": "{{categoryId}}",
+           "notes": "êm, nhẹ, hợp chạy sáng"},
+     note="Lấy thêm màu / cỡ của các phân loại. Chưa bật AI hoặc AI bận: ai=false, trả mẫu soạn sẵn kèm notice.")
 step(F2, "Kiểm kê: bắt đầu theo dõi kho + giá vốn", "PUT", "/inventories/variants/{{variantId}}", token="ownerToken",
      body={"quantity": 5, "minQuantity": 2, "costPrice": 600000, "note": "Kiểm kê đầu kỳ"})
 step(F2, "Tạo nhà cung cấp", "POST", "/suppliers", token="ownerToken",

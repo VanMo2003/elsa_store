@@ -858,6 +858,59 @@
           }
         },
         {
+          "name": "AI viết mô tả sản phẩm (bản nháp)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/product-description",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "product-description"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Giày chạy bộ {{runSuffix}}\",\n  \"productId\": {{productId}},\n  \"categoryId\": {{categoryId}},\n  \"notes\": \"êm, nhẹ, hợp chạy sáng\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Lấy thêm màu / cỡ của các phân loại. Chưa bật AI hoặc AI bận: ai=false, trả mẫu soạn sẵn kèm notice."
+          }
+        },
+        {
           "name": "Kiểm kê: bắt đầu theo dõi kho + giá vốn",
           "event": [
             {

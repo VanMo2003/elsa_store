@@ -229,6 +229,9 @@ step(F4, "Sản phẩm bán chạy (kèm lãi gộp)", "GET", "/reports/top-prod
 step(F4, "Lượt xem sản phẩm và tỉ lệ chuyển đổi", "GET", "/reports/product-views", token="ownerToken",
      query={"from": "{{today}}", "to": "{{today}}", "limit": "10"},
      note="Lượt xem đếm khi khách / người chưa đăng nhập mở GET /products/{id}; người của cửa hàng và ADMIN không tính.")
+step(F4, "Giờ vàng: đơn theo thứ và giờ đặt hàng", "GET", "/reports/sales-by-time", token="ownerToken",
+     query={"from": "{{today}}", "to": "{{today}}"},
+     note="dayOfWeek theo ISO (1 = Thứ hai … 7 = Chủ nhật); đơn đặt trong kỳ trừ đơn huỷ.")
 step(F4, "Hàng chậm bán (còn tồn, 30 ngày không bán)", "GET", "/reports/slow-movers", token="ownerToken",
      query={"days": "30", "limit": "20"},
      note="Còn tồn kho, theo dõi kho từ trước mốc và không có đơn (trừ huỷ) từ mốc; vốn tồn (tồn × giá vốn) nhiều nhất trước.")

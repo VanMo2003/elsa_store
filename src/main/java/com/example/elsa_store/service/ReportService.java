@@ -35,6 +35,9 @@ public interface ReportService {
 
     List<LowStockResponse> lowStock(Long storeId);
 
+    /** Giờ vàng: đơn đặt trong kỳ theo thứ trong tuần và giờ trong ngày. */
+    SalesByTimeResponse salesByTime(LocalDate from, LocalDate to, Long storeId);
+
     /** Hàng còn tồn mà {@code days} ngày qua không bán được, vốn tồn nhiều nhất trước (tối đa {@code limit} dòng). */
     List<SlowMoverResponse> slowMovers(int days, int limit, Long storeId);
 

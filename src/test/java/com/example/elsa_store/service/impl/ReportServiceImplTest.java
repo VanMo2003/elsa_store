@@ -113,6 +113,32 @@ class ReportServiceImplTest {
     }
 
     @Test
+    void salesByTimeUsesIsoWeekdaysAndFindsThePeak() {
+        when(orders.salesByWeekdayHour(FROM.atStartOfDay(), TO.plusDays(1).atStartOfDay(), 1L)).thenReturn(rows(
+                new Object[] {1, 20, 5L, 2_000_000.0},   // Chủ nhật 20h
+                new Object[] {7, 20, 3L, 900_000.0},     // Thứ bảy 20h
+                new Object[] {2, 9, 2L, 400_000.0}));    // Thứ hai 9h
+
+        var res = service.salesByTime(FROM, TO, null);
+
+        assertEquals(10, res.totalOrders());
+        assertEquals(List.of(1, 6, 7), res.cells().stream().map(c -> c.dayOfWeek()).toList(), "thứ hai trước, chủ nhật cuối");
+        assertEquals(8L, res.byHour().get(20));
+        assertEquals(2L, res.byHour().get(9));
+        assertEquals(List.of(2L, 0L, 0L, 0L, 0L, 3L, 5L), res.byWeekday());
+        assertEquals(20, res.peakHour());
+        assertEquals(7, res.peakWeekday(), "chủ nhật");
+        assertEquals(7, res.peak().dayOfWeek());
+        assertEquals(20, res.peak().hour());
+
+        when(orders.salesByWeekdayHour(any(), any(), any())).thenReturn(List.of());
+        var empty = service.salesByTime(FROM, TO, null);
+        assertNull(empty.peak());
+        assertNull(empty.peakHour());
+        assertEquals(24, empty.byHour().size());
+    }
+
+    @Test
     void growthIsAPercentageAndUndefinedWithoutABase() {
         assertEquals(50.0, ReportServiceImpl.growth(150, 100));
         assertEquals(-25.0, ReportServiceImpl.growth(150, 200));

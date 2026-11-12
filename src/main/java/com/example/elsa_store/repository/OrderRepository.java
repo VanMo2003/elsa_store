@@ -155,6 +155,21 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                           @Param("since") LocalDateTime since,
                           @Param("excludeId") Long excludeId);
 
+    /**
+     * Giờ vàng: mỗi dòng {thứ theo MySQL DAYOFWEEK (1 = Chủ nhật … 7 = Thứ bảy), giờ 0–23, số đơn, tiền khách trả} của các
+     * đơn đặt trong kỳ (theo lúc đặt, trừ đơn huỷ).
+     */
+    @Query("""
+        SELECT function('dayofweek', o.orderDate), function('hour', o.orderDate), COUNT(o.id), COALESCE(SUM(o.finalAmount), 0)
+        FROM Order o
+        WHERE o.orderDate >= :start AND o.orderDate < :end
+          AND o.status <> com.example.elsa_store.constant.OrderStatus.DA_HUY
+          AND (:storeId IS NULL OR o.store.id = :storeId)
+        GROUP BY function('dayofweek', o.orderDate), function('hour', o.orderDate)
+    """)
+    List<Object[]> salesByWeekdayHour(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+                                      @Param("storeId") Long storeId);
+
     /** Xếp hạng cửa hàng: mỗi dòng {storeId, doanh thu, số đơn} của đơn hoàn thành trong kỳ (theo ngày hoàn thành). */
     @Query("""
         SELECT o.store.id, COALESCE(SUM(o.finalAmount), 0), COUNT(o.id)

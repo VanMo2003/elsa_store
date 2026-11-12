@@ -483,6 +483,48 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     @Transactional(readOnly = true)
+    public SalesByTimeResponse salesByTime(LocalDate from, LocalDate to, Long storeId) {
+        checkRange(from, to);
+        Long scope = scope(storeId);
+        List<SalesByTimeResponse.Cell> cells = new ArrayList<>();
+        long[] byHour = new long[24];
+        long[] byWeekday = new long[7];
+        long total = 0;
+        SalesByTimeResponse.Cell peak = null;
+        for (Object[] row : orderRepository.salesByWeekdayHour(start(from), endExclusive(to), scope)) {
+            int mysqlDay = number(row[0]).intValue();
+            // MySQL DAYOFWEEK: 1 = Chủ nhật; đổi sang ISO 1 = Thứ hai … 7 = Chủ nhật.
+            int day = mysqlDay == 1 ? 7 : mysqlDay - 1;
+            int hour = number(row[1]).intValue();
+            long orders = number(row[2]).longValue();
+            var cell = new SalesByTimeResponse.Cell(day, hour, orders, number(row[3]).doubleValue());
+            cells.add(cell);
+            byHour[hour] += orders;
+            byWeekday[day - 1] += orders;
+            total += orders;
+            if (peak == null || orders > peak.orders() || (orders == peak.orders() && cell.revenue() > peak.revenue())) {
+                peak = cell;
+            }
+        }
+        cells.sort(java.util.Comparator.comparingInt(SalesByTimeResponse.Cell::dayOfWeek)
+                .thenComparingInt(SalesByTimeResponse.Cell::hour));
+        return new SalesByTimeResponse(cells, java.util.Arrays.stream(byHour).boxed().toList(),
+                java.util.Arrays.stream(byWeekday).boxed().toList(), total, peak,
+                total == 0 ? null : argMax(byHour), total == 0 ? null : argMax(byWeekday) + 1);
+    }
+
+    private static int argMax(long[] values) {
+        int best = 0;
+        for (int i = 1; i < values.length; i++) {
+            if (values[i] > values[best]) {
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<SlowMoverResponse> slowMovers(int days, int limit, Long storeId) {
         Long scope = scope(storeId);
         int window = Math.min(Math.max(days, 7), 365);

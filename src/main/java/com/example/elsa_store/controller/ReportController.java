@@ -117,6 +117,15 @@ public class ReportController {
         return ApiResponse.ok(reportService.productViews(from, to, limit, storeId));
     }
 
+    /** Giờ vàng: số đơn / tiền theo thứ và giờ đặt hàng trong kỳ (chủ / quản lý; ADMIN chọn storeId hoặc toàn sàn). */
+    @GetMapping("/sales-by-time")
+    public ApiResponse<SalesByTimeResponse> salesByTime(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long storeId) {
+        return ApiResponse.ok(reportService.salesByTime(from, to, storeId));
+    }
+
     /** ADMIN: xếp hạng các cửa hàng theo doanh thu trong kỳ (kèm số đơn, tỉ lệ huỷ, điểm đánh giá, thị phần). */
     @GetMapping("/stores")
     public ApiResponse<List<StoreRankingResponse>> storeRanking(

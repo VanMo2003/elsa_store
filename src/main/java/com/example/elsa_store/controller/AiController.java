@@ -2,12 +2,15 @@ package com.example.elsa_store.controller;
 
 import com.example.elsa_store.ai.AiClient;
 import com.example.elsa_store.ai.ChatAssistant;
+import com.example.elsa_store.ai.ReportAnalyst;
 import com.example.elsa_store.ai.ShoppingAssistant;
 import com.example.elsa_store.dto.common.ApiResponse;
 import com.example.elsa_store.dto.request.AiAskRequest;
 import com.example.elsa_store.dto.request.AiStoreSettingsRequest;
+import com.example.elsa_store.dto.request.ReportInsightRequest;
 import com.example.elsa_store.dto.response.AiStoreSettingsResponse;
 import com.example.elsa_store.dto.response.AiSuggestionResponse;
+import com.example.elsa_store.dto.response.ReportInsightResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class AiController {
     private final AiClient aiClient;
     private final ChatAssistant chatAssistant;
     private final ShoppingAssistant shoppingAssistant;
+    private final ReportAnalyst reportAnalyst;
 
     /** Công khai: để app ẩn các nút AI khi máy chủ chưa có khoá API. */
     @GetMapping("/status")
@@ -51,6 +55,15 @@ public class AiController {
     @PostMapping("/conversations/{id}/suggest-reply")
     public ApiResponse<AiSuggestionResponse> suggestReply(@PathVariable Long id) {
         return ApiResponse.ok(chatAssistant.suggest(id));
+    }
+
+    /**
+     * Nhận xét báo cáo của kỳ: tóm tắt, điểm nổi bật, việc nên làm. Quyền như xem báo cáo (chủ / quản lý; ADMIN toàn sàn
+     * hoặc storeId). Chưa bật AI, AI bận hay hết lượt thì trả nhận xét theo quy tắc ({@code ai=false} kèm {@code notice}).
+     */
+    @PostMapping("/report-insights")
+    public ApiResponse<ReportInsightResponse> reportInsights(@Valid @RequestBody ReportInsightRequest req) {
+        return ApiResponse.ok(reportAnalyst.analyse(req.from(), req.to(), req.storeId()));
     }
 
     @GetMapping("/store-settings")

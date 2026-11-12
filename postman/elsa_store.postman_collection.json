@@ -4595,6 +4595,59 @@
           }
         },
         {
+          "name": "AI nhận xét báo cáo kỳ (tóm tắt, nổi bật, việc nên làm)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/report-insights",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "report-insights"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from\": \"{{today}}\",\n  \"to\": \"{{today}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Mô hình chỉ thấy bảng số thật của kỳ. Chưa bật AI / AI bận / hỏi quá 10 lần mỗi 10 phút: ai=false, nhận xét theo quy tắc kèm notice."
+          }
+        },
+        {
           "name": "ADMIN xem báo cáo một cửa hàng",
           "event": [
             {

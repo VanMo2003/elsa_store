@@ -238,6 +238,9 @@ step(F4, "Giờ vàng: đơn theo thứ và giờ đặt hàng", "GET", "/report
 step(F4, "Hàng chậm bán (còn tồn, 30 ngày không bán)", "GET", "/reports/slow-movers", token="ownerToken",
      query={"days": "30", "limit": "20"},
      note="Còn tồn kho, theo dõi kho từ trước mốc và không có đơn (trừ huỷ) từ mốc; vốn tồn (tồn × giá vốn) nhiều nhất trước.")
+step(F4, "AI nhận xét báo cáo kỳ (tóm tắt, nổi bật, việc nên làm)", "POST", "/ai/report-insights", token="ownerToken",
+     body={"from": "{{today}}", "to": "{{today}}"},
+     note="Mô hình chỉ thấy bảng số thật của kỳ. Chưa bật AI / AI bận / hỏi quá 10 lần mỗi 10 phút: ai=false, nhận xét theo quy tắc kèm notice.")
 step(F4, "ADMIN xem báo cáo một cửa hàng", "GET", "/reports/summary", token="adminToken",
      query={"from": "{{today}}", "to": "{{today}}", "storeId": "{{storeId}}"})
 step(F4, "ADMIN: xếp hạng cửa hàng theo doanh thu", "GET", "/reports/stores", token="adminToken",

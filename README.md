@@ -166,6 +166,7 @@ chỉ nằm ở BE; chưa có khoá thì mọi tính năng AI tự tắt và app
 | Trong chat, nhân viên cần gợi ý | `POST /ai/conversations/{id}/suggest-reply` | Trả **bản nháp** + sản phẩm để nhân viên sửa rồi gửi — không bao giờ tự gửi tới khách |
 | Cửa hàng bật tự trả lời | `PUT /ai/store-settings` `{autoReply}` (chủ / quản lý), đọc bằng `GET /ai/store-settings` (`{storeId, autoReply, aiEnabled, autoReplyDelaySeconds}`) | Khách nhắn mà sau `AI_AUTO_REPLY_DELAY_SECONDS` chưa ai của cửa hàng trả lời thì trợ lý trả lời; mặc định **tắt** |
 | Trợ lý mua sắm toàn sàn | `POST /ai/ask` `{question, history?}` (công khai) | Tư vấn trên các sản phẩm công khai của mọi cửa hàng, kèm thẻ sản phẩm |
+| Báo cáo: AI nhận xét | `POST /ai/report-insights` `{from, to, storeId?}` (chủ / quản lý; ADMIN toàn sàn hoặc một cửa hàng) | `ReportAnalyst` gom số liệu thật của kỳ (doanh thu so với kỳ trước, lợi nhuận, bán chạy, danh mục, tỉ lệ huỷ, giờ vàng, hàng sắp hết, hàng chậm bán, mục tiêu tháng) thành bảng số, ép mô hình gọi `write_insights` → `{summary, highlights[≤4], actions[≤4], ai, notice, generatedAt}` |
 
 - **Chuyển cho nhân viên:** trong chat, khi khách cần việc ngoài tư vấn (huỷ / đổi trả đơn, khiếu nại, khách muốn gặp
   người) trợ lý gọi `handoff_to_staff`; cuộc trò chuyện được gắn `needsStaff=true` (kèm `handoffReason`, chỉ lộ ở phía cửa
@@ -174,6 +175,8 @@ chỉ nằm ở BE; chưa có khoá thì mọi tính năng AI tự tắt và app
 - **Giới hạn lượt** (`AiRateLimiter`, cửa sổ trượt, trong bộ nhớ): khách hỏi AI trong chat 15 lượt / 10 phút / tài khoản và
   40 lượt / giờ / cuộc trò chuyện; tự trả lời 20 lượt / giờ / cuộc trò chuyện; gợi ý cho nhân viên 30 lượt / 10 phút /
   tài khoản; `/ai/ask` 20 lượt / 10 phút / tài khoản (hoặc theo IP khi chưa đăng nhập). Quá hạn mức: `1016`.
+  Nhận xét báo cáo 10 lượt / 10 phút / tài khoản — tính năng này **không báo lỗi** khi chưa có khoá, AI bận, hết
+  lượt hay quá hạn mức mà trả nhận xét theo quy tắc với `ai=false` và `notice`.
 - **Cách hoạt động:** `AiClient` nhận yêu cầu dạng Anthropic và dịch sang Chat Completions chuẩn OpenAI (`OpenAiCompat`,
   giữ nguyên khối `thought signature` của Gemini), nên cùng một đường đi dùng được cho Gemini, Claude hay máy chủ
   OpenAI khác (Groq, OpenRouter, Ollama…). Vòng gọi công cụ tối đa 5 lượt; `search_products` xếp hạng bằng so khớp

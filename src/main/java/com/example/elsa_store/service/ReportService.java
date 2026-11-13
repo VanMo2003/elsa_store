@@ -41,6 +41,12 @@ public interface ReportService {
     /** Giờ vàng: đơn đặt trong kỳ theo thứ trong tuần và giờ trong ngày. */
     SalesByTimeResponse salesByTime(LocalDate from, LocalDate to, Long storeId);
 
+    /**
+     * Gợi ý nhập hàng: phân loại có theo dõi kho, bán được trong {@code days} ngày qua và sẽ hết trong {@code horizon} ngày
+     * tới theo tốc độ đó; số nên nhập đủ bán {@code cover} ngày. Sắp hết trước.
+     */
+    List<RestockSuggestionResponse> restockSuggestions(int days, int horizon, int cover, int limit, Long storeId);
+
     /** Hàng còn tồn mà {@code days} ngày qua không bán được, vốn tồn nhiều nhất trước (tối đa {@code limit} dòng). */
     List<SlowMoverResponse> slowMovers(int days, int limit, Long storeId);
 

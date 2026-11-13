@@ -150,6 +150,20 @@ public class ReportController {
      * Hàng chậm bán: còn tồn kho mà {@code days} ngày (7–365, mặc định 30) không có đơn nào, vốn tồn nhiều nhất trước
      * (chủ / quản lý; ADMIN chọn storeId hoặc toàn sàn).
      */
+    /**
+     * Gợi ý nhập hàng: phân loại sẽ hết trong {@code horizon} ngày theo tốc độ bán {@code days} ngày qua, kèm số nên nhập
+     * để đủ bán {@code cover} ngày và tiền nhập ước tính (chủ / quản lý; ADMIN chọn storeId hoặc toàn sàn).
+     */
+    @GetMapping("/restock-suggestions")
+    public ApiResponse<List<RestockSuggestionResponse>> restockSuggestions(
+            @RequestParam(defaultValue = "30") int days,
+            @RequestParam(defaultValue = "14") int horizon,
+            @RequestParam(defaultValue = "30") int cover,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) Long storeId) {
+        return ApiResponse.ok(reportService.restockSuggestions(days, horizon, cover, limit, storeId));
+    }
+
     @GetMapping("/slow-movers")
     public ApiResponse<List<SlowMoverResponse>> slowMovers(
             @RequestParam(defaultValue = "30") int days,

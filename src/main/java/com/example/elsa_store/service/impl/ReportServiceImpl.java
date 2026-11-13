@@ -525,6 +525,73 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<RestockSuggestionResponse> restockSuggestions(int days, int horizon, int cover, int limit, Long storeId) {
+        Long scope = scope(storeId);
+        int window = Math.min(Math.max(days, 7), 180);
+        int ahead = Math.min(Math.max(horizon, 1), 90);
+        int coverDays = Math.min(Math.max(cover, 7), 180);
+        int size = Math.min(Math.max(limit, 1), 100);
+        java.util.Map<Long, Long> sold = new java.util.HashMap<>();
+        for (Object[] row : orderRepository.soldQuantityByVariant(LocalDateTime.now().minusDays(window), scope)) {
+            sold.put(number(row[0]).longValue(), number(row[1]).longValue());
+        }
+        List<Inventory> inventories = scope == null
+                ? inventoryRepository.findAll()
+                : inventoryRepository.findAllByProductVariant_Product_Store_Id(scope);
+        List<RestockSuggestionResponse> result = new ArrayList<>();
+        for (Inventory inventory : inventories) {
+            ProductVariant v = inventory.getProductVariant();
+            long soldQty = sold.getOrDefault(v.getId(), 0L);
+            RestockPlan plan = restockPlan(inventory.getQuantity() == null ? 0 : inventory.getQuantity(), soldQty, window,
+                    ahead, coverDays);
+            if (plan == null) {
+                continue;
+            }
+            Product p = v.getProduct();
+            Double cost = v.getCostPrice();
+            result.add(new RestockSuggestionResponse(
+                    p.getId(),
+                    v.getId(),
+                    p.getName(),
+                    v.getImageUrl() != null ? v.getImageUrl() : p.getImageUrl(),
+                    v.getColor(),
+                    v.getSize(),
+                    v.getSku(),
+                    inventory.getQuantity() == null ? 0 : inventory.getQuantity(),
+                    soldQty,
+                    plan.perDay(),
+                    plan.daysLeft(),
+                    plan.suggested(),
+                    cost,
+                    cost == null ? null : (double) Math.round(plan.suggested() * cost)));
+        }
+        result.sort(java.util.Comparator.comparingInt(RestockSuggestionResponse::daysLeft)
+                .thenComparing(java.util.Comparator.comparingDouble(RestockSuggestionResponse::perDay).reversed()));
+        return result.size() > size ? List.copyOf(result.subList(0, size)) : result;
+    }
+
+    /** Kế hoạch nhập của một phân loại; null khi không cần nhập (không bán được, hoặc còn đủ quá {@code horizon} ngày). */
+    record RestockPlan(double perDay, int daysLeft, int suggested) {}
+
+    static RestockPlan restockPlan(int quantity, long sold, int window, int horizon, int cover) {
+        if (sold <= 0) {
+            return null;
+        }
+        double perDay = (double) sold / window;
+        int stock = Math.max(0, quantity);
+        int daysLeft = (int) Math.floor(stock / perDay);
+        if (daysLeft > horizon) {
+            return null;
+        }
+        int suggested = (int) Math.ceil(perDay * cover) - stock;
+        if (suggested <= 0) {
+            return null;
+        }
+        return new RestockPlan(Math.round(perDay * 10) / 10.0, daysLeft, suggested);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<SlowMoverResponse> slowMovers(int days, int limit, Long storeId) {
         Long scope = scope(storeId);
         int window = Math.min(Math.max(days, 7), 365);

@@ -4764,6 +4764,59 @@
           }
         },
         {
+          "name": "Gợi ý nhập hàng (sắp hết theo tốc độ bán)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/restock-suggestions?days=30&horizon=14&cover=30",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "restock-suggestions"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30"
+                },
+                {
+                  "key": "horizon",
+                  "value": "14"
+                },
+                {
+                  "key": "cover",
+                  "value": "30"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Còn bao nhiêu ngày thì hết, nên nhập bao nhiêu để đủ bán 30 ngày, tiền nhập ước tính theo giá vốn."
+          }
+        },
+        {
           "name": "AI nhận xét báo cáo kỳ (tóm tắt, nổi bật, việc nên làm)",
           "event": [
             {

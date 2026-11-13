@@ -156,6 +156,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                           @Param("excludeId") Long excludeId);
 
     /**
+     * Gợi ý nhập hàng: mỗi dòng {productVariantId, tổng số lượng} đã bán theo đơn đặt từ {@code since} (trừ đơn huỷ).
+     */
+    @Query("""
+        SELECT oi.productVariant.id, COALESCE(SUM(oi.quantity), 0)
+        FROM OrderItem oi JOIN oi.order o
+        WHERE o.orderDate >= :since
+          AND o.status <> com.example.elsa_store.constant.OrderStatus.DA_HUY
+          AND (:storeId IS NULL OR o.store.id = :storeId)
+        GROUP BY oi.productVariant.id
+    """)
+    List<Object[]> soldQuantityByVariant(@Param("since") LocalDateTime since, @Param("storeId") Long storeId);
+
+    /**
      * Giờ vàng: mỗi dòng {thứ theo MySQL DAYOFWEEK (1 = Chủ nhật … 7 = Thứ bảy), giờ 0–23, số đơn, tiền khách trả} của các
      * đơn đặt trong kỳ (theo lúc đặt, trừ đơn huỷ).
      */

@@ -4,6 +4,7 @@ import com.example.elsa_store.constant.OrderStatus;
 import com.example.elsa_store.constant.Role;
 import com.example.elsa_store.dto.response.DashboardResponse;
 import com.example.elsa_store.dto.response.ProductRevenueResponse;
+import com.example.elsa_store.dto.response.RestockSuggestionResponse;
 import com.example.elsa_store.dto.response.RevenueBreakdownResponse;
 import com.example.elsa_store.dto.response.RevenueSummaryResponse;
 import com.example.elsa_store.dto.response.SlowMoverResponse;
@@ -97,6 +98,46 @@ class ReportServiceImplTest {
         verify(inventories).findSlowMovers(eq(1L),
                 argThat(since -> Math.abs(java.time.Duration.between(since, LocalDateTime.now().minusDays(30)).toMinutes()) < 2),
                 argThat(page -> page.getPageSize() == 20));
+    }
+
+    @Test
+    void restockPlanCoversTheNextMonthOnlyForFastSellers() {
+        // 60 cái / 30 ngày = 2/ngày; còn 10 → hết sau 5 ngày; đủ bán 30 ngày cần 60 → nhập 50.
+        var plan = ReportServiceImpl.restockPlan(10, 60, 30, 14, 30);
+        assertEquals(2.0, plan.perDay());
+        assertEquals(5, plan.daysLeft());
+        assertEquals(50, plan.suggested());
+        assertNull(ReportServiceImpl.restockPlan(10, 0, 30, 14, 30), "không bán được thì không gợi ý (đã có hàng chậm bán)");
+        assertNull(ReportServiceImpl.restockPlan(100, 60, 30, 14, 30), "còn đủ 50 ngày, quá 14 ngày");
+        var soldOut = ReportServiceImpl.restockPlan(-2, 7, 30, 14, 30);
+        assertEquals(0, soldOut.daysLeft());
+        assertEquals(7, soldOut.suggested(), "0,23/ngày × 30 = 7");
+    }
+
+    @Test
+    void restockSuggestionsSortSoonestFirstWithEstimatedCost() {
+        when(orders.soldQuantityByVariant(any(), eq(1L))).thenReturn(rows(
+                new Object[] {7L, 60L}, new Object[] {8L, 30L}, new Object[] {9L, 3L}));
+        when(inventories.findAllByProductVariant_Product_Store_Id(1L)).thenReturn(List.of(
+                stock(7L, "Giày A", 10, 500_000.0, 1),   // 2/ngày, còn 5 ngày
+                stock(8L, "Túi B", 0, null, 1),          // 1/ngày, đã hết
+                stock(9L, "Mũ C", 50, 100_000.0, 1),     // 0,1/ngày, còn rất lâu → bỏ
+                stock(10L, "Áo D", 5, 200_000.0, 1)));   // không bán → bỏ
+
+        List<RestockSuggestionResponse> list = service.restockSuggestions(30, 14, 30, 20, null);
+
+        assertEquals(List.of(8L, 7L), list.stream().map(RestockSuggestionResponse::productVariantId).toList());
+        RestockSuggestionResponse bag = list.get(0);
+        assertEquals(0, bag.daysLeft());
+        assertEquals(30, bag.suggestedQuantity());
+        assertNull(bag.estimatedCost(), "chưa có giá vốn");
+        RestockSuggestionResponse shoe = list.get(1);
+        assertEquals(50, shoe.suggestedQuantity());
+        assertEquals(25_000_000.0, shoe.estimatedCost());
+        assertEquals(60L, shoe.soldInWindow());
+        verify(orders).soldQuantityByVariant(
+                argThat(since -> Math.abs(java.time.Duration.between(since, LocalDateTime.now().minusDays(30)).toMinutes()) < 2),
+                eq(1L));
     }
 
     @Test

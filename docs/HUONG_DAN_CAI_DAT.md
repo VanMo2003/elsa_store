@@ -420,7 +420,7 @@ Hibernate tự thêm bảng và cột mới. Các cột mới đều cho phép �
   `https://<tên-miền>/elsa-store/api`.
 - Xác thực bằng header `Authorization: Bearer <accessToken>`. Lấy token từ `POST /auth/login`; làm mới bằng
   `POST /auth/refreshToken`.
-- Danh sách đầy đủ 236 endpoint ở [`docs/TINH_NANG.md`](TINH_NANG.md) (phụ lục). Request mẫu có sẵn body ở bộ Postman
+- Danh sách đầy đủ 239 endpoint ở [`docs/TINH_NANG.md`](TINH_NANG.md) (phụ lục). Request mẫu có sẵn body ở bộ Postman
   `postman/elsa_store.postman_collection.json`.
 
 Các nhóm chính:
@@ -443,7 +443,7 @@ Các nhóm chính:
 | Báo cáo | `/reports/*` | dashboard, doanh thu, giờ vàng, mục tiêu tháng, hàng chậm bán, xuất Excel |
 | Thông báo | `/notifications/*` | đăng ký token FCM: `POST /notifications/devices` |
 | Chat | `/conversations/*`, `/chat/quick-replies`, WebSocket `/ws/chat?token=<accessToken>` | |
-| AI | `/ai/status`, `/ai/ask`, `/ai/conversations/{id}/suggest-reply`, `/ai/report-insights`, `/ai/product-description`, `/ai/store-settings` | cần `GEMINI_API_KEY` (hai API báo cáo / mô tả vẫn chạy khi không có khoá) |
+| AI | `/ai/status`, `/ai/ask`, `/ai/conversations/{id}/suggest-reply`, `/ai/report-insights`, `/ai/product-description`, `/ai/reviews/{id}/suggest-reply`, `/ai/questions/{id}/suggest-answer`, `/ai/products/{productId}/review-digest`, `/ai/store-settings` | cần `GEMINI_API_KEY`; nhận xét báo cáo, viết mô tả và soạn phản hồi / trả lời vẫn chạy bằng mẫu soạn sẵn khi không có khoá |
 | Trang chủ, tìm kiếm | `/home/*`, `/search/*`, `/banners/*` | |
 | Liên kết mở app | `/app-links/*` | deep link `elsastore://…` |
 

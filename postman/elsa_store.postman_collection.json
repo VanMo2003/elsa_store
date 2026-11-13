@@ -4817,6 +4817,45 @@
           }
         },
         {
+          "name": "Phân nhóm khách (VIP, thân thiết, mới, sắp rời bỏ, lâu không mua)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/segments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "segments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Thêm ?segment=AT_RISK để lọc; counts luôn đủ 5 nhóm."
+          }
+        },
+        {
           "name": "AI nhận xét báo cáo kỳ (tóm tắt, nổi bật, việc nên làm)",
           "event": [
             {

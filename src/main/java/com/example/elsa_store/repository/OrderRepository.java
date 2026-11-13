@@ -169,6 +169,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Object[]> soldQuantityByVariant(@Param("since") LocalDateTime since, @Param("storeId") Long storeId);
 
     /**
+     * Phân nhóm khách: mỗi dòng {customerId, số đơn hoàn thành, tổng tiền khách trả, lần đặt gần nhất} ở một cửa hàng.
+     */
+    @Query("""
+        SELECT o.customer.id, COUNT(o.id), COALESCE(SUM(o.finalAmount), 0), MAX(o.orderDate)
+        FROM Order o
+        WHERE o.store.id = :storeId
+          AND o.customer IS NOT NULL
+          AND o.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+        GROUP BY o.customer.id
+    """)
+    List<Object[]> completedStatsByCustomer(@Param("storeId") Long storeId);
+
+    /**
      * Giờ vàng: mỗi dòng {thứ theo MySQL DAYOFWEEK (1 = Chủ nhật … 7 = Thứ bảy), giờ 0–23, số đơn, tiền khách trả} của các
      * đơn đặt trong kỳ (theo lúc đặt, trừ đơn huỷ).
      */

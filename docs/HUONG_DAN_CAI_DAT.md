@@ -420,7 +420,7 @@ Hibernate tự thêm bảng và cột mới. Các cột mới đều cho phép �
   `https://<tên-miền>/elsa-store/api`.
 - Xác thực bằng header `Authorization: Bearer <accessToken>`. Lấy token từ `POST /auth/login`; làm mới bằng
   `POST /auth/refreshToken`.
-- Danh sách đầy đủ 239 endpoint ở [`docs/TINH_NANG.md`](TINH_NANG.md) (phụ lục). Request mẫu có sẵn body ở bộ Postman
+- Danh sách đầy đủ 241 endpoint ở [`docs/TINH_NANG.md`](TINH_NANG.md) (phụ lục). Request mẫu có sẵn body ở bộ Postman
   `postman/elsa_store.postman_collection.json`.
 
 Các nhóm chính:
@@ -428,7 +428,7 @@ Các nhóm chính:
 | Nhóm | Đường dẫn | Ghi chú |
 |---|---|---|
 | Xác thực, mật khẩu | `/auth/*`, `/auth/password/forgot\|verify\|reset` | OTP gửi qua email (hoặc log khi chưa cấu hình mail) |
-| Người dùng, địa chỉ, khách hàng | `/users/*`, `/addresses/*`, `/customers/*` | |
+| Người dùng, địa chỉ, khách hàng | `/users/*`, `/addresses/*`, `/customers/*` | phân nhóm khách: `/customers/segments` |
 | Mở cửa hàng, duyệt | `/store-registrations/*` | ADMIN duyệt / đình chỉ |
 | Cửa hàng, nhân sự | `/stores/*`, `/store-members/*` | |
 | Sản phẩm, phân loại, ảnh | `/products/*`, `/product-variants/*`, `/products/import` | Nhập Excel |
@@ -440,7 +440,7 @@ Các nhóm chính:
 | Đánh giá, hỏi đáp, yêu thích | `/products/{productId}/reviews`, `/products/{productId}/questions`, `/reviews/*`, `/questions/*`, `/wishlist/*` | |
 | Xu, điểm danh, giới thiệu | `/coins/*`, `/referrals/*` | |
 | Đổi / trả hàng | `/returns/*` | |
-| Báo cáo | `/reports/*` | dashboard, doanh thu, giờ vàng, mục tiêu tháng, hàng chậm bán, xuất Excel |
+| Báo cáo | `/reports/*` | dashboard, doanh thu, giờ vàng, mục tiêu tháng, gợi ý nhập hàng, hàng chậm bán, xuất Excel |
 | Thông báo | `/notifications/*` | đăng ký token FCM: `POST /notifications/devices` |
 | Chat | `/conversations/*`, `/chat/quick-replies`, WebSocket `/ws/chat?token=<accessToken>` | |
 | AI | `/ai/status`, `/ai/ask`, `/ai/conversations/{id}/suggest-reply`, `/ai/report-insights`, `/ai/product-description`, `/ai/reviews/{id}/suggest-reply`, `/ai/questions/{id}/suggest-answer`, `/ai/products/{productId}/review-digest`, `/ai/store-settings` | cần `GEMINI_API_KEY`; nhận xét báo cáo, viết mô tả và soạn phản hồi / trả lời vẫn chạy bằng mẫu soạn sẵn khi không có khoá |

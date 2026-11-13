@@ -172,6 +172,8 @@ step(F3, "Đánh giá hữu ích nhất trước (công khai)", "GET", "/product
      query={"sort": "helpful", "page": "0", "size": "10"},
      note="Khách khác bấm POST /reviews/{id}/helpful (bỏ: DELETE); tự bấm cho đánh giá của mình bị 400.")
 step(F3, "Cửa hàng: đánh giá chưa trả lời", "GET", "/reviews/store", token="staffToken", query={"unreplied": "true"})
+step(F3, "AI soạn phản hồi đánh giá (bản nháp)", "POST", "/ai/reviews/{{reviewId}}/suggest-reply", token="staffToken",
+     note="Chỉ trả bản nháp {text, ai, notice}; gửi thật bằng PUT /reviews/{id}/reply. Không có AI: mẫu theo số sao.")
 step(F3, "Cửa hàng trả lời đánh giá", "PUT", "/reviews/{{reviewId}}/reply", token="staffToken",
      body={"reply": "Cảm ơn bạn đã ủng hộ Elsa!"})
 step(F3, "Khách hỏi về sản phẩm", "POST", "/products/{{productId}}/questions", token="customerToken",

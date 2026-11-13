@@ -3090,6 +3090,47 @@
           }
         },
         {
+          "name": "AI soạn phản hồi đánh giá (bản nháp)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/reviews/{{reviewId}}/suggest-reply",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "reviews",
+                "{{reviewId}}",
+                "suggest-reply"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Chỉ trả bản nháp {text, ai, notice}; gửi thật bằng PUT /reviews/{id}/reply. Không có AI: mẫu theo số sao."
+          }
+        },
+        {
           "name": "Cửa hàng trả lời đánh giá",
           "event": [
             {

@@ -3284,6 +3284,47 @@
           }
         },
         {
+          "name": "AI soạn trả lời câu hỏi (bản nháp)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/questions/{{questionId}}/suggest-answer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "questions",
+                "{{questionId}}",
+                "suggest-answer"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Chỉ dựa trên hồ sơ thật của sản phẩm; gửi thật bằng PUT /questions/{id}/answer."
+          }
+        },
+        {
           "name": "Cửa hàng trả lời câu hỏi",
           "event": [
             {

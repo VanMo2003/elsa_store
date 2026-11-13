@@ -3,6 +3,7 @@ package com.example.elsa_store.controller;
 import com.example.elsa_store.ai.AiClient;
 import com.example.elsa_store.ai.ChatAssistant;
 import com.example.elsa_store.ai.ProductCopywriter;
+import com.example.elsa_store.ai.QuestionAnswerWriter;
 import com.example.elsa_store.ai.ReportAnalyst;
 import com.example.elsa_store.ai.ReviewReplyWriter;
 import com.example.elsa_store.ai.ShoppingAssistant;
@@ -39,6 +40,7 @@ public class AiController {
     private final ReportAnalyst reportAnalyst;
     private final ProductCopywriter productCopywriter;
     private final ReviewReplyWriter reviewReplyWriter;
+    private final QuestionAnswerWriter questionAnswerWriter;
 
     /** Công khai: để app ẩn các nút AI khi máy chủ chưa có khoá API. */
     @GetMapping("/status")
@@ -89,6 +91,15 @@ public class AiController {
     @PostMapping("/reviews/{id}/suggest-reply")
     public ApiResponse<AiDraftResponse> suggestReviewReply(@PathVariable Long id) {
         return ApiResponse.ok(reviewReplyWriter.suggest(id));
+    }
+
+    /**
+     * Chủ / quản lý / nhân viên: bản nháp trả lời câu hỏi của khách, chỉ dựa trên hồ sơ thật của sản phẩm. Chưa bật AI, AI
+     * bận hay hết lượt thì trả mẫu soạn sẵn nêu giá, màu, cỡ ({@code ai=false} kèm {@code notice}).
+     */
+    @PostMapping("/questions/{id}/suggest-answer")
+    public ApiResponse<AiDraftResponse> suggestQuestionAnswer(@PathVariable Long id) {
+        return ApiResponse.ok(questionAnswerWriter.suggest(id));
     }
 
     @GetMapping("/store-settings")

@@ -181,6 +181,8 @@ step(F3, "Khách hỏi về sản phẩm", "POST", "/products/{{productId}}/ques
      saves=[("questionId", "j.data.id", lambda j: j["data"]["id"])],
      note="Mỗi khách treo tối đa 3 câu chưa được trả lời cho một sản phẩm (quá thì 429, mã 1029).")
 step(F3, "Cửa hàng: câu hỏi chưa trả lời", "GET", "/questions/store", token="staffToken", query={"unanswered": "true"})
+step(F3, "AI soạn trả lời câu hỏi (bản nháp)", "POST", "/ai/questions/{{questionId}}/suggest-answer", token="staffToken",
+     note="Chỉ dựa trên hồ sơ thật của sản phẩm; gửi thật bằng PUT /questions/{id}/answer.")
 step(F3, "Cửa hàng trả lời câu hỏi", "PUT", "/questions/{{questionId}}/answer", token="staffToken",
      body={"answer": "Dạ có size 45, bạn đặt nhé!"})
 step(F3, "Hỏi đáp của sản phẩm (công khai, chỉ câu đã trả lời)", "GET", "/products/{{productId}}/questions",

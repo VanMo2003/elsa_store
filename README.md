@@ -169,6 +169,7 @@ chỉ nằm ở BE; chưa có khoá thì mọi tính năng AI tự tắt và app
 | Báo cáo: AI nhận xét | `POST /ai/report-insights` `{from, to, storeId?}` (chủ / quản lý; ADMIN toàn sàn hoặc một cửa hàng) | `ReportAnalyst` gom số liệu thật của kỳ (doanh thu so với kỳ trước, lợi nhuận, bán chạy, danh mục, tỉ lệ huỷ, giờ vàng, hàng sắp hết, hàng chậm bán, mục tiêu tháng) thành bảng số, ép mô hình gọi `write_insights` → `{summary, highlights[≤4], actions[≤4], ai, notice, generatedAt}` |
 | Sản phẩm: AI viết mô tả | `POST /ai/product-description` `{name, categoryId?, productId?, price?, notes?}` (thành viên cửa hàng) | `ProductCopywriter` viết **bản nháp** 70–140 từ từ tên, danh mục, màu / cỡ của các phân loại (khi sửa sản phẩm có sẵn) và gợi ý đã gõ; không bịa chất liệu / xuất xứ, không nhắc giá → `{description, ai, notice}` |
 | Đánh giá: AI soạn phản hồi | `POST /ai/reviews/{id}/suggest-reply` (chủ / quản lý / nhân viên của cửa hàng có sản phẩm) | `ReviewReplyWriter` soạn **bản nháp** 25–80 từ theo số sao (4–5 sao cảm ơn; 3 sao ghi nhận góp ý; 1–2 sao xin lỗi, mời nhắn chat kèm mã đơn), không hứa hoàn tiền / đền bù / tặng mã → `{text, ai, notice}` |
+| Hỏi đáp: AI soạn câu trả lời | `POST /ai/questions/{id}/suggest-answer` (người của cửa hàng có sản phẩm) | `QuestionAnswerWriter` chỉ dùng hồ sơ thật của sản phẩm (giá, màu / cỡ còn / hết, mô tả) và 5 câu hỏi đáp gần nhất; điều hồ sơ không có thì nói shop sẽ kiểm tra / mời nhắn chat → `{text, ai, notice}` |
 
 - **Chuyển cho nhân viên:** trong chat, khi khách cần việc ngoài tư vấn (huỷ / đổi trả đơn, khiếu nại, khách muốn gặp
   người) trợ lý gọi `handoff_to_staff`; cuộc trò chuyện được gắn `needsStaff=true` (kèm `handoffReason`, chỉ lộ ở phía cửa
@@ -180,6 +181,7 @@ chỉ nằm ở BE; chưa có khoá thì mọi tính năng AI tự tắt và app
   Nhận xét báo cáo 10 lượt / 10 phút, viết mô tả 20 lượt / 10 phút / tài khoản — hai tính năng này **không báo lỗi** khi
   chưa có khoá, AI bận, hết lượt hay quá hạn mức mà trả bản theo quy tắc / mẫu soạn sẵn với `ai=false` và `notice`.
   Soạn phản hồi đánh giá 30 lượt / 10 phút / tài khoản (không dùng được AI thì mẫu theo số sao).
+  Soạn trả lời câu hỏi 30 lượt / 10 phút / tài khoản (không dùng được AI thì mẫu nêu giá, màu, cỡ).
 - **Cách hoạt động:** `AiClient` nhận yêu cầu dạng Anthropic và dịch sang Chat Completions chuẩn OpenAI (`OpenAiCompat`,
   giữ nguyên khối `thought signature` của Gemini), nên cùng một đường đi dùng được cho Gemini, Claude hay máy chủ
   OpenAI khác (Groq, OpenRouter, Ollama…). Vòng gọi công cụ tối đa 5 lượt; `search_products` xếp hạng bằng so khớp

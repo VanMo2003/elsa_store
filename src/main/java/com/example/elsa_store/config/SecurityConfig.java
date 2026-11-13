@@ -43,6 +43,8 @@ public class SecurityConfig {
         "/products/{id:\\d+}/reviews/me",
         // Hỏi đáp sản phẩm: câu đã trả lời ai cũng đọc được.
         "/products/{id:\\d+}/questions",
+        // "Khách nói gì": tóm tắt đánh giá bằng AI, ai cũng đọc được.
+        "/ai/products/{id:\\d+}/review-digest",
         "/product-variants",
         "/product-variants/{id:\\d+}",
         "/stores",

@@ -170,6 +170,7 @@ chỉ nằm ở BE; chưa có khoá thì mọi tính năng AI tự tắt và app
 | Sản phẩm: AI viết mô tả | `POST /ai/product-description` `{name, categoryId?, productId?, price?, notes?}` (thành viên cửa hàng) | `ProductCopywriter` viết **bản nháp** 70–140 từ từ tên, danh mục, màu / cỡ của các phân loại (khi sửa sản phẩm có sẵn) và gợi ý đã gõ; không bịa chất liệu / xuất xứ, không nhắc giá → `{description, ai, notice}` |
 | Đánh giá: AI soạn phản hồi | `POST /ai/reviews/{id}/suggest-reply` (chủ / quản lý / nhân viên của cửa hàng có sản phẩm) | `ReviewReplyWriter` soạn **bản nháp** 25–80 từ theo số sao (4–5 sao cảm ơn; 3 sao ghi nhận góp ý; 1–2 sao xin lỗi, mời nhắn chat kèm mã đơn), không hứa hoàn tiền / đền bù / tặng mã → `{text, ai, notice}` |
 | Hỏi đáp: AI soạn câu trả lời | `POST /ai/questions/{id}/suggest-answer` (người của cửa hàng có sản phẩm) | `QuestionAnswerWriter` chỉ dùng hồ sơ thật của sản phẩm (giá, màu / cỡ còn / hết, mô tả) và 5 câu hỏi đáp gần nhất; điều hồ sơ không có thì nói shop sẽ kiểm tra / mời nhắn chat → `{text, ai, notice}` |
+| Trang sản phẩm: "Khách nói gì" | `GET /ai/products/{productId}/review-digest` (công khai) | `ReviewDigestWriter` tóm tắt khi có ≥ 3 đánh giá có nhận xét (đọc 40 mới nhất) qua công cụ `write_digest` → `{summary, pros[≤3], cons[≤3], basedOn, upToDate, generatedAt}`; lưu ở bảng `review_digests`, chỉ viết lại khi thêm / sửa / xoá đánh giá (bấm "hữu ích" không tính); không dùng được AI thì trả bản cũ (`upToDate=false`) hoặc `null` — không tự bịa |
 
 - **Chuyển cho nhân viên:** trong chat, khi khách cần việc ngoài tư vấn (huỷ / đổi trả đơn, khiếu nại, khách muốn gặp
   người) trợ lý gọi `handoff_to_staff`; cuộc trò chuyện được gắn `needsStaff=true` (kèm `handoffReason`, chỉ lộ ở phía cửa
@@ -182,6 +183,7 @@ chỉ nằm ở BE; chưa có khoá thì mọi tính năng AI tự tắt và app
   chưa có khoá, AI bận, hết lượt hay quá hạn mức mà trả bản theo quy tắc / mẫu soạn sẵn với `ai=false` và `notice`.
   Soạn phản hồi đánh giá 30 lượt / 10 phút / tài khoản (không dùng được AI thì mẫu theo số sao).
   Soạn trả lời câu hỏi 30 lượt / 10 phút / tài khoản (không dùng được AI thì mẫu nêu giá, màu, cỡ).
+  Tóm tắt đánh giá: tối đa 60 lần viết / 10 phút cho cả máy chủ (mỗi sản phẩm một lần cho mỗi đợt đánh giá mới).
 - **Cách hoạt động:** `AiClient` nhận yêu cầu dạng Anthropic và dịch sang Chat Completions chuẩn OpenAI (`OpenAiCompat`,
   giữ nguyên khối `thought signature` của Gemini), nên cùng một đường đi dùng được cho Gemini, Claude hay máy chủ
   OpenAI khác (Groq, OpenRouter, Ollama…). Vòng gọi công cụ tối đa 5 lượt; `search_products` xếp hạng bằng so khớp
@@ -675,7 +677,7 @@ dùng cho `docker compose`).
 | `AI_AUTO_REPLY_DELAY_SECONDS` | `60` | Chờ bao lâu trước khi trợ lý tự trả lời thay cửa hàng đã bật tự trả lời |
 
 Bảng `notifications`, `device_tokens`, `conversations`, `chat_messages`, `stock_movements`, `password_reset_codes`,
-`product_reviews`, `wishlist_items`, `order_status_history`, `return_requests` và `return_items` được Hibernate tạo tự động
+`product_reviews`, `wishlist_items`, `order_status_history`, `return_requests`, `return_items` và `review_digests` được Hibernate tạo tự động
 (`ddl-auto=update`); các cột mới trên bảng cũ (`stores.ai_auto_reply`, `stores.shipping_fee`,
 `stores.free_shipping_threshold`, `orders.completed_at`, `orders.cancel_reason`, `orders.shipping_fee`,
 `orders.shipping_carrier`, `orders.tracking_code`, `stores.monthly_revenue_target`, `users.referral_code`, `users.referred_by_id`,

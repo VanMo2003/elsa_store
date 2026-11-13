@@ -15,6 +15,9 @@ import java.util.Optional;
 @Repository
 public interface ProductReviewRepository extends JpaRepository<ProductReview, Long> {
 
+    /** Mọi đánh giá của sản phẩm, mới nhất trước (tóm tắt "Khách nói gì"). */
+    java.util.List<ProductReview> findByProduct_IdOrderByIdDesc(Long productId);
+
     Optional<ProductReview> findByUser_IdAndProduct_Id(Long userId, Long productId);
 
     /** Đánh giá của một sản phẩm, mới nhất trước; {@code rating} null = mọi số sao; {@code withImages} = chỉ đánh giá có ảnh. */

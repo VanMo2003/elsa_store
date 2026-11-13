@@ -5,6 +5,7 @@ import com.example.elsa_store.ai.ChatAssistant;
 import com.example.elsa_store.ai.ProductCopywriter;
 import com.example.elsa_store.ai.QuestionAnswerWriter;
 import com.example.elsa_store.ai.ReportAnalyst;
+import com.example.elsa_store.ai.ReviewDigestWriter;
 import com.example.elsa_store.ai.ReviewReplyWriter;
 import com.example.elsa_store.ai.ShoppingAssistant;
 import com.example.elsa_store.dto.common.ApiResponse;
@@ -17,6 +18,7 @@ import com.example.elsa_store.dto.response.AiDraftResponse;
 import com.example.elsa_store.dto.response.AiSuggestionResponse;
 import com.example.elsa_store.dto.response.ProductDescriptionResponse;
 import com.example.elsa_store.dto.response.ReportInsightResponse;
+import com.example.elsa_store.dto.response.ReviewDigestResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class AiController {
     private final ProductCopywriter productCopywriter;
     private final ReviewReplyWriter reviewReplyWriter;
     private final QuestionAnswerWriter questionAnswerWriter;
+    private final ReviewDigestWriter reviewDigestWriter;
 
     /** Công khai: để app ẩn các nút AI khi máy chủ chưa có khoá API. */
     @GetMapping("/status")
@@ -100,6 +103,15 @@ public class AiController {
     @PostMapping("/questions/{id}/suggest-answer")
     public ApiResponse<AiDraftResponse> suggestQuestionAnswer(@PathVariable Long id) {
         return ApiResponse.ok(questionAnswerWriter.suggest(id));
+    }
+
+    /**
+     * Công khai: "Khách nói gì" — tóm tắt đánh giá của sản phẩm do AI viết (cần ít nhất 3 đánh giá có nhận xét). Lưu lại và
+     * chỉ viết lại khi có đánh giá mới / sửa / xoá; {@code data=null} khi chưa có bản tóm tắt nào (app ẩn mục này).
+     */
+    @GetMapping("/products/{productId}/review-digest")
+    public ApiResponse<ReviewDigestResponse> reviewDigest(@PathVariable Long productId) {
+        return ApiResponse.ok(reviewDigestWriter.digest(productId));
     }
 
     @GetMapping("/store-settings")

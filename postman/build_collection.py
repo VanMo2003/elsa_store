@@ -187,6 +187,8 @@ step(F3, "Cửa hàng trả lời câu hỏi", "PUT", "/questions/{{questionId}}
      body={"answer": "Dạ có size 45, bạn đặt nhé!"})
 step(F3, "Hỏi đáp của sản phẩm (công khai, chỉ câu đã trả lời)", "GET", "/products/{{productId}}/questions",
      query={"page": "0", "size": "10"})
+step(F3, "\"Khách nói gì\": AI tóm tắt đánh giá (công khai)", "GET", "/ai/products/{{productId}}/review-digest",
+     note="Cần ≥ 3 đánh giá có nhận xét, chưa đủ thì data = null. Lưu lại, chỉ viết lại khi có đánh giá mới / sửa / xoá.")
 step(F3, "Cửa hàng: thêm câu trả lời nhanh cho chat", "POST", "/chat/quick-replies", token="staffToken",
      body={"title": "Chào khách", "content": "Dạ Elsa chào bạn, bạn cần tư vấn size nào ạ?"})
 step(F3, "Cửa hàng: danh sách câu trả lời nhanh", "GET", "/chat/quick-replies", token="ownerToken")

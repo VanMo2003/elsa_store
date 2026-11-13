@@ -3420,6 +3420,40 @@
           }
         },
         {
+          "name": "\"Khách nói gì\": AI tóm tắt đánh giá (công khai)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/products/{{productId}}/review-digest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "products",
+                "{{productId}}",
+                "review-digest"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Cần ≥ 3 đánh giá có nhận xét, chưa đủ thì data = null. Lưu lại, chỉ viết lại khi có đánh giá mới / sửa / xoá."
+          }
+        },
+        {
           "name": "Cửa hàng: thêm câu trả lời nhanh cho chat",
           "event": [
             {

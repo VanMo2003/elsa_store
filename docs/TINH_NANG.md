@@ -41,7 +41,7 @@ toàn bộ API (trích tự động từ controller).
   phiếu nhập (giá vốn bình quân gia quyền); nhà cung cấp.
 - **Bán hàng:** khuyến mãi tự động và mã giảm giá, phí giao / mức miễn phí, tạm nghỉ bán kèm lời nhắn.
 - **Chăm sóc khách:** hộp thư chat chung của cửa hàng (gợi ý trả lời bằng AI, **câu trả lời nhanh**, AI tự trả lời khi
-  vắng), **phân nhóm khách** (VIP, thân thiết, mới, sắp rời bỏ, lâu không mua kèm gợi ý chăm sóc; **gửi ưu đãi / mã giảm giá cho cả nhóm**, mỗi nhóm 1 lần / 24 giờ), trả lời đánh giá và trả lời câu hỏi (**AI soạn bản nháp**: theo số sao / theo hồ sơ thật của sản phẩm), danh sách
+  vắng), **phân nhóm khách** (VIP, thân thiết, mới, sắp rời bỏ, lâu không mua kèm gợi ý chăm sóc; **gửi ưu đãi / mã giảm giá cho cả nhóm**, mỗi nhóm 1 lần / 24 giờ; **tải danh sách nhóm ra Excel**), trả lời đánh giá và trả lời câu hỏi (**AI soạn bản nháp**: theo số sao / theo hồ sơ thật của sản phẩm), danh sách
   khách hàng.
 - **Báo cáo (chủ / quản lý):** tổng quan (hôm nay / tháng, lợi nhuận gộp, **mục tiêu tháng + dự báo cuối tháng**, việc cần
   làm), **AI nhận xét kỳ** (tóm tắt, điểm nổi bật, việc nên làm từ số liệu thật; không có AI thì theo quy tắc), **giờ vàng**
@@ -92,7 +92,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
   (`test/contract/api_contract_test.dart`, bật bằng `--dart-define=ELSA_CONTRACT=true`).
 - CI GitHub Actions cho cả hai repo.
 
-## Phụ lục: danh sách API (246 endpoint)
+## Phụ lục: danh sách API (247 endpoint)
 
 Đường dẫn tương đối với `/elsa-store/api`. Quyền từng endpoint xem README BE (phần Vai trò và phân quyền) và Postman.
 
@@ -175,6 +175,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
 - `GET /customers/segments`
 - `POST /customers/segments/{segment}/offers`
 - `GET /customers/segments/offers`
+- `GET /customers/segments/export`
 - `GET /customers/search`
 - `PUT /customers/{id}`
 - `DELETE /customers/{id}`

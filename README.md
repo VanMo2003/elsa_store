@@ -547,19 +547,28 @@ sai mật khẩu báo `1022`, còn đơn chưa xong (chờ xác nhận / đã x�
 sổ địa chỉ ẩn danh, giỏ hàng / yêu thích / theo dõi / thông báo / thiết bị push bị xoá; tài khoản bị khoá và mọi token
 hết hiệu lực (`AccountDeletion`).
 
-## Danh mục sản phẩm (2 tầng)
+## Danh mục sản phẩm (riêng từng cửa hàng, 2 tầng)
 
-Bảng `categories` tự tham chiếu qua cột **`parent_id`**: trống = danh mục **tầng 1** (vd. "Áo sơ mi"), có giá trị = id của
-danh mục cha tầng 1 → danh mục **tầng 2** (vd. "Sơ mi ngắn tay", "Sơ mi dài tay"). ADMIN quản lý (`POST /categories`,
-`PUT /categories/{id}` `{name, parentId}`, `DELETE /categories/{id}`); ai cũng đọc được `GET /categories`.
+Mỗi cửa hàng có **bộ danh mục riêng** (`categories.store_id`), chia 2 tầng qua cột **`parent_id`**: trống = danh mục **tầng 1**
+(vd. "Áo sơ mi"), có giá trị = id danh mục cha tầng 1 **của cùng cửa hàng** → danh mục **tầng 2** (vd. "Sơ mi ngắn tay").
 
-- Chỉ 2 tầng: danh mục cha phải là tầng 1 (không có tầng 3), không làm cha của chính nó; danh mục tầng 1 đang có con thì
-  không chuyển thành tầng 2. Danh mục con chuyển được sang cha khác hoặc lên tầng 1 (gửi `parentId: null`).
-- Tên (≤ 100 ký tự, gộp khoảng trắng) không trùng với danh mục **cùng cấp / cùng cha** (không phân biệt hoa thường).
-- Không xoá danh mục còn danh mục con hoặc còn sản phẩm (đã bỏ cascade xoá dây chuyền ở entity).
-- `GET /categories` trả dạng cây phẳng: mỗi danh mục cha (A→Z theo tiếng Việt) rồi ngay sau là các con (A→Z); mỗi dòng có
-  `level` (1 / 2), `parentId`, `parentName`, `childCount`, `productCount`. Lọc sản phẩm theo danh mục cha lấy luôn sản phẩm
-  của các danh mục con.
+- Chủ / quản lý thêm, sửa, xoá danh mục của cửa hàng mình (`POST /categories`, `PUT /categories/{id}` `{name, parentId}`,
+  `DELETE /categories/{id}`); nhân viên chỉ đọc; ADMIN chỉ xem (không còn danh mục chung).
+- Chỉ 2 tầng: cha phải là tầng 1 của cùng cửa hàng (không tầng 3, không tự làm cha); tầng 1 đang có con thì không xuống tầng 2.
+  Tên (≤ 100 ký tự) không trùng với danh mục cùng cấp **trong cửa hàng** (không phân biệt hoa thường) — hai cửa hàng khác nhau
+  có thể cùng có "Áo sơ mi". Không xoá danh mục còn con hoặc còn sản phẩm (không cascade).
+- Sản phẩm chỉ gắn được danh mục của chính cửa hàng (`categoryId: must be a category of your store`); nhập Excel cũng chỉ
+  tra danh mục của cửa hàng.
+- `GET /categories?storeId=` (công khai) → danh mục của cửa hàng đó. Không có `storeId`: người của cửa hàng nhận danh mục của
+  mình, ADMIN nhận mọi danh mục (kèm `storeName`), khách nhận **danh sách gộp theo tên** của các cửa hàng đang bán (mỗi tên
+  một mục, đại diện là danh mục có id nhỏ nhất, cộng dồn `productCount`). Lọc sản phẩm `GET /products?categoryId=` khớp
+  **theo tên** (danh mục cha: sản phẩm thuộc danh mục cùng tên hoặc con của nó; danh mục con: cùng tên con và cùng tên cha)
+  nên trang chủ / tìm kiếm / sản phẩm tương tự vẫn duyệt được toàn sàn.
+- Mỗi dòng trả về: `level` (1 / 2), `parentId`, `parentName`, `childCount`, `productCount`, `storeId`, `storeName`; danh sách
+  sắp theo cây (cha A→Z rồi các con A→Z).
+- Dữ liệu cũ (`CategoryStoreMigration`, chạy khi khởi động): danh mục chung (`store_id` trống) đang có sản phẩm được sao thành
+  danh mục của từng cửa hàng có sản phẩm trong đó (kèm danh mục cha, dùng lại nếu cửa hàng đã có cùng tên) rồi gắn lại sản phẩm;
+  danh mục chung cũ vẫn giữ để banner cũ không hỏng.
 
 ## Vai trò và phân quyền
 

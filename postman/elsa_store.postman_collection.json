@@ -54,6 +54,10 @@
       "value": ""
     },
     {
+      "key": "parentCategoryId",
+      "value": ""
+    },
+    {
       "key": "productId",
       "value": ""
     },
@@ -661,7 +665,61 @@
           }
         },
         {
-          "name": "ADMIN: tạo danh mục",
+          "name": "Chủ cửa hàng: tạo danh mục cha (tầng 1) của cửa hàng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('parentCategoryId', j.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Giày {{runSuffix}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Mỗi cửa hàng có bộ danh mục riêng; ADMIN không còn tạo danh mục chung."
+          }
+        },
+        {
+          "name": "Chủ cửa hàng: tạo danh mục con (tầng 2)",
           "event": [
             {
               "listen": "test",
@@ -697,19 +755,56 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{adminToken}}",
+                  "value": "{{ownerToken}}",
                   "type": "string"
                 }
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Giày {{runSuffix}}\"\n}",
+              "raw": "{\n  \"name\": \"Giày chạy bộ\",\n  \"parentId\": {{parentCategoryId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "description": "parentId phải là danh mục tầng 1 của chính cửa hàng; không có tầng 3."
+          }
+        },
+        {
+          "name": "Danh mục của một cửa hàng (công khai)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories?storeId={{storeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "storeId",
+                  "value": "{{storeId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
             }
           }
         }

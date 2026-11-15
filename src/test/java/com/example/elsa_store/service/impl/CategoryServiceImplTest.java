@@ -3,9 +3,11 @@ package com.example.elsa_store.service.impl;
 import com.example.elsa_store.dto.request.CategoryRequest;
 import com.example.elsa_store.dto.response.CategoryResponse;
 import com.example.elsa_store.entity.Category;
+import com.example.elsa_store.entity.Store;
 import com.example.elsa_store.exception.AppException;
 import com.example.elsa_store.repository.CategoryRepository;
 import com.example.elsa_store.repository.ProductRepository;
+import com.example.elsa_store.repository.StoreRepository;
 import com.example.elsa_store.security.AccessGuard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,14 +31,29 @@ class CategoryServiceImplTest {
 
     private final CategoryRepository categories = mock(CategoryRepository.class);
     private final ProductRepository products = mock(ProductRepository.class);
-    private final CategoryServiceImpl service = new CategoryServiceImpl(categories, mock(AccessGuard.class), products);
+    private final AccessGuard guard = mock(AccessGuard.class);
+    private final StoreRepository stores = mock(StoreRepository.class);
+    private final CategoryServiceImpl service = new CategoryServiceImpl(categories, guard, products, stores);
+    private final Store mine = store(1, "Shop A");
+    private final Store other = store(2, "Shop B");
+
+    private static Store store(long id, String name) {
+        Store s = new Store();
+        s.setId(id);
+        s.setName(name);
+        return s;
+    }
 
     private Category shirts;
     private Category shortSleeve;
     private Category pants;
 
-    private static Category category(long id, String name, Category parent) {
-        Category c = Category.builder().name(name).parent(parent).children(new ArrayList<>()).build();
+    private Category category(long id, String name, Category parent) {
+        return category(id, name, parent, mine);
+    }
+
+    private static Category category(long id, String name, Category parent, Store store) {
+        Category c = Category.builder().name(name).parent(parent).store(store).children(new ArrayList<>()).build();
         c.setId(id);
         if (parent != null) {
             parent.getChildren().add(c);
@@ -58,6 +75,9 @@ class CategoryServiceImplTest {
         pants = category(3, "Quần", null);
         List<Category> all = List.of(pants, shortSleeve, shirts);
         when(categories.findAll()).thenReturn(all);
+        when(categories.findAllByStore_Id(1L)).thenReturn(all);
+        when(guard.requireStoreManager()).thenReturn(mine);
+        when(stores.existsById(1L)).thenReturn(true);
         all.forEach(c -> when(categories.findById(c.getId())).thenReturn(Optional.of(c)));
         when(categories.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(products.countByCategory()).thenReturn(List.<Object[]>of(new Object[] {2L, 5L}));
@@ -65,7 +85,7 @@ class CategoryServiceImplTest {
 
     @Test
     void listIsATreeParentsThenTheirChildren() {
-        List<CategoryResponse> list = service.getAll();
+        List<CategoryResponse> list = service.getAll(1L);
         assertEquals(List.of("Áo sơ mi", "Sơ mi ngắn tay", "Quần"), list.stream().map(CategoryResponse::getName).toList());
         assertEquals(1, list.get(0).getLevel());
         assertEquals(1, list.get(0).getChildCount());
@@ -112,5 +132,37 @@ class CategoryServiceImplTest {
 
         service.delete(3L);
         verify(categories).delete(pants);
+    }
+
+    @Test
+    void anotherStoresCategoryIsOffLimits() {
+        Category theirs = category(9, "Giày", null, other);
+        when(categories.findById(9L)).thenReturn(Optional.of(theirs));
+        assertThrows(AppException.class, () -> service.update(9L, request("Giày", null)));
+        assertThrows(AppException.class, () -> service.delete(9L));
+        AppException parent = assertThrows(AppException.class, () -> service.create(request("Giày chạy", 9L)));
+        assertTrue(parent.getMessage().contains("your store"), parent.getMessage());
+    }
+
+    @Test
+    void customersSeeCategoriesMergedByNameAcrossStores() {
+        Category aShirts = category(10, "Áo sơ mi", null, mine);
+        Category aShort = category(11, "Sơ mi ngắn tay", aShirts, mine);
+        Category bShirts = category(20, "áo SƠ MI", null, other);
+        Category bShort = category(21, "Sơ mi ngắn tay", bShirts, other);
+        Category bLong = category(22, "Sơ mi dài tay", bShirts, other);
+        when(categories.findAllOfVisibleStores()).thenReturn(List.of(bShirts, bShort, bLong, aShirts, aShort));
+        when(guard.currentUserOrEmpty()).thenReturn(Optional.empty());
+        when(products.countByCategory()).thenReturn(List.<Object[]>of(new Object[] {11L, 2L}, new Object[] {21L, 3L}));
+
+        List<CategoryResponse> list = service.getAll(null);
+
+        assertEquals(List.of("Áo sơ mi", "Sơ mi dài tay", "Sơ mi ngắn tay"), list.stream().map(CategoryResponse::getName).toList());
+        assertEquals(10L, list.get(0).getId(), "đại diện là danh mục id nhỏ nhất");
+        assertEquals(3, list.get(0).getChildCount());
+        CategoryResponse merged = list.get(2);
+        assertEquals(11L, merged.getId());
+        assertEquals(10L, merged.getParentId());
+        assertEquals(5L, merged.getProductCount(), "cộng sản phẩm của cả hai cửa hàng");
     }
 }

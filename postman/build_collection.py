@@ -59,8 +59,15 @@ step(F1, "Chủ tạo nhân viên", "POST", "/store-members", token="ownerToken"
      body={"username": "staff{{runSuffix}}", "password": "123456", "fullName": "Nhân viên Demo", "role": "STAFF"})
 step(F1, "Nhân viên đăng nhập", "POST", "/auth/login", body={"username": "staff{{runSuffix}}", "password": "123456"},
      saves=[("staffToken", "j.data.accessToken", lambda j: j["data"]["accessToken"])])
-step(F1, "ADMIN: tạo danh mục", "POST", "/categories", token="adminToken", body={"name": "Giày {{runSuffix}}"},
-     saves=[("categoryId", "j.data.id", lambda j: j["data"]["id"])])
+step(F1, "Chủ cửa hàng: tạo danh mục cha (tầng 1) của cửa hàng", "POST", "/categories", token="ownerToken",
+     body={"name": "Giày {{runSuffix}}"},
+     saves=[("parentCategoryId", "j.data.id", lambda j: j["data"]["id"])],
+     note="Mỗi cửa hàng có bộ danh mục riêng; ADMIN không còn tạo danh mục chung.")
+step(F1, "Chủ cửa hàng: tạo danh mục con (tầng 2)", "POST", "/categories", token="ownerToken",
+     body={"name": "Giày chạy bộ", "parentId": "{{parentCategoryId}}"},
+     saves=[("categoryId", "j.data.id", lambda j: j["data"]["id"])],
+     note="parentId phải là danh mục tầng 1 của chính cửa hàng; không có tầng 3.")
+step(F1, "Danh mục của một cửa hàng (công khai)", "GET", "/categories", query={"storeId": "{{storeId}}"})
 
 step(F2, "Tạo sản phẩm (multipart: phần 'data' là JSON)", "POST", "/products", token="ownerToken",
      body=("form", {"name": "Giày chạy bộ {{runSuffix}}", "description": "Giày thử", "basePrice": 1000000, "status": 1,

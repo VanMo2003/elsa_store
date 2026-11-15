@@ -13,6 +13,17 @@ public class CategoryResponse {
     private Integer childCount;
     /** Số sản phẩm gắn trực tiếp vào danh mục này. */
     private Long productCount;
+    /** Cửa hàng sở hữu (trống ở danh sách gộp cho khách). */
+    private Long storeId;
+    private String storeName;
+
+    public Long getStoreId() { return storeId; }
+
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
+
+    public String getStoreName() { return storeName; }
+
+    public void setStoreName(String storeName) { this.storeName = storeName; }
 
     public Long getId() { return id; }
 

@@ -11,5 +11,6 @@ public interface CategoryService {
     CategoryResponse update(Long id, CategoryRequest req);
     void delete(Long id);
     CategoryResponse getById(Long id);
-    List<CategoryResponse> getAll();
+    /** {@code storeId} trống: danh mục của cửa hàng mình (người của cửa hàng), mọi danh mục (ADMIN) hoặc danh sách gộp (khách). */
+    List<CategoryResponse> getAll(Long storeId);
 }

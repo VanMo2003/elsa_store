@@ -42,8 +42,12 @@ public class CategoryController {
         return ApiResponse.ok(categoryService.getById(id));
     }
 
+    /**
+     * Có {@code storeId}: danh mục riêng của cửa hàng đó (công khai). Không có: người của cửa hàng nhận danh mục của mình,
+     * ADMIN nhận mọi danh mục, khách nhận danh sách gộp theo tên của các cửa hàng đang bán.
+     */
     @GetMapping
-    public ApiResponse<List<CategoryResponse>> getAll() {
-        return ApiResponse.ok(categoryService.getAll());
+    public ApiResponse<List<CategoryResponse>> getAll(@RequestParam(required = false) Long storeId) {
+        return ApiResponse.ok(categoryService.getAll(storeId));
     }
 }

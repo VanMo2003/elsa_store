@@ -28,13 +28,17 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      * sản phẩm của danh mục con (chọn "Áo" ra cả "Áo sơ mi").
      */
     String PUBLIC_PRODUCTS = """
-        select p from Product p left join p.category c
+        select p from Product p left join p.category c left join c.parent cp
         where (p.status is null or p.status = 1)
           and (p.store is null
                or p.store.approvalStatus = com.example.elsa_store.constant.ApprovalStatus.APPROVED
                or p.store.approvalStatus is null)
           and (p.store is null or (p.store.suspended is null or p.store.suspended = false))
-          and (:categoryId is null or c.id = :categoryId or c.parent.id = :categoryId)
+          and (:categoryId is null or exists (
+                select k.id from Category k left join k.parent kp
+                where k.id = :categoryId
+                  and ((kp.id is null and (lower(c.name) = lower(k.name) or lower(cp.name) = lower(k.name)))
+                    or (kp.id is not null and lower(c.name) = lower(k.name) and lower(cp.name) = lower(kp.name)))))
           and (:storeId is null or p.store.id = :storeId)
         order by p.id desc
     """;

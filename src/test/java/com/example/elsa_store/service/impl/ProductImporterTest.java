@@ -63,7 +63,7 @@ class ProductImporterTest {
         shoes.setId(4L);
         Category bags = Category.builder().name("Túi Xách").build();
         bags.setId(6L);
-        when(categories.findAll()).thenReturn(List.of(shoes, bags));
+        when(categories.findAllByStore_Id(1L)).thenReturn(List.of(shoes, bags));
         existing = Product.builder().name("Túi tote Elsa").store(store).category(bags).status(1).basePrice(350_000.0).build();
         existing.setId(50L);
         when(products.findAllByStore_Id(1L)).thenReturn(List.of(existing));

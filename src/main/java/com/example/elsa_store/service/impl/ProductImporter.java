@@ -89,7 +89,7 @@ public class ProductImporter {
             return result(false, rows.size(), 0, 0, 0, 0, errors);
         }
         Map<String, Category> categories = new HashMap<>();
-        for (Category c : categoryRepository.findAll()) {
+        for (Category c : categoryRepository.findAllByStore_Id(store.getId())) {
             categories.put(key(c.getName()), c);
             categories.put(String.valueOf(c.getId()), c);
         }
@@ -206,7 +206,7 @@ public class ProductImporter {
     /** Tệp mẫu: sheet "Sản phẩm" (tiêu đề + ví dụ) và sheet "Hướng dẫn" (ý nghĩa từng cột, danh mục đang có). */
     @Transactional(readOnly = true)
     public byte[] template() {
-        accessGuard.requireStoreManager();
+        Store templateStore = accessGuard.requireStoreManager();
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             CellStyle bold = workbook.createCellStyle();
             Font font = workbook.createFont();
@@ -220,7 +220,7 @@ public class ProductImporter {
                 cell.setCellValue(HEADERS[c]);
                 cell.setCellStyle(bold);
             }
-            List<Category> categories = categoryRepository.findAll();
+            List<Category> categories = categoryRepository.findAllByStore_Id(templateStore.getId());
             String sampleCategory = categories.isEmpty() ? "Giày" : categories.getFirst().getName();
             Object[][] samples = {
                 {"Giày chạy bộ Elsa Run", sampleCategory, 890000, "Đế êm, thoáng khí", "Đen", "40", "RUN-DEN-40", null, 10, 500000, "Đang bán"},

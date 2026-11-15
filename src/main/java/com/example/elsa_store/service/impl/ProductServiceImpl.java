@@ -89,7 +89,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse create(ProductRequest request, List<MultipartFile> files) {
         Store store = accessGuard.requireStoreMember();
-        Category category = findCategory(request.getCategoryId());
+        Category category = findCategory(request.getCategoryId(), store);
         Product product = ProductMapper.toEntity(request, category);
         product.setStore(store);
         product = productRepository.save(product);
@@ -122,7 +122,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse update(Long id, ProductRequest request) {
         Product product = find(id);
         accessGuard.authorize(product.getStore(), Access.STAFF_WRITE);
-        ProductMapper.updateEntity(product, request, findCategory(request.getCategoryId()));
+        ProductMapper.updateEntity(product, request, findCategory(request.getCategoryId(), product.getStore()));
         return ProductMapper.toResponse(product);
     }
 
@@ -337,12 +337,17 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
     }
 
-    private Category findCategory(Long categoryId) {
+    /** Danh mục phải thuộc chính cửa hàng của sản phẩm (mỗi cửa hàng có bộ danh mục riêng). */
+    private Category findCategory(Long categoryId, Store store) {
         if (categoryId == null) {
             return null;
         }
-        return categoryRepository.findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        if (store == null || category.getStore() == null || !category.getStore().getId().equals(store.getId())) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "categoryId: must be a category of your store");
+        }
+        return category;
     }
 
     /** Đang bán và (nếu có) cửa hàng đã được duyệt. */

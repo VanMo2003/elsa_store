@@ -54,6 +54,8 @@ app:
     unpaid-online-cancel-minutes: ${ORDER_UNPAID_CANCEL_MINUTES:30}
     # Đơn đang giao quá chừng này ngày mà khách chưa bấm "đã nhận hàng" thì tự hoàn thành. 0 = tắt.
     auto-complete-days: ${ORDER_AUTO_COMPLETE_DAYS:7}
+    # Đơn chờ xác nhận quá chừng này giờ thì nhắc người của cửa hàng (mỗi đơn một lần, gộp theo cửa hàng). 0 = tắt.
+    pending-remind-hours: ${ORDER_PENDING_REMIND_HOURS:12}
     # Khách gửi yêu cầu trả hàng trong chừng này ngày sau khi đơn hoàn thành. 0 = tắt đổi trả.
     return-window-days: ${ORDER_RETURN_WINDOW_DAYS:7}
   # Nhắc khách còn hàng trong giỏ sau chừng này giờ không đổi giỏ (mỗi lần bỏ quên nhắc một lần). 0 = tắt.

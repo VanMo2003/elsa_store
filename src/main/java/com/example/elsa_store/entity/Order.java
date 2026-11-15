@@ -59,6 +59,10 @@ public class Order extends BaseEntity {
     @Column(name = "delivery_reminded_at")
     private LocalDateTime deliveryRemindedAt;
 
+    /** Lúc nhắc cửa hàng xử lý đơn chờ xác nhận quá lâu; null = chưa nhắc. */
+    @Column(name = "store_reminded_at")
+    private LocalDateTime storeRemindedAt;
+
     /** Lưu dạng chuỗi (không dùng kiểu enum của MySQL) để thêm trạng thái mới không phải sửa cột. */
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)

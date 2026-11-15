@@ -79,6 +79,14 @@ public class ReportServiceImpl implements ReportService {
         this.violationRepository = violationRepository;
     }
 
+    /** Mốc "đơn chờ quá lâu" cho tổng quan, cùng cấu hình với {@link PendingOrderReminders}; 0 = tắt. */
+    private int pendingRemindHours = 12;
+
+    @Autowired
+    void setPendingRemindHours(@org.springframework.beans.factory.annotation.Value("${app.orders.pending-remind-hours:12}") int hours) {
+        this.pendingRemindHours = Math.max(hours, 0);
+    }
+
     /** Đếm câu hỏi chưa trả lời cho tổng quan (tiêm qua setter để giữ nguyên hàm dựng dùng trong test). */
     @Autowired
     void setQuestionRepository(ProductQuestionRepository questionRepository) {
@@ -674,6 +682,10 @@ public class ReportServiceImpl implements ReportService {
                 .monthGrossProfit(monthRevenue - monthCost.amount())
                 .monthUncostedQuantity(monthCost.uncostedQuantity())
                 .processingOrders(countStatus(scope, OrderStatus.CHUA_XAC_NHAN))
+                .overdueOrders(pendingRemindHours == 0
+                        ? null
+                        : orderRepository.countPendingBefore(LocalDateTime.now().minusHours(pendingRemindHours), scope))
+                .overdueHours(pendingRemindHours == 0 ? null : pendingRemindHours)
                 .confirmedOrders(countStatus(scope, OrderStatus.DA_XAC_NHAN))
                 .shippingOrders(countStatus(scope, OrderStatus.DANG_GIAO))
                 .pendingReturns(scope == null

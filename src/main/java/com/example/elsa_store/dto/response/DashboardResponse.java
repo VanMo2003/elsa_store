@@ -28,6 +28,12 @@ public class DashboardResponse {
     /** Đơn chờ xác nhận. */
     private Long processingOrders;
 
+    /** Trong số đó: đơn chờ quá {@code overdueHours} giờ (đã / sẽ được nhắc). */
+    private Long overdueOrders;
+
+    /** Mốc giờ tính đơn chờ quá lâu ({@code app.orders.pending-remind-hours}); null khi tắt nhắc. */
+    private Integer overdueHours;
+
     /** Đơn đã xác nhận, đang chuẩn bị (chưa giao cho đơn vị vận chuyển). */
     private Long confirmedOrders;
 

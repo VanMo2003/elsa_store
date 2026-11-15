@@ -91,6 +91,26 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     List<Long> findUnpaidOnlineOrderIds(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
 
+    /** Đơn chờ xác nhận đặt trước {@code cutoff} mà chưa nhắc cửa hàng. */
+    @Query("""
+        select o from Order o
+        where o.status = com.example.elsa_store.constant.OrderStatus.CHUA_XAC_NHAN
+          and o.store is not null
+          and o.storeRemindedAt is null
+          and o.orderDate < :cutoff
+        order by o.store.id, o.id
+    """)
+    List<Order> findPendingToRemindStore(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
+
+    /** Số đơn chờ xác nhận đặt trước {@code cutoff} ({@code storeId} null = toàn sàn). */
+    @Query("""
+        select count(o) from Order o
+        where o.status = com.example.elsa_store.constant.OrderStatus.CHUA_XAC_NHAN
+          and o.orderDate < :cutoff
+          and (:storeId is null or o.store.id = :storeId)
+    """)
+    long countPendingBefore(@Param("cutoff") LocalDateTime cutoff, @Param("storeId") Long storeId);
+
     /** Đơn của khách đang giao từ trước {@code cutoff} mà chưa nhắc xác nhận đã nhận hàng. */
     @Query("""
         select o from Order o

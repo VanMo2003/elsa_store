@@ -52,5 +52,7 @@ public enum NotificationType {
     /** Cho khách: nhận xu giới thiệu bạn bè (người mời và người được mời). */
     REFERRAL_REWARD,
     /** Cho khách: cửa hàng gửi ưu đãi cho nhóm khách của mình (có thể kèm mã giảm giá). */
-    STORE_OFFER
+    STORE_OFFER,
+    /** Cho người của cửa hàng: có đơn chờ xác nhận quá lâu (gộp theo cửa hàng). */
+    ORDER_PENDING_REMINDER
 }

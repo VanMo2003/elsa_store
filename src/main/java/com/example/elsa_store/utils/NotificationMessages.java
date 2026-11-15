@@ -207,6 +207,18 @@ public final class NotificationMessages {
                 "Bạn " + friendName + " đã hoàn thành đơn đầu tiên nhờ mã giới thiệu của bạn. Cảm ơn bạn đã giới thiệu Elsa Store!");
     }
 
+    /** Cho cửa hàng: các đơn chờ xác nhận quá {@code hours} giờ (gộp một tin). */
+    public static Message pendingOrders(java.util.List<com.example.elsa_store.entity.Order> orders, int hours) {
+        if (orders.size() == 1) {
+            return new Message("Đơn " + orders.get(0).getCode() + " chờ xác nhận đã hơn " + hours + " giờ",
+                    "Khách đang chờ — xác nhận hoặc liên hệ khách sớm để không mất đơn.");
+        }
+        String codes = String.join(", ", orders.stream().limit(3).map(com.example.elsa_store.entity.Order::getCode).toList())
+                + (orders.size() > 3 ? "…" : "");
+        return new Message(orders.size() + " đơn chờ xác nhận đã hơn " + hours + " giờ",
+                "Gồm " + codes + ". Xác nhận hoặc liên hệ khách sớm để không mất đơn.");
+    }
+
     /** Ưu đãi cửa hàng gửi cho nhóm khách. */
     public static Message storeOffer(String storeName, String message, String couponCode) {
         String body = couponCode == null ? message : message + " Nhập mã " + couponCode + " khi đặt hàng.";

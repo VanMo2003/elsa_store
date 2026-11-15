@@ -207,6 +207,12 @@ public final class NotificationMessages {
                 "Bạn " + friendName + " đã hoàn thành đơn đầu tiên nhờ mã giới thiệu của bạn. Cảm ơn bạn đã giới thiệu Elsa Store!");
     }
 
+    /** Ưu đãi cửa hàng gửi cho nhóm khách. */
+    public static Message storeOffer(String storeName, String message, String couponCode) {
+        String body = couponCode == null ? message : message + " Nhập mã " + couponCode + " khi đặt hàng.";
+        return new Message(storeName + " gửi ưu đãi cho bạn", body);
+    }
+
     public static Message referralWelcome(int coins) {
         return new Message(
                 "Quà chào mừng " + String.format(java.util.Locale.ROOT, "%,d", coins).replace(',', '.') + " xu",

@@ -256,6 +256,10 @@ step(F4, "Gợi ý nhập hàng (sắp hết theo tốc độ bán)", "GET", "/r
      note="Còn bao nhiêu ngày thì hết, nên nhập bao nhiêu để đủ bán 30 ngày, tiền nhập ước tính theo giá vốn.")
 step(F4, "Phân nhóm khách (VIP, thân thiết, mới, sắp rời bỏ, lâu không mua)", "GET", "/customers/segments",
      token="ownerToken", note="Thêm ?segment=AT_RISK để lọc; counts luôn đủ 5 nhóm.")
+step(F4, "Gửi ưu đãi cho nhóm khách Mới", "POST", "/customers/segments/NEW/offers", token="ownerToken",
+     body={"message": "Cảm ơn bạn đã mua hàng, ghé shop xem mẫu mới nhé!"},
+     note="Kèm promotionId của mã đang chạy để gửi mã; mỗi nhóm 1 lần / 24 giờ (1034).")
+step(F4, "Lịch sử gửi ưu đãi", "GET", "/customers/segments/offers", token="ownerToken")
 step(F4, "AI nhận xét báo cáo kỳ (tóm tắt, nổi bật, việc nên làm)", "POST", "/ai/report-insights", token="ownerToken",
      body={"from": "{{today}}", "to": "{{today}}"},
      note="Mô hình chỉ thấy bảng số thật của kỳ. Chưa bật AI / AI bận / hỏi quá 10 lần mỗi 10 phút: ai=false, nhận xét theo quy tắc kèm notice.")

@@ -20,6 +20,8 @@ public enum NotificationGroup {
     STORE_REPLIES(false, NotificationType.REVIEW_REPLIED, NotificationType.QUESTION_ANSWERED),
     /** Khách: còn hàng trong giỏ đã lâu chưa đặt. */
     CART_REMINDER(false, NotificationType.CART_REMINDER),
+    /** Khách: cửa hàng đã mua gửi ưu đãi / mã giảm giá. */
+    STORE_OFFERS(false, NotificationType.STORE_OFFER),
     /** Người của cửa hàng: khách viết đánh giá / đặt câu hỏi mới. */
     CUSTOMER_FEEDBACK(true, NotificationType.REVIEW_NEW, NotificationType.QUESTION_NEW);
 

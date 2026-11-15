@@ -19,10 +19,30 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final CustomerSegments customerSegments;
+    private final com.example.elsa_store.service.SegmentCampaigns segmentCampaigns;
 
-    public CustomerController(CustomerService customerService, CustomerSegments customerSegments) {
+    public CustomerController(CustomerService customerService, CustomerSegments customerSegments,
+                              com.example.elsa_store.service.SegmentCampaigns segmentCampaigns) {
         this.customerService = customerService;
         this.customerSegments = customerSegments;
+        this.segmentCampaigns = segmentCampaigns;
+    }
+
+    /**
+     * Chủ / quản lý gửi ưu đãi (lời nhắn, có thể kèm mã giảm giá đang chạy) cho mọi khách có tài khoản trong nhóm; mỗi nhóm
+     * tối đa một lần / 24 giờ (mã lỗi 1034).
+     */
+    @PostMapping("/segments/{segment}/offers")
+    public ApiResponse<com.example.elsa_store.dto.response.SegmentCampaignResponse> sendOffer(
+            @PathVariable CustomerSegment segment,
+            @Valid @RequestBody com.example.elsa_store.dto.request.SegmentOfferRequest request) {
+        return ApiResponse.ok(segmentCampaigns.send(segment, request));
+    }
+
+    /** 20 lần gửi ưu đãi gần nhất của cửa hàng. */
+    @GetMapping("/segments/offers")
+    public ApiResponse<List<com.example.elsa_store.dto.response.SegmentCampaignResponse>> offerHistory() {
+        return ApiResponse.ok(segmentCampaigns.history());
     }
 
     /**

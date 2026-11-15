@@ -41,7 +41,8 @@ public enum ErrorCode {
     ALREADY_CHECKED_IN(1030, "Already checked in today, come back tomorrow", HttpStatus.CONFLICT),
     INVALID_REFERRAL_CODE(1031, "Referral code is invalid", HttpStatus.BAD_REQUEST),
     REFERRAL_NOT_ALLOWED(1032, "Referral code can no longer be added to this account", HttpStatus.BAD_REQUEST),
-    CART_OTHER_STORE(1033, "Cart has products from another store", HttpStatus.BAD_REQUEST);
+    CART_OTHER_STORE(1033, "Cart has products from another store", HttpStatus.BAD_REQUEST),
+    CAMPAIGN_TOO_SOON(1034, "An offer was already sent to this segment in the last 24 hours", HttpStatus.TOO_MANY_REQUESTS);
 
     private int code;
     private String message;

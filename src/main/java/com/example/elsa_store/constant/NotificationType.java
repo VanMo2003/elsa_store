@@ -50,5 +50,7 @@ public enum NotificationType {
     /** Cho khách: đơn đang giao đã lâu, nhắc bấm "Đã nhận hàng" trước khi đơn tự hoàn thành. */
     ORDER_DELIVERY_CHECK,
     /** Cho khách: nhận xu giới thiệu bạn bè (người mời và người được mời). */
-    REFERRAL_REWARD
+    REFERRAL_REWARD,
+    /** Cho khách: cửa hàng gửi ưu đãi cho nhóm khách của mình (có thể kèm mã giảm giá). */
+    STORE_OFFER
 }

@@ -33,6 +33,9 @@ public interface ReportService {
 
     CancellationRateResponse cancellationRate(LocalDate from, LocalDate to, Long storeId);
 
+    /** Khách mới và khách quay lại trong kỳ (số khách, doanh thu, % doanh thu từ khách mới). */
+    CustomerMixResponse customerMix(LocalDate from, LocalDate to, Long storeId);
+
     List<LowStockResponse> lowStock(Long storeId);
 
     /** Chủ / quản lý đặt mục tiêu doanh thu tháng (trống / 0 = bỏ); trả tổng quan mới. */

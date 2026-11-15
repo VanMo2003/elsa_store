@@ -91,6 +91,33 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     List<Long> findUnpaidOnlineOrderIds(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
 
+    /**
+     * Khách mới / quay lại: mỗi dòng {customerId (null = đơn không gắn khách), số đơn, tiền} của đơn hoàn thành trong kỳ.
+     */
+    @Query("""
+        select o.customer.id, count(o.id), coalesce(sum(o.finalAmount), 0)
+        from Order o left join o.customer
+        where o.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+          and coalesce(o.completedAt, o.orderDate) >= :start
+          and coalesce(o.completedAt, o.orderDate) < :end
+          and (:storeId is null or o.store.id = :storeId)
+        group by o.customer.id
+    """)
+    List<Object[]> completedByCustomer(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+                                       @Param("storeId") Long storeId);
+
+    /** Trong {@code customerIds}: những khách đã có đơn hoàn thành trước {@code start} (cùng phạm vi). */
+    @Query("""
+        select distinct o.customer.id from Order o
+        where o.status = com.example.elsa_store.constant.OrderStatus.HOAN_THANH
+          and coalesce(o.completedAt, o.orderDate) < :start
+          and o.customer.id in :customerIds
+          and (:storeId is null or o.store.id = :storeId)
+    """)
+    List<Long> customersWithCompletedBefore(@Param("start") LocalDateTime start,
+                                            @Param("customerIds") java.util.Collection<Long> customerIds,
+                                            @Param("storeId") Long storeId);
+
     /** Đơn chờ xác nhận đặt trước {@code cutoff} mà chưa nhắc cửa hàng. */
     @Query("""
         select o from Order o

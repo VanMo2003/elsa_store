@@ -164,6 +164,15 @@ public class ReportController {
         return ApiResponse.ok(reportService.restockSuggestions(days, horizon, cover, limit, storeId));
     }
 
+    /** Khách mới và khách quay lại trong kỳ (chủ / quản lý; ADMIN chọn storeId hoặc toàn sàn). */
+    @GetMapping("/customer-mix")
+    public ApiResponse<CustomerMixResponse> customerMix(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long storeId) {
+        return ApiResponse.ok(reportService.customerMix(from, to, storeId));
+    }
+
     @GetMapping("/slow-movers")
     public ApiResponse<List<SlowMoverResponse>> slowMovers(
             @RequestParam(defaultValue = "30") int days,

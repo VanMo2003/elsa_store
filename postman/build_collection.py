@@ -253,6 +253,8 @@ step(F4, "Giờ vàng: đơn theo thứ và giờ đặt hàng", "GET", "/report
 step(F4, "Hàng chậm bán (còn tồn, 30 ngày không bán)", "GET", "/reports/slow-movers", token="ownerToken",
      query={"days": "30", "limit": "20"},
      note="Còn tồn kho, theo dõi kho từ trước mốc và không có đơn (trừ huỷ) từ mốc; vốn tồn (tồn × giá vốn) nhiều nhất trước.")
+step(F4, "Khách mới / khách quay lại trong kỳ", "GET", "/reports/customer-mix", token="ownerToken",
+     query={"from": "{{today}}", "to": "{{today}}"})
 step(F4, "Gợi ý nhập hàng (sắp hết theo tốc độ bán)", "GET", "/reports/restock-suggestions", token="ownerToken",
      query={"days": "30", "horizon": "14", "cover": "30"},
      note="Còn bao nhiêu ngày thì hết, nên nhập bao nhiêu để đủ bán 30 ngày, tiền nhập ước tính theo giá vốn.")

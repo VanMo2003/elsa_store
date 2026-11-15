@@ -141,6 +141,33 @@ class ReportServiceImplTest {
     }
 
     @Test
+    void customerMixSplitsNewAndReturningCustomers() {
+        when(orders.completedByCustomer(FROM.atStartOfDay(), TO.plusDays(1).atStartOfDay(), 1L)).thenReturn(rows(
+                new Object[] {7L, 2L, 600_000.0},   // mua lần đầu trong kỳ
+                new Object[] {8L, 1L, 400_000.0},   // đã mua trước kỳ
+                new Object[] {null, 3L, 900_000.0})); // đơn tại quầy không gắn khách
+        when(orders.customersWithCompletedBefore(eq(FROM.atStartOfDay()), any(), eq(1L))).thenReturn(List.of(8L));
+
+        var mix = service.customerMix(FROM, TO, null);
+
+        assertEquals(1, mix.newCustomers());
+        assertEquals(1, mix.returningCustomers());
+        assertEquals(600_000, mix.newRevenue());
+        assertEquals(400_000, mix.returningRevenue());
+        assertEquals(60.0, mix.newShare());
+        assertEquals(3, mix.guestOrders());
+    }
+
+    @Test
+    void customerMixWithoutSalesHasNoShare() {
+        when(orders.completedByCustomer(any(), any(), eq(1L))).thenReturn(List.of());
+        var mix = service.customerMix(FROM, TO, null);
+        assertEquals(0, mix.newCustomers());
+        assertNull(mix.newShare());
+        verify(orders, never()).customersWithCompletedBefore(any(), any(), any());
+    }
+
+    @Test
     void slowMoverWindowAndSizeAreClampedAndAdminSeesTheWholeMarket() {
         User admin = User.builder().username("admin").role(Role.ADMIN).build();
         when(accessGuard.currentUser()).thenReturn(admin);

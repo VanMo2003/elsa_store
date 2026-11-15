@@ -362,6 +362,40 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
+    public CustomerMixResponse customerMix(LocalDate from, LocalDate to, Long storeId) {
+        checkRange(from, to);
+        Long scope = scope(storeId);
+        java.util.Map<Long, Double> revenueByCustomer = new java.util.HashMap<>();
+        long guestOrders = 0;
+        for (Object[] row : orderRepository.completedByCustomer(start(from), endExclusive(to), scope)) {
+            double revenue = number(row[2]).doubleValue();
+            if (row[0] == null) {
+                guestOrders += number(row[1]).longValue();
+            } else {
+                revenueByCustomer.put(number(row[0]).longValue(), revenue);
+            }
+        }
+        java.util.Set<Long> returning = revenueByCustomer.isEmpty()
+                ? java.util.Set.of()
+                : new java.util.HashSet<>(orderRepository.customersWithCompletedBefore(
+                        start(from), revenueByCustomer.keySet(), scope));
+        long newCount = 0;
+        double newRevenue = 0;
+        double returningRevenue = 0;
+        for (var entry : revenueByCustomer.entrySet()) {
+            if (returning.contains(entry.getKey())) {
+                returningRevenue += entry.getValue();
+            } else {
+                newCount++;
+                newRevenue += entry.getValue();
+            }
+        }
+        double total = newRevenue + returningRevenue;
+        return new CustomerMixResponse(newCount, revenueByCustomer.size() - newCount, Math.round(newRevenue),
+                Math.round(returningRevenue), total > 0 ? round1(newRevenue / total * 100) : null, guestOrders);
+    }
+
+    @Override
     public CancellationRateResponse cancellationRate(LocalDate from, LocalDate to, Long storeId) {
         checkRange(from, to);
         Long scope = scope(storeId);

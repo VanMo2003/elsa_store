@@ -22,6 +22,7 @@ public class Category extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Category parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    /** Danh mục con (tầng 2). Không cascade xoá: service chặn xoá danh mục còn con. */
+    @OneToMany(mappedBy = "parent")
     private List<Category> children;
 }

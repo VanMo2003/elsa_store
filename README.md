@@ -547,6 +547,20 @@ sai mật khẩu báo `1022`, còn đơn chưa xong (chờ xác nhận / đã x�
 sổ địa chỉ ẩn danh, giỏ hàng / yêu thích / theo dõi / thông báo / thiết bị push bị xoá; tài khoản bị khoá và mọi token
 hết hiệu lực (`AccountDeletion`).
 
+## Danh mục sản phẩm (2 tầng)
+
+Bảng `categories` tự tham chiếu qua cột **`parent_id`**: trống = danh mục **tầng 1** (vd. "Áo sơ mi"), có giá trị = id của
+danh mục cha tầng 1 → danh mục **tầng 2** (vd. "Sơ mi ngắn tay", "Sơ mi dài tay"). ADMIN quản lý (`POST /categories`,
+`PUT /categories/{id}` `{name, parentId}`, `DELETE /categories/{id}`); ai cũng đọc được `GET /categories`.
+
+- Chỉ 2 tầng: danh mục cha phải là tầng 1 (không có tầng 3), không làm cha của chính nó; danh mục tầng 1 đang có con thì
+  không chuyển thành tầng 2. Danh mục con chuyển được sang cha khác hoặc lên tầng 1 (gửi `parentId: null`).
+- Tên (≤ 100 ký tự, gộp khoảng trắng) không trùng với danh mục **cùng cấp / cùng cha** (không phân biệt hoa thường).
+- Không xoá danh mục còn danh mục con hoặc còn sản phẩm (đã bỏ cascade xoá dây chuyền ở entity).
+- `GET /categories` trả dạng cây phẳng: mỗi danh mục cha (A→Z theo tiếng Việt) rồi ngay sau là các con (A→Z); mỗi dòng có
+  `level` (1 / 2), `parentId`, `parentName`, `childCount`, `productCount`. Lọc sản phẩm theo danh mục cha lấy luôn sản phẩm
+  của các danh mục con.
+
 ## Vai trò và phân quyền
 
 Năm vai trò: `ADMIN`, `STORE_OWNER`, `STORE_MANAGER`, `STAFF`, `USER`. Mỗi cửa hàng (`Store`) là một

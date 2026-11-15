@@ -15,6 +15,12 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     List<Product> findAllByCategory_Id(Long categoryId);
 
+    long countByCategory_Id(Long categoryId);
+
+    /** Số sản phẩm theo danh mục: mỗi dòng {categoryId, số sản phẩm}. */
+    @Query("select p.category.id, count(p) from Product p where p.category is not null group by p.category.id")
+    List<Object[]> countByCategory();
+
     List<Product> findAllByStore_Id(Long storeId);
 
     /**

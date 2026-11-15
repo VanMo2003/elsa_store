@@ -23,7 +23,7 @@ toàn bộ API (trích tự động từ controller).
 - **Khám phá:** trang chủ có banner, đang giảm giá, bán chạy, đã xem gần đây, **gợi ý cho bạn**, hàng mới theo danh mục;
   tìm kiếm có gợi ý khi gõ, lịch sử, lọc danh mục / giá, sắp xếp; trang cửa hàng công khai (đánh giá, số đã bán, người
   theo dõi, sản phẩm); trang sản phẩm (bộ ảnh, phân loại, đếm ngược khuyến mãi, mã giảm giá của cửa hàng, **hướng dẫn chọn
-  size**, đánh giá có ảnh + "hữu ích", **"Khách nói gì"** (AI tóm tắt đánh giá: ưu điểm, điểm cần lưu ý), hỏi đáp, "khách mua cũng mua", sản phẩm tương tự, chia sẻ liên kết).
+  size**, **so sánh tối đa 3 sản phẩm**, đánh giá có ảnh + "hữu ích", **"Khách nói gì"** (AI tóm tắt đánh giá: ưu điểm, điểm cần lưu ý), hỏi đáp, "khách mua cũng mua", sản phẩm tương tự, chia sẻ liên kết).
 - **Mua hàng:** giỏ hàng (giá luôn theo khuyến mãi hiện tại, báo hết hàng), báo giá có mã giảm giá + phí giao + **dùng
   xu**, đặt hàng COD / VNPay (tự huỷ đơn VNPay chưa trả sau 30 phút), theo dõi trạng thái + dòng thời gian, **mã vận đơn**
   (đơn vị vận chuyển + mã, sao chép để tra cứu), huỷ kèm lý do, bấm "đã nhận hàng" (nhắc trước 2 ngày, tự hoàn thành sau 7 ngày), mua lại (thanh toán ngay hoặc **thêm lại vào giỏ**), yêu cầu trả hàng trong 7 ngày.
@@ -62,6 +62,7 @@ toàn bộ API (trích tự động từ controller).
 |---|---|---|
 | `OrderAutomation` | 5 phút | Huỷ đơn VNPay chưa trả quá 30 phút (hoàn kho, hoàn xu); tự hoàn thành đơn đang giao quá 7 ngày |
 | `DeliveryReminders` | 1 giờ | Nhắc khách bấm "đã nhận hàng" khi đơn đã giao 5 ngày (mỗi đơn một lần) |
+| `PendingOrderReminders` | 15 phút | Nhắc người của cửa hàng các đơn chờ xác nhận quá 12 giờ (gộp một tin mỗi cửa hàng, mỗi đơn một lần) |
 | `CartReminders` | 1 giờ | Nhắc giỏ hàng không đổi quá 24 giờ (mỗi lần bỏ quên một lần) |
 | Dọn dữ liệu bảo mật | 1 giờ / 15 phút | Xoá mã OTP hết hạn và token đã đăng xuất hết hạn (1 giờ); xoá bộ đếm đăng nhập sai cũ (15 phút) |
 

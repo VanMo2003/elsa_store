@@ -420,7 +420,7 @@ Hibernate tự thêm bảng và cột mới. Các cột mới đều cho phép �
   `https://<tên-miền>/elsa-store/api`.
 - Xác thực bằng header `Authorization: Bearer <accessToken>`. Lấy token từ `POST /auth/login`; làm mới bằng
   `POST /auth/refreshToken`.
-- Danh sách đầy đủ 241 endpoint ở [`docs/TINH_NANG.md`](TINH_NANG.md) (phụ lục). Request mẫu có sẵn body ở bộ Postman
+- Danh sách đầy đủ 244 endpoint ở [`docs/TINH_NANG.md`](TINH_NANG.md) (phụ lục). Request mẫu có sẵn body ở bộ Postman
   `postman/elsa_store.postman_collection.json`.
 
 Các nhóm chính:

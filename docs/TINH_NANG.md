@@ -33,7 +33,7 @@ toàn bộ API (trích tự động từ controller).
 
 ### Nhân viên, quản lý, chủ cửa hàng
 - **Đơn hàng:** danh sách phân trang + đếm theo trạng thái, xác nhận → giao (kèm đơn vị vận chuyển + mã vận đơn, sửa được
-  khi đang giao) → hoàn thành / huỷ, bán tại quầy, xuất Excel
+  khi đang giao) → hoàn thành / huỷ, **ghi chú nội bộ** (khách không thấy), **nhắc đơn chờ quá 12 giờ**, bán tại quầy, xuất Excel
   (chủ / quản lý), xử lý trả hàng (nhân viên duyệt, chủ / quản lý hoàn tiền).
 - **Sản phẩm & kho:** sản phẩm, phân loại, bộ ảnh tối đa 10, ẩn / mở bán, **AI viết mô tả** (bản nháp từ tên, danh mục,
   màu / cỡ và gợi ý đã gõ; không có AI thì mẫu soạn sẵn), **nhập hàng loạt từ Excel** (tệp mẫu, xem trước,
@@ -47,7 +47,7 @@ toàn bộ API (trích tự động từ controller).
   làm), **AI nhận xét kỳ** (tóm tắt, điểm nổi bật, việc nên làm từ số liệu thật; không có AI thì theo quy tắc), **giờ vàng**
   (bản đồ nhiệt đơn theo thứ × giờ đặt), doanh thu theo ngày / tuần / tháng /
   năm, so với kỳ trước, sản phẩm bán chạy kèm lãi, danh mục, kênh bán & cách trả tiền, khách mua nhiều, hiệu suất nhân
-  viên, tỷ lệ huỷ, hoàn tiền, **lượt xem & chuyển đổi**, hàng sắp hết, **nên nhập thêm** (hết sau bao lâu theo tốc độ bán, số nên nhập, tiền ước tính), **hàng chậm bán** (còn tồn mà 30 ngày không bán, vốn tồn), xuất Excel nhiều sheet.
+  viên, tỷ lệ huỷ, hoàn tiền, **lượt xem & chuyển đổi**, hàng sắp hết, **khách mới & quay lại**, **nên nhập thêm** (hết sau bao lâu theo tốc độ bán, số nên nhập, tiền ước tính), **hàng chậm bán** (còn tồn mà 30 ngày không bán, vốn tồn), xuất Excel nhiều sheet.
 - **Quản trị cửa hàng:** thông tin, logo, nhân sự (chủ tạo quản lý / nhân viên, khoá thay vì xoá), tuỳ chọn thông báo.
 
 ### Quản trị (ADMIN)
@@ -92,7 +92,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
   (`test/contract/api_contract_test.dart`, bật bằng `--dart-define=ELSA_CONTRACT=true`).
 - CI GitHub Actions cho cả hai repo.
 
-## Phụ lục: danh sách API (244 endpoint)
+## Phụ lục: danh sách API (246 endpoint)
 
 Đường dẫn tương đối với `/elsa-store/api`. Quyền từng endpoint xem README BE (phần Vai trò và phân quyền) và Postman.
 
@@ -228,6 +228,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
 - `PUT /orders/{orderId}/status`
 - `PUT /orders/{orderId}/tracking`
 - `POST /orders/{id}/reorder`
+- `PUT /orders/{orderId}/internal-note`
 - `PUT /orders/{orderId}/payment-status`
 - `GET /orders/page`
 - `GET /orders/export`
@@ -355,6 +356,7 @@ Khách tắt được các nhóm tiếp thị (giảm giá, sản phẩm mới, 
 - `GET /reports/sales-by-time`
 - `GET /reports/stores`
 - `GET /reports/low-stock`
+- `GET /reports/customer-mix`
 - `GET /reports/restock-suggestions`
 - `GET /reports/slow-movers`
 - `GET /reports/export`

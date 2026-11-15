@@ -20,12 +20,30 @@ public class CustomerController {
     private final CustomerService customerService;
     private final CustomerSegments customerSegments;
     private final com.example.elsa_store.service.SegmentCampaigns segmentCampaigns;
+    private final com.example.elsa_store.service.CustomerSegmentExcel segmentExcel;
 
     public CustomerController(CustomerService customerService, CustomerSegments customerSegments,
-                              com.example.elsa_store.service.SegmentCampaigns segmentCampaigns) {
+                              com.example.elsa_store.service.SegmentCampaigns segmentCampaigns,
+                              com.example.elsa_store.service.CustomerSegmentExcel segmentExcel) {
         this.customerService = customerService;
         this.customerSegments = customerSegments;
         this.segmentCampaigns = segmentCampaigns;
+        this.segmentExcel = segmentExcel;
+    }
+
+    /** Chủ / quản lý: tải danh sách khách theo nhóm ra Excel ({@code segment} trống = mọi nhóm). */
+    @GetMapping("/segments/export")
+    public org.springframework.http.ResponseEntity<byte[]> exportSegments(
+            @RequestParam(required = false) CustomerSegment segment) {
+        byte[] file = segmentExcel.export(segment);
+        String name = "khach-hang" + (segment == null ? "" : "-" + segment.name().toLowerCase().replace('_', '-')) + ".xlsx";
+        return org.springframework.http.ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment()
+                                .filename(name, java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .body(file);
     }
 
     /**

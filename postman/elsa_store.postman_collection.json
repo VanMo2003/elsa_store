@@ -5098,6 +5098,46 @@
           }
         },
         {
+          "name": "Tải danh sách khách theo nhóm (Excel)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/segments/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "segments",
+                "export"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Thêm ?segment=AT_RISK để chỉ lấy một nhóm."
+          }
+        },
+        {
           "name": "AI nhận xét báo cáo kỳ (tóm tắt, nổi bật, việc nên làm)",
           "event": [
             {

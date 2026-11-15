@@ -88,6 +88,13 @@ public class OrderController {
         return ApiResponse.ok(orderResponse);
     }
 
+    /** Ghi chú nội bộ của cửa hàng cho đơn (nhân viên trở lên; khách không thấy); gửi trống để xoá. */
+    @PutMapping("/{orderId}/internal-note")
+    public ApiResponse<OrderResponse> updateInternalNote(
+            @PathVariable Long orderId, @Valid @RequestBody com.example.elsa_store.dto.request.InternalNoteRequest request) {
+        return ApiResponse.ok(orderService.updateInternalNote(orderId, request.note()));
+    }
+
     /** Sửa đơn vị vận chuyển / mã vận đơn của đơn đang giao (nhân viên trở lên). */
     @PutMapping("/{orderId}/tracking")
     public ApiResponse<OrderResponse> updateTracking(

@@ -58,6 +58,9 @@ public interface OrderService {
     /** Sửa đơn vị vận chuyển / mã vận đơn của đơn đang giao (nhân viên trở lên); báo khách khi có mã mới. */
     OrderResponse updateTracking(Long orderId, String carrier, String trackingCode);
 
+    /** Người của cửa hàng ghi / sửa / xoá (trống) ghi chú nội bộ của đơn. */
+    OrderResponse updateInternalNote(Long orderId, String note);
+
     OrderResponse updatePaymentStatus(Long orderId, PaymentStatus paymentStatus);
 
     /**

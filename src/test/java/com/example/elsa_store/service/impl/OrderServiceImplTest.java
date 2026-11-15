@@ -444,6 +444,29 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void internalNoteIsForTheStoreOnly() {
+        when(accessGuard.currentUser()).thenReturn(staff);
+        Order order = placed(OrderStatus.CHUA_XAC_NHAN, PaymentStatus.CHUA_THANH_TOAN);
+
+        OrderResponse res = service.updateInternalNote(900L, "  Khách hẹn giao sau 17h  ");
+        assertEquals("Khách hẹn giao sau 17h", res.getInternalNote());
+        assertEquals("Khách hẹn giao sau 17h", order.getInternalNote());
+        assertEquals(staff, order.getInternalNoteBy());
+        assertNotNull(order.getInternalNoteAt());
+
+        when(accessGuard.currentUser()).thenReturn(buyer);
+        assertNull(service.getById(900L).getInternalNote(), "khách không bao giờ thấy ghi chú nội bộ");
+        AppException customer = assertThrows(AppException.class, () -> service.updateInternalNote(900L, "x"));
+        assertEquals(ErrorCode.UN_AUTHORIZED, customer.getErrorCode());
+
+        when(accessGuard.currentUser()).thenReturn(staff);
+        service.updateInternalNote(900L, " ");
+        assertNull(order.getInternalNote());
+        assertNull(order.getInternalNoteBy());
+        assertThrows(AppException.class, () -> service.updateInternalNote(900L, "a".repeat(1001)));
+    }
+
+    @Test
     void customerConfirmsReceiptOnlyWhileTheOrderIsBeingDelivered() {
         Order order = placed(OrderStatus.DANG_GIAO, PaymentStatus.CHUA_THANH_TOAN);
         order.setShippingAddress("1 Nguyen Hue, Q1");

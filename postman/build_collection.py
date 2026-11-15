@@ -152,6 +152,8 @@ step(F3, "Nhân viên giao cho đơn vị vận chuyển (kèm mã vận đơn)"
      note="carrier / trackingCode tuỳ chọn, chỉ nhận khi chuyển sang DANG_GIAO; mã chỉ gồm chữ không dấu, số và - _ . /.")
 step(F3, "Sửa mã vận đơn khi đang giao (khách nhận thông báo mã mới)", "PUT", "/orders/{{orderId}}/tracking",
      token="staffToken", body={"carrier": "Giao Hàng Nhanh", "trackingCode": "GHN{{runSuffix}}X"})
+step(F3, "Ghi chú nội bộ cho đơn (khách không thấy)", "PUT", "/orders/{{orderId}}/internal-note", token="staffToken",
+     body={"note": "Khách hẹn giao sau 17h"}, note="Gửi note trống để xoá; tối đa 1000 ký tự.")
 step(F3, "Khách bấm Đã nhận được hàng (hoàn thành, ghi nhận doanh thu)", "PUT", "/orders/{{orderId}}/status",
      token="customerToken", query={"status": "HOAN_THANH"})
 step(F3, "Chi tiết đơn kèm dòng thời gian", "GET", "/orders/{{orderId}}", token="customerToken")

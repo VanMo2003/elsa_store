@@ -52,6 +52,11 @@ public class OrderResponse {
     /** Đơn vị vận chuyển và mã vận đơn cửa hàng nhập khi giao (có thể trống). */
     private String shippingCarrier;
     private String trackingCode;
+
+    /** Ghi chú nội bộ của cửa hàng — chỉ trả cho người của cửa hàng và ADMIN. */
+    private String internalNote;
+    private String internalNoteBy;
+    private java.time.LocalDateTime internalNoteAt;
     /** Xu đã dùng cho đơn (null = không dùng). */
     private Integer coinsUsed;
     /** Xu đã nhận khi đơn hoàn thành. */

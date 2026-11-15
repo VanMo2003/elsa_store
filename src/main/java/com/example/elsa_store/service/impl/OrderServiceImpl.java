@@ -662,6 +662,26 @@ public class OrderServiceImpl implements OrderService {
         return toResponse(order, viewer(current), true);
     }
 
+    @Override
+    public OrderResponse updateInternalNote(Long orderId, String note) {
+        Order order = find(orderId);
+        User current = accessGuard.currentUser();
+        if (current.getRole() == Role.USER) {
+            throw new AppException(ErrorCode.UN_AUTHORIZED);
+        }
+        accessGuard.authorize(order.getStore(), Access.STAFF_WRITE);
+        User staff = current;
+        String value = trimToNull(note);
+        if (value != null && value.length() > 1000) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "note: must be at most 1000 characters");
+        }
+        order.setInternalNote(value);
+        order.setInternalNoteBy(value == null ? null : staff);
+        order.setInternalNoteAt(value == null ? null : LocalDateTime.now());
+        order = orderRepository.save(order);
+        return toResponse(order, viewer(current), true);
+    }
+
     /** Đơn vị vận chuyển + mã vận đơn đã cắt khoảng trắng; mã viết hoa cho dễ đọc / dò. */
     record Tracking(String carrier, String code) {
         static final int MAX_LENGTH = 50;
@@ -877,6 +897,14 @@ public class OrderServiceImpl implements OrderService {
                     ? customer.getFullName()
                     : account != null ? (account.getFullName() != null ? account.getFullName() : account.getUsername()) : null);
             res.setCustomerPhone(customer.getPhone() != null ? customer.getPhone() : account != null ? account.getPhone() : null);
+        }
+        // Ghi chú nội bộ chỉ cho người của cửa hàng / ADMIN, không bao giờ cho khách.
+        if (viewer != null && viewer.user() != null && viewer.user().getRole() != Role.USER
+                && order.getInternalNote() != null) {
+            res.setInternalNote(order.getInternalNote());
+            res.setInternalNoteAt(order.getInternalNoteAt());
+            User by = order.getInternalNoteBy();
+            res.setInternalNoteBy(by == null ? null : by.getFullName() != null ? by.getFullName() : by.getUsername());
         }
         if (order.getHandledBy() != null) {
             User staff = order.getHandledBy();

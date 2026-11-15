@@ -59,6 +59,17 @@ public class Order extends BaseEntity {
     @Column(name = "delivery_reminded_at")
     private LocalDateTime deliveryRemindedAt;
 
+    /** Ghi chú nội bộ của cửa hàng (khách không thấy). */
+    @Column(name = "internal_note", columnDefinition = "TEXT")
+    private String internalNote;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "internal_note_by")
+    private User internalNoteBy;
+
+    @Column(name = "internal_note_at")
+    private LocalDateTime internalNoteAt;
+
     /** Lúc nhắc cửa hàng xử lý đơn chờ xác nhận quá lâu; null = chưa nhắc. */
     @Column(name = "store_reminded_at")
     private LocalDateTime storeRemindedAt;

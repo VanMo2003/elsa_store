@@ -260,6 +260,9 @@ trừ kho và không tạo đơn — app dùng để hiện màn thanh toán.
   gian ghi "GHN · MÃ" khi không có ghi chú riêng. Đơn đang giao sửa được bằng `PUT /orders/{id}/tracking`
   `{carrier, trackingCode}` (nhân viên trở lên; gửi trống để xoá) — mã mới thì khách nhận thông báo trong app (không gửi
   email lần nữa). Excel đơn hàng có thêm cột "Vận chuyển", "Mã vận đơn".
+- **Ghi chú nội bộ** (`PUT /orders/{id}/internal-note {note}`, nhân viên trở lên của cửa hàng; ≤ 1000 ký tự, gửi trống để xoá):
+  lưu `orders.internal_note` kèm người ghi / thời điểm (`internalNoteBy`, `internalNoteAt`). Chỉ trả cho người của cửa hàng
+  và ADMIN — khách xem đơn (chi tiết lẫn danh sách) không bao giờ thấy.
 - **Mua lại** (`POST /orders/{id}/reorder?replace=`, chỉ khách đặt đơn): thêm lại các món của đơn cũ vào giỏ với giá và khuyến mãi hiện tại (`Reorders`). Không đủ số lượng cũ thì thử bớt dần tới 1; ngừng bán / hết hàng thì bỏ qua — trả
   `{cart, added, skipped[]}` (món bỏ qua / thêm thiếu kèm lý do). Giỏ đang có hàng cửa hàng khác thì lỗi `1033`, gửi `replace=true` để xoá giỏ cũ trước. Mỗi món thêm trong transaction riêng của giỏ nên một món lỗi không hỏng cả lượt.
 - **Tự xử lý đơn bị bỏ quên** (`OrderAutomation`, mỗi 5 phút): đơn VNPay chưa trả sau 30 phút (tính từ lúc đặt và lần

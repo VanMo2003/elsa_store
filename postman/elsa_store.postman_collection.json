@@ -2677,6 +2677,52 @@
           }
         },
         {
+          "name": "Khách: Mua lại đơn đã nhận (thêm lại vào giỏ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/reorder?replace=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "reorder"
+              ],
+              "query": [
+                {
+                  "key": "replace",
+                  "value": "true"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Trả {cart, added, skipped}; giỏ có hàng cửa hàng khác thì 1033 trừ khi replace=true."
+          }
+        },
+        {
           "name": "Cửa hàng: danh sách đơn phân trang, tìm theo SĐT",
           "event": [
             {

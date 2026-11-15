@@ -40,7 +40,8 @@ public enum ErrorCode {
             1029, "Too many unanswered questions for this product, wait for the store to reply", HttpStatus.TOO_MANY_REQUESTS),
     ALREADY_CHECKED_IN(1030, "Already checked in today, come back tomorrow", HttpStatus.CONFLICT),
     INVALID_REFERRAL_CODE(1031, "Referral code is invalid", HttpStatus.BAD_REQUEST),
-    REFERRAL_NOT_ALLOWED(1032, "Referral code can no longer be added to this account", HttpStatus.BAD_REQUEST);
+    REFERRAL_NOT_ALLOWED(1032, "Referral code can no longer be added to this account", HttpStatus.BAD_REQUEST),
+    CART_OTHER_STORE(1033, "Cart has products from another store", HttpStatus.BAD_REQUEST);
 
     private int code;
     private String message;

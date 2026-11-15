@@ -28,9 +28,21 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
+    private final com.example.elsa_store.service.Reorders reorders;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, com.example.elsa_store.service.Reorders reorders) {
         this.orderService = orderService;
+        this.reorders = reorders;
+    }
+
+    /**
+     * Khách: "Mua lại" — thêm các món của đơn cũ vào giỏ với giá hiện tại; món hết hàng / ngừng bán bị bỏ qua và báo lại.
+     * Giỏ đang có hàng của cửa hàng khác thì lỗi 1033, gửi {@code replace=true} để xoá giỏ cũ trước.
+     */
+    @PostMapping("/{id}/reorder")
+    public ApiResponse<com.example.elsa_store.dto.response.ReorderResponse> reorder(
+            @PathVariable Long id, @RequestParam(defaultValue = "false") boolean replace) {
+        return ApiResponse.ok(reorders.reorder(id, replace));
     }
 
     @PostMapping

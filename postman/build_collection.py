@@ -155,6 +155,9 @@ step(F3, "Sửa mã vận đơn khi đang giao (khách nhận thông báo mã m�
 step(F3, "Khách bấm Đã nhận được hàng (hoàn thành, ghi nhận doanh thu)", "PUT", "/orders/{{orderId}}/status",
      token="customerToken", query={"status": "HOAN_THANH"})
 step(F3, "Chi tiết đơn kèm dòng thời gian", "GET", "/orders/{{orderId}}", token="customerToken")
+step(F3, "Khách: Mua lại đơn đã nhận (thêm lại vào giỏ)", "POST", "/orders/{{orderId}}/reorder", token="customerToken",
+     query={"replace": "true"},
+     note="Trả {cart, added, skipped}; giỏ có hàng cửa hàng khác thì 1033 trừ khi replace=true.")
 step(F3, "Cửa hàng: danh sách đơn phân trang, tìm theo SĐT", "GET", "/orders/page", token="staffToken",
      query={"keyword": "0900000099", "page": "0", "size": "20"})
 step(F3, "Cửa hàng: số đơn theo trạng thái", "GET", "/orders/counts", token="staffToken")

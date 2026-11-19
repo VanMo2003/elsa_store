@@ -151,6 +151,19 @@ ra `nang-cap`. Nếu clone báo không có nhánh → Bước 0 chưa làm.
 Chỉ cần schema trống: BE tự tạo bảng khi chạy (Hibernate `ddl-auto=update`) và tự tạo tài khoản quản trị
 `admin123` / `admin123`.
 
+**Nếu người dùng gửi kèm file `db.sql` (dữ liệu mẫu)**: chép vào `D:\elsa\db.sql` rồi nạp vào schema vừa tạo — làm
+TRƯỚC khi chạy BE lần đầu:
+
+```powershell
+& "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p --default-character-set=utf8mb4 elsa_store_db -e "source D:/elsa/db.sql"
+```
+
+Kiểm tra: `... -e "select username, role from users;" elsa_store_db` phải thấy `admin123`, `owner123`, `user01`…
+Khi BE khởi động lần đầu trên dữ liệu này, log có dòng `Moved N product(s) from shared categories into per-store
+categories` — đó là bước tự chuyển danh mục cũ sang danh mục riêng của cửa hàng, bình thường.
+Tài khoản trong `db.sql`: `admin123`/`admin123`; khách `user01`, `user02`, `user03` mật khẩu `123456`; chủ cửa hàng
+`owner123` — hỏi người dùng mật khẩu.
+
 ---
 
 ## Bước 4 — Cấu hình và chạy Backend
@@ -296,6 +309,24 @@ python postman\build_collection.py postman\elsa_store.postman_collection.json --
 ```
 
 Kết quả cuối phải là `FAILED: 0 / ...`. Mỗi lần chạy tạo một cửa hàng "Elsa Demo …", sản phẩm, khách, đơn hàng mới.
+
+### Bộ Postman cho dữ liệu `db.sql`
+
+Nếu đã nạp `db.sql` ở Bước 3, dùng `postman/elsa_store_sample_data.postman_collection.json` (52 request, chạy trên
+cửa hàng "Elsa Store" và tài khoản có sẵn):
+
+1. Postman → **Import** → chọn file trên.
+2. Mở collection → tab **Variables** → điền `ownerPassword` (mật khẩu `owner123`, hỏi người dùng); sửa `baseUrl` nếu BE
+   không ở `localhost:8080`.
+3. Chuột phải collection → **Run collection** → **Run**. Thư mục 0 lấy token, các request sau tự dùng lại.
+
+Chạy bằng dòng lệnh thay cho Postman:
+
+```powershell
+python postman\build_sample_collection.py postman\elsa_store_sample_data.postman_collection.json --run http://localhost:8080/elsa-store/api ownerPassword=<mật khẩu owner123>
+```
+
+Cả bộ sẽ đặt 1 đơn COD mới cho `user01` và hoàn thành đơn đó (ghi vào CSDL).
 
 ---
 

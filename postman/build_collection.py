@@ -384,11 +384,11 @@ def build():
     }
 
 
-def run(base):
+def run(base, init=None):
     import requests
     v = {"runSuffix": str(int(time.time() * 1000))[-6:],
          "today": time.strftime("%Y-%m-%d", time.gmtime(time.time() + 7 * 3600)),
-         "resetCode": "000000"}
+         "resetCode": "000000", **(init or {})}
 
     def sub(x):
         if isinstance(x, str):
